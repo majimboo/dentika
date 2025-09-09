@@ -5,6 +5,7 @@ import UserManagementWrapper from '../views/UserManagementWrapper.vue';
 import UserList from '../views/UserList.vue'; // Keep for backward compatibility
 import UserEdit from '../views/UserEdit.vue';
 import StaffEdit from '../views/StaffEdit.vue';
+import Agenda from '../views/Agenda.vue';
 import NewStaff from '../views/NewStaff.vue';
 import NewUser from '../views/NewUser.vue';
 import PatientList from '../views/PatientList.vue';
@@ -48,6 +49,12 @@ const routes = [
             },
 
             // Level 1 pages (show back button to home)
+            {
+                path: '/agenda',
+                name: 'Agenda',
+                component: Agenda,
+                meta: { level: 1, title: 'Daily Agenda', parent: 'Dashboard', requiresNonSuperAdmin: true },
+            },
             {
                 path: '/patients',
                 name: 'PatientList',

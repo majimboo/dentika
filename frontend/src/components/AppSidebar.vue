@@ -44,11 +44,31 @@
                     <div class="font-medium">Dashboard</div>
                     <div class="text-xs text-gray-400">Overview & stats</div>
                   </div>
-               </router-link>
-             </li>
-             <li role="listitem">
-               <router-link
-                 to="/patients"
+                </router-link>
+              </li>
+              <li v-if="!isSuperAdmin" role="listitem">
+                <router-link
+                  to="/agenda"
+                  @click="closeSidebarOnMobile"
+                  class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.name === 'Agenda' }"
+                  :aria-current="$route.name === 'Agenda' ? 'page' : null"
+                >
+                  <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200"
+                       :class="{ 'bg-blue-200': $route.name === 'Agenda' }">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="font-medium">Agenda</div>
+                    <div class="text-xs text-gray-400">Daily workflow</div>
+                  </div>
+                </router-link>
+              </li>
+              <li role="listitem">
+                <router-link
+                  to="/patients"
                  @click="closeSidebarOnMobile"
                  class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                  :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/patients') }"

@@ -1,0 +1,229 @@
+package handlers
+
+import (
+	"strconv"
+
+	"dentika/server/database"
+	"dentika/server/models"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+type CreateClinicRequest struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
+	Phone   string `json:"phone"`
+	Email   string `json:"email"`
+	Website string `json:"website"`
+}
+
+type CreateBranchRequest struct {
+	Name         string `json:"name"`
+	Address      string `json:"address"`
+	Phone        string `json:"phone"`
+	IsMainBranch bool   `json:"is_main_branch"`
+}
+
+func GetClinics(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+
+	var clinics []models.Clinic
+	query := database.DB.Preload("Branches").Preload("Staff")
+
+	// Super admin can see all clinics, others only their own
+	if !user.IsSuperAdmin() {
+		if user.ClinicID == nil {
+			return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+		}
+		query = query.Where("id = ?", *user.ClinicID)
+	}
+
+	if err := query.Find(&clinics).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch clinics"})
+	}
+
+	return c.JSON(clinics)
+}
+
+func GetClinic(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	clinicID, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// Check access
+	if !user.CanAccessClinic(uint(clinicID)) {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+	}
+
+	var clinic models.Clinic
+	if err := database.DB.Preload("Branches").Preload("Staff").First(&clinic, clinicID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Clinic not found"})
+	}
+
+	return c.JSON(clinic)
+}
+
+func CreateClinic(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+
+	// Only super admin can create clinics
+	if !user.IsSuperAdmin() {
+		return c.Status(403).JSON(fiber.Map{"error": "Only super admin can create clinics"})
+	}
+
+	var req CreateClinicRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	if req.Name == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Clinic name is required"})
+	}
+
+	clinic := models.Clinic{
+		Name:     req.Name,
+		Address:  req.Address,
+		Phone:    req.Phone,
+		Email:    req.Email,
+		Website:  req.Website,
+		IsActive: true,
+	}
+
+	if err := database.DB.Create(&clinic).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to create clinic"})
+	}
+
+	// Create main branch
+	mainBranch := models.Branch{
+		Name:         req.Name + " - Main",
+		Address:      req.Address,
+		Phone:        req.Phone,
+		IsMainBranch: true,
+		IsActive:     true,
+		ClinicID:     clinic.ID,
+	}
+
+	if err := database.DB.Create(&mainBranch).Error; err != nil {
+		// If branch creation fails, we should probably rollback clinic creation
+		database.DB.Delete(&clinic)
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to create main branch"})
+	}
+
+	// Reload with relationships
+	database.DB.Preload("Branches").Preload("Staff").First(&clinic, clinic.ID)
+
+	return c.Status(201).JSON(clinic)
+}
+
+func UpdateClinic(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	clinicID, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// Check access - super admin or clinic owner
+	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != uint(clinicID) || !user.HasRole(models.ClinicOwner)) {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+	}
+
+	var clinic models.Clinic
+	if err := database.DB.First(&clinic, clinicID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Clinic not found"})
+	}
+
+	var req CreateClinicRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	// Update clinic fields
+	if req.Name != "" {
+		clinic.Name = req.Name
+	}
+	if req.Address != "" {
+		clinic.Address = req.Address
+	}
+	if req.Phone != "" {
+		clinic.Phone = req.Phone
+	}
+	if req.Email != "" {
+		clinic.Email = req.Email
+	}
+	if req.Website != "" {
+		clinic.Website = req.Website
+	}
+
+	if err := database.DB.Save(&clinic).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to update clinic"})
+	}
+
+	// Reload with relationships
+	database.DB.Preload("Branches").Preload("Staff").First(&clinic, clinic.ID)
+
+	return c.JSON(clinic)
+}
+
+func GetClinicBranches(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	clinicID, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// Check access
+	if !user.CanAccessClinic(uint(clinicID)) {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+	}
+
+	var branches []models.Branch
+	if err := database.DB.Where("clinic_id = ?", clinicID).Find(&branches).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch branches"})
+	}
+
+	return c.JSON(branches)
+}
+
+func CreateBranch(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	clinicID, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// Check access - super admin or clinic owner
+	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != uint(clinicID) || !user.HasRole(models.ClinicOwner)) {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+	}
+
+	var req CreateBranchRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	if req.Name == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Branch name is required"})
+	}
+
+	// If this is supposed to be main branch, unset other main branches
+	if req.IsMainBranch {
+		database.DB.Model(&models.Branch{}).Where("clinic_id = ?", clinicID).Update("is_main_branch", false)
+	}
+
+	branch := models.Branch{
+		Name:         req.Name,
+		Address:      req.Address,
+		Phone:        req.Phone,
+		IsMainBranch: req.IsMainBranch,
+		IsActive:     true,
+		ClinicID:     uint(clinicID),
+	}
+
+	if err := database.DB.Create(&branch).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to create branch"})
+	}
+
+	return c.Status(201).JSON(branch)
+}

@@ -1,0 +1,13 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/package-lock.json
+
+# IDE and OS specific files
+.idea/
+.vscode/
+.claude/
+.DS_Store
+Thumbs.db
+
+uploads/

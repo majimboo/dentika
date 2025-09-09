@@ -110,17 +110,25 @@ export const useAppointmentStore = defineStore('appointment', {
     async fetchAppointment(appointmentId) {
       this.loading = true
       this.error = null
-      
+
       try {
+        console.log('Fetching appointment with ID:', appointmentId)
         const result = await apiService.get(`/appointments/${appointmentId}`)
-        if (result.success) {
+        console.log('API result:', result)
+
+        if (result && result.success) {
           this.currentAppointment = result.data
+          console.log('Current appointment set:', this.currentAppointment)
+          return { success: true, data: result.data }
         } else {
-          this.error = result.error
+          this.error = result?.error || 'Failed to fetch appointment'
+          console.error('Failed to fetch appointment:', this.error)
+          return { success: false, error: this.error }
         }
       } catch (error) {
         this.error = 'Failed to fetch appointment'
         console.error('Error fetching appointment:', error)
+        return { success: false, error: this.error }
       } finally {
         this.loading = false
       }

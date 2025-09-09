@@ -2,15 +2,6 @@
   <div class="space-y-8">
     <!-- Page Header -->
     <div class="flex items-center mb-6">
-      <button
-        @click="$router.go(-1)"
-        class="mr-4 p-2 rounded-xl hover:bg-neutral-100 transition-all duration-200"
-      >
-        <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-
       <div>
          <h1 class="text-2xl font-bold text-neutral-900">
            {{ isReadOnly ? 'Appointment Details' : 'Edit Appointment' }}
@@ -549,8 +540,11 @@ const filteredProcedures = computed(() => {
 
 const loadAppointment = async (appointmentId) => {
   loading.value = true
+  console.log('Loading appointment with ID:', appointmentId)
   try {
     const result = await appointmentStore.fetchAppointment(appointmentId)
+    console.log('Fetch appointment result:', result)
+    console.log('Current appointment from store:', appointmentStore.currentAppointment)
 
     if (result && appointmentStore.currentAppointment) {
       const appointment = appointmentStore.currentAppointment
@@ -904,8 +898,13 @@ onMounted(async () => {
    }
 
   // Load the appointment data
+  console.log('Route params:', route.params)
+  console.log('Appointment ID from route:', route.params.id)
   if (route.params.id) {
     await loadAppointment(route.params.id)
+  } else {
+    console.error('No appointment ID found in route params')
+    router.push('/appointments')
   }
 })
 

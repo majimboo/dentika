@@ -86,7 +86,10 @@ class ApiService {
 
   get(url, config) {
     const correctedUrl = url.startsWith('/api') ? url.slice(4) : url
-    return this.request('get', correctedUrl, null, config)
+    console.log('API Service GET:', `${this.baseURL}${correctedUrl}`)
+    const result = this.request('get', correctedUrl, null, config)
+    console.log('API Service GET result:', result)
+    return result
   }
 
   post(url, data, config) {
@@ -173,8 +176,16 @@ class ApiService {
     return this.request('get', '/appointments', null, { params })
   }
 
+  async getAppointment(id) {
+    return this.request('get', `/appointments/${id}`)
+  }
+
   async createAppointment(appointmentData) {
     return this.request('post', '/appointments', appointmentData)
+  }
+
+  async updateAppointment(id, appointmentData) {
+    return this.request('put', `/appointments/${id}`, appointmentData)
   }
 
   async updateAppointmentStatus(id, statusData) {

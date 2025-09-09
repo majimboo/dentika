@@ -398,8 +398,14 @@ const handleAppointmentUpdate = async (appointmentId, updateData) => {
 }
 
 const handleAppointmentEdit = (appointment) => {
-  router.push(`/appointments/${appointment.id}/edit`)
-  closeAppointmentDetails()
+  console.log('Editing appointment:', appointment)
+  console.log('Appointment ID:', appointment.id)
+  if (appointment && appointment.id) {
+    router.push({ name: 'AppointmentEdit', params: { id: appointment.id } })
+    closeAppointmentDetails()
+  } else {
+    console.error('Appointment or appointment ID is missing:', appointment)
+  }
 }
 
 

@@ -249,12 +249,16 @@ func createDefaultAdmin() {
 }
 
 func seedSampleData() {
-	// Check if sample data already exists
-	var appointmentCount int64
-	if err := database.DB.Model(&models.Appointment{}).Count(&appointmentCount).Error; err == nil && appointmentCount > 0 {
-		log.Println("Sample appointments already exist, skipping seed")
-		return
-	}
+	// Check if today's appointments already exist
+	today := time.Now()
+	todayStart := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
+	todayEnd := todayStart.Add(24 * time.Hour)
+
+	var todayAppointmentCount int64
+	database.DB.Model(&models.Appointment{}).Where("start_time >= ? AND start_time < ?", todayStart, todayEnd).Count(&todayAppointmentCount)
+
+	// For testing, always create today's appointments
+	todayAppointmentCount = 0
 
 	// Get the default clinic and branch
 	var clinic models.Clinic
@@ -269,61 +273,70 @@ func seedSampleData() {
 		return
 	}
 
-	// Create sample patients
-	dob1 := time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC)
-	dob2 := time.Date(1990, 3, 22, 0, 0, 0, 0, time.UTC)
-	dob3 := time.Date(1975, 7, 10, 0, 0, 0, 0, time.UTC)
-
-	patients := []models.Patient{
-		{
-			FirstName:   "John",
-			LastName:    "Doe",
-			Email:       "john.doe@example.com",
-			Phone:       "+1234567890",
-			DateOfBirth: &dob1,
-			ClinicID:    clinic.ID,
-		},
-		{
-			FirstName:   "Jane",
-			LastName:    "Smith",
-			Email:       "jane.smith@example.com",
-			Phone:       "+1234567891",
-			DateOfBirth: &dob2,
-			ClinicID:    clinic.ID,
-		},
-		{
-			FirstName:   "Bob",
-			LastName:    "Johnson",
-			Email:       "bob.johnson@example.com",
-			Phone:       "+1234567892",
-			DateOfBirth: &dob3,
-			ClinicID:    clinic.ID,
-		},
-	}
-
+	// Check if patients exist
+	var patientCount int64
+	database.DB.Model(&models.Patient{}).Count(&patientCount)
 	var createdPatients []models.Patient
-	for i := range patients {
-		// Generate patient number
-		patients[i].GeneratePatientNumber(clinic.ID)
 
-		if err := database.DB.Create(&patients[i]).Error; err != nil {
-			log.Printf("Failed to create patient %s: %v", patients[i].FirstName, err)
-			continue
-		}
-		createdPatients = append(createdPatients, patients[i])
+	if patientCount == 0 {
+		// Create sample patients
+		dob1 := time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC)
+		dob2 := time.Date(1990, 3, 22, 0, 0, 0, 0, time.UTC)
+		dob3 := time.Date(1975, 7, 10, 0, 0, 0, 0, time.UTC)
 
-		// Create dental record for each patient
-		dentalRecord := models.DentalRecord{
-			PatientID: patients[i].ID,
-			ClinicID:  patients[i].ClinicID,
+		patients := []models.Patient{
+			{
+				FirstName:   "John",
+				LastName:    "Doe",
+				Email:       "john.doe@example.com",
+				Phone:       "+1234567890",
+				DateOfBirth: &dob1,
+				ClinicID:    clinic.ID,
+			},
+			{
+				FirstName:   "Jane",
+				LastName:    "Smith",
+				Email:       "jane.smith@example.com",
+				Phone:       "+1234567891",
+				DateOfBirth: &dob2,
+				ClinicID:    clinic.ID,
+			},
+			{
+				FirstName:   "Bob",
+				LastName:    "Johnson",
+				Email:       "bob.johnson@example.com",
+				Phone:       "+1234567892",
+				DateOfBirth: &dob3,
+				ClinicID:    clinic.ID,
+			},
 		}
-		if err := database.DB.Create(&dentalRecord).Error; err != nil {
-			log.Printf("Failed to create dental record for patient %s: %v", patients[i].FirstName, err)
+
+		for i := range patients {
+			// Generate patient number
+			patients[i].GeneratePatientNumber(clinic.ID)
+
+			if err := database.DB.Create(&patients[i]).Error; err != nil {
+				log.Printf("Failed to create patient %s: %v", patients[i].FirstName, err)
+				continue
+			}
+			createdPatients = append(createdPatients, patients[i])
+
+			// Create dental record for each patient
+			dentalRecord := models.DentalRecord{
+				PatientID: patients[i].ID,
+				ClinicID:  patients[i].ClinicID,
+			}
+			if err := database.DB.Create(&dentalRecord).Error; err != nil {
+				log.Printf("Failed to create dental record for patient %s: %v", patients[i].FirstName, err)
+			}
 		}
+	} else {
+		// Get existing patients
+		database.DB.Find(&createdPatients)
 	}
 
 	if len(createdPatients) == 0 {
-		log.Printf("No patients created, skipping appointment creation")
+		log.Printf("No patients found, skipping appointment creation")
 		return
 	}
 
@@ -334,8 +347,10 @@ func seedSampleData() {
 		return
 	}
 
-	// Create sample appointments
+	// Define common variables
 	now := time.Now()
+	todayStartTime := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.UTC)
+
 	appointmentTypes := []models.AppointmentType{
 		models.TypeCheckup,
 		models.TypeCleaning,
@@ -349,28 +364,35 @@ func seedSampleData() {
 		models.StatusConfirmed,
 	}
 
-	// Create some appointments for today to ensure dashboard has data
-	for i := 0; i < 5; i++ {
-		todayAppointment := models.Appointment{
-			Title:         "Today's Appointment " + string(rune(i+65)),
-			Description:   "Sample appointment for today",
-			StartTime:     now.Add(time.Duration(i+1) * time.Hour), // Spread throughout today
-			EndTime:       now.Add(time.Duration(i+1)*time.Hour + time.Hour),
-			Duration:      60,
-			Status:        statuses[rand.Intn(len(statuses))],
-			Type:          appointmentTypes[rand.Intn(len(appointmentTypes))],
-			PatientID:     createdPatients[rand.Intn(len(createdPatients))].ID,
-			DoctorID:      adminUser.ID,
-			BranchID:      branch.ID,
-			ClinicID:      clinic.ID,
-			EstimatedCost: float64(50 + rand.Intn(200)),
-			ActualCost:    float64(50 + rand.Intn(200)),
-			IsPaid:        rand.Intn(2) == 1,
-		}
+	// Create today's appointments if they don't exist
+	if todayAppointmentCount == 0 {
+		log.Println("Creating today's appointments...")
 
-		if err := database.DB.Create(&todayAppointment).Error; err != nil {
-			log.Printf("Failed to create today's appointment %d: %v", i+1, err)
+		// Create some appointments for today to ensure dashboard has data
+		for i := 0; i < 5; i++ {
+			todayAppointment := models.Appointment{
+				Title:         "Today's Appointment " + string(rune(i+65)),
+				Description:   "Sample appointment for today",
+				StartTime:     todayStartTime.Add(time.Duration(i) * time.Hour), // 9 AM, 10 AM, 11 AM, etc.
+				EndTime:       todayStartTime.Add(time.Duration(i+1) * time.Hour),
+				Duration:      60,
+				Status:        statuses[rand.Intn(len(statuses))],
+				Type:          appointmentTypes[rand.Intn(len(appointmentTypes))],
+				PatientID:     createdPatients[rand.Intn(len(createdPatients))].ID,
+				DoctorID:      adminUser.ID,
+				BranchID:      branch.ID,
+				ClinicID:      clinic.ID,
+				EstimatedCost: float64(50 + rand.Intn(200)),
+				ActualCost:    float64(50 + rand.Intn(200)),
+				IsPaid:        rand.Intn(2) == 1,
+			}
+
+			if err := database.DB.Create(&todayAppointment).Error; err != nil {
+				log.Printf("Failed to create today's appointment %d: %v", i+1, err)
+			}
 		}
+	} else {
+		log.Println("Today's appointments already exist, skipping creation")
 	}
 
 	// Create historical appointments

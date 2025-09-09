@@ -303,12 +303,14 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePatientStore } from '../stores/patient'
 import { useClinicStore } from '../stores/clinic'
+import { useAppointmentStore } from '../stores/appointment'
 
 const route = useRoute()
 const router = useRouter()
 
 const patientStore = usePatientStore()
 const clinicStore = useClinicStore()
+const appointmentStore = useAppointmentStore()
 
 const isEditing = ref(false)
 const isSubmitting = ref(false)
@@ -477,25 +479,32 @@ const handleSubmit = async () => {
       type: formData.value.type,
       start_time: `${formData.value.date}T${formData.value.time}:00`,
       end_time: calculateEndTime(),
-      notes: formData.value.notes,
-      send_reminder: formData.value.send_reminder,
-      reminder_email: formData.value.reminder_email,
-      reminder_sms: formData.value.reminder_sms,
-      send_confirmation: formData.value.send_confirmation
+      duration: parseInt(formData.value.duration),
+      pre_appointment_notes: formData.value.notes,
+      title: generateAppointmentTitle(),
+      description: formData.value.notes || '',
+      status: 'scheduled'
     }
-    
+
+    let result
     if (isEditing.value) {
       // Update existing appointment
       console.log('Updating appointment:', appointmentData)
-      // API call would go here
+      // For now, we'll implement create only - update would need a separate API endpoint
+      result = { success: false, error: 'Update not implemented yet' }
     } else {
       // Create new appointment
       console.log('Creating appointment:', appointmentData)
-      // API call would go here
+      result = await appointmentStore.createAppointment(appointmentData)
     }
-    
-    // Navigate back to calendar
-    router.push('/appointments')
+
+    if (result.success) {
+      // Navigate back to calendar
+      router.push('/appointments')
+    } else {
+      console.error('Failed to save appointment:', result.error)
+      // Could show error message to user here
+    }
   } catch (error) {
     console.error('Error saving appointment:', error)
     // Handle error - could show toast notification
@@ -508,6 +517,24 @@ const calculateEndTime = () => {
   const startDateTime = new Date(`${formData.value.date}T${formData.value.time}:00`)
   const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.value.duration) * 60000)
   return endDateTime.toISOString().slice(0, 19)
+}
+
+const generateAppointmentTitle = () => {
+  const typeLabels = {
+    consultation: 'Consultation',
+    cleaning: 'Cleaning',
+    filling: 'Filling',
+    extraction: 'Extraction',
+    root_canal: 'Root Canal',
+    crown: 'Crown',
+    bridge: 'Bridge',
+    implant: 'Implant',
+    orthodontics: 'Orthodontics',
+    emergency: 'Emergency',
+    follow_up: 'Follow Up',
+    other: 'Appointment'
+  }
+  return typeLabels[formData.value.type] || 'Appointment'
 }
 
 // Close dropdown when clicking outside

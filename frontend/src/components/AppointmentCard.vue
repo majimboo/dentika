@@ -1,40 +1,40 @@
 <template>
-  <div class="bg-white border border-neutral-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-pointer group">
+  <div class="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all duration-200 cursor-pointer group">
     <!-- Patient Info -->
-    <div class="flex items-start justify-between mb-3">
+    <div class="flex items-start justify-between mb-2">
       <div class="flex-1">
-        <h4 class="font-semibold text-neutral-900 text-sm mb-1">
+        <h4 class="font-medium text-gray-900 text-sm mb-1">
           {{ appointment.patient?.first_name }} {{ appointment.patient?.last_name }}
         </h4>
-        <p class="text-xs text-neutral-500 mb-2">
+        <p class="text-xs text-gray-500">
           ID: {{ appointment.patient?.patient_number || appointment.patient_id }}
         </p>
       </div>
 
       <!-- Status Badge -->
-      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
             :class="getStatusBadgeClass(appointment.status)">
         {{ getStatusDisplayName(appointment.status) }}
       </span>
     </div>
 
     <!-- Appointment Details -->
-    <div class="space-y-2 mb-3">
-      <div class="flex items-center text-xs text-neutral-600">
+    <div class="space-y-1 mb-2">
+      <div class="flex items-center text-xs text-gray-600">
         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
         {{ formatTime(appointment.start_time) }} - {{ formatTime(appointment.end_time) }}
       </div>
 
-      <div class="flex items-center text-xs text-neutral-600">
+      <div class="flex items-center text-xs text-gray-600">
         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
         {{ appointment.type || 'General' }}
       </div>
 
-      <div v-if="appointment.doctor" class="flex items-center text-xs text-neutral-600">
+      <div v-if="appointment.doctor" class="flex items-center text-xs text-gray-600">
         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
         </svg>
@@ -43,7 +43,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="flex items-center justify-between pt-2 border-t border-neutral-100">
+    <div class="flex items-center justify-between pt-2 border-t border-gray-100">
       <div class="flex space-x-1">
         <!-- Mark as Arrived (for scheduled appointments) -->
         <button

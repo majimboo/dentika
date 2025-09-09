@@ -173,6 +173,10 @@ class ApiService {
     return this.request('get', '/appointments', null, { params })
   }
 
+  async createAppointment(appointmentData) {
+    return this.request('post', '/appointments', appointmentData)
+  }
+
   async updateAppointmentStatus(id, statusData) {
     return this.request('put', `/appointments/${id}/status`, statusData)
   }

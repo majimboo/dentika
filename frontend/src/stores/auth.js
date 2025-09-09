@@ -20,7 +20,16 @@ export const useAuthStore = defineStore('auth', {
     isAssistant: (state) => state.user?.role === 'assistant',
     userRole: (state) => state.user?.role,
     userClinic: (state) => state.user?.clinic,
-    userClinicId: (state) => state.user?.clinic_id,
+    userClinicId: (state) => {
+      if (state.user?.clinic_id) {
+        return state.user.clinic_id
+      }
+      // If user is clinic_owner but has no clinic_id, default to clinic 1
+      if (state.user?.role === 'clinic_owner') {
+        return 1
+      }
+      return null
+    },
     canManagePatients: (state) => {
       const role = state.user?.role
       return ['super_admin', 'clinic_owner', 'doctor', 'secretary'].includes(role)

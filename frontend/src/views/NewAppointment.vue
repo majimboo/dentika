@@ -198,19 +198,138 @@
                    </svg>
                    Procedures
                  </label>
-                 <button
-                   type="button"
-                   @click="addProcedure"
-                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
-                 >
-                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                   </svg>
-                   Add Procedure
-                 </button>
-               </div>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      @click="toggleProcedureInline"
+                      class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+                    >
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                      </svg>
+                      Add Procedure
+                      <svg class="w-3 h-3 ml-1" :class="{ 'rotate-180': showProcedureInline }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      @click="addProcedure"
+                      class="inline-flex items-center px-3 py-1.5 border border-neutral-300 text-xs font-medium rounded-md text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+                    >
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                      </svg>
+                      Browse All
+                    </button>
+                  </div>
+                </div>
 
-               <!-- Selected Procedures -->
+                <!-- Inline Procedure Selection -->
+                <div v-if="showProcedureInline" class="mt-4 p-4 bg-neutral-50 rounded-xl border border-neutral-200">
+                  <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-sm font-semibold text-neutral-900">Select Procedures</h4>
+                    <button
+                      @click="showProcedureInline = false"
+                      class="text-neutral-400 hover:text-neutral-600 transition-colors"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Search and Filters -->
+                  <div class="space-y-3 mb-4">
+                    <div class="flex gap-3">
+                      <div class="flex-1 relative">
+                        <input
+                          v-model="procedureSearchQuery"
+                          type="text"
+                          class="block w-full pl-8 pr-4 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                          placeholder="Search procedures..."
+                        />
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                          <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                          </svg>
+                        </div>
+                      </div>
+                      <select
+                        v-model="selectedCategory"
+                        class="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        <option value="">All Categories</option>
+                        <option v-for="category in availableCategories" :key="category.value" :value="category.value">
+                          {{ category.label }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Procedure Grid -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+                    <div
+                      v-for="procedure in filteredProcedures.slice(0, 12)"
+                      :key="procedure.id"
+                      @click="selectProcedure(procedure)"
+                      class="cursor-pointer p-3 border rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200"
+                      :class="[
+                        'bg-white',
+                        isSelected(procedure.id) ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50' : 'border-neutral-200'
+                      ]"
+                    >
+                      <div class="flex items-start justify-between mb-2">
+                        <div class="flex-1 min-w-0">
+                          <h5 class="font-medium text-neutral-900 text-sm truncate">{{ procedure.name }}</h5>
+                          <p class="text-xs text-neutral-600 line-clamp-2 mt-1">{{ procedure.description }}</p>
+                        </div>
+                        <div v-if="isSelected(procedure.id)" class="ml-2 flex-shrink-0">
+                          <svg class="w-4 h-4 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                          </svg>
+                        </div>
+                      </div>
+                      <div class="flex items-center justify-between text-xs text-neutral-500">
+                        <div class="flex items-center gap-2">
+                          <span>{{ procedure.estimated_duration }}min</span>
+                          <span>${{ procedure.default_cost }}</span>
+                        </div>
+                        <div class="flex gap-1">
+                          <span v-if="procedure.requires_anesthesia" class="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded">A</span>
+                          <span v-if="procedure.requires_followup" class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">F</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Show more button -->
+                    <div v-if="filteredProcedures.length > 12" class="col-span-full text-center py-2">
+                      <button
+                        @click="addProcedure"
+                        class="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                      >
+                        View all {{ filteredProcedures.length }} procedures →
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Quick Add -->
+                  <div class="mt-4 pt-4 border-t border-neutral-200">
+                    <p class="text-xs text-neutral-600 mb-2">Quick add common combinations:</p>
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        v-for="combo in commonCombinations"
+                        :key="combo.id"
+                        @click="addProcedureCombination(combo)"
+                        class="px-3 py-1.5 text-xs bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-full transition-colors"
+                      >
+                        {{ combo.name }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Selected Procedures -->
                <div v-if="selectedProcedures.length > 0" class="space-y-3">
                  <div
                    v-for="(procedure, index) in selectedProcedures"
@@ -221,7 +340,7 @@
                      <div class="font-medium text-neutral-900">{{ procedure.name }}</div>
                      <div class="text-sm text-neutral-600">{{ procedure.description }}</div>
                      <div class="text-xs text-neutral-500 mt-1">
-                       Duration: {{ procedure.estimated_duration }} min • Cost: ${{ procedure.default_cost }}
+                       Duration: {{ procedure.estimated_duration }} min • Cost: {{ procedure.default_cost }}
                      </div>
                    </div>
                    <button
@@ -360,71 +479,301 @@
       </div>
     </div>
 
-    <!-- Procedure Selection Modal -->
-    <div v-if="showProcedureModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeProcedureModal"></div>
+     <!-- Enhanced Procedure Selection Modal -->
+     <div v-if="showProcedureModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+       <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeProcedureModal"></div>
 
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="sm:flex sm:items-start">
-              <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                  Select Procedure
-                </h3>
+         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full max-h-[90vh]">
+           <div class="bg-white">
+             <!-- Modal Header -->
+             <div class="px-6 py-4 border-b border-neutral-200">
+               <div class="flex items-center justify-between">
+                 <h3 class="text-lg font-semibold text-neutral-900" id="modal-title">
+                   Add Procedures to Appointment
+                 </h3>
+                 <button
+                   @click="closeProcedureModal"
+                   class="text-neutral-400 hover:text-neutral-600 transition-colors"
+                 >
+                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                   </svg>
+                 </button>
+               </div>
+             </div>
 
-                <!-- Procedure Search -->
-                <div class="mb-4">
-                  <input
-                    v-model="procedureSearchQuery"
-                    type="text"
-                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Search procedures..."
-                  />
-                </div>
+             <div class="flex flex-col lg:flex-row">
+               <!-- Left Panel - Procedure Selection -->
+               <div class="flex-1 p-6 border-r border-neutral-200 lg:max-w-md">
+                 <!-- Search and Filters -->
+                 <div class="space-y-4 mb-6">
+                   <!-- Search Input -->
+                   <div class="relative">
+                     <input
+                       v-model="procedureSearchQuery"
+                       type="text"
+                       class="block w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                       placeholder="Search procedures..."
+                     />
+                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <svg class="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                       </svg>
+                     </div>
+                   </div>
 
-                <!-- Procedure List -->
-                <div class="max-h-64 overflow-y-auto">
-                  <div
-                    v-for="procedure in filteredProcedures"
-                    :key="procedure.id"
-                    @click="selectProcedure(procedure)"
-                    class="cursor-pointer p-3 border border-gray-200 rounded-md mb-2 hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <div class="font-medium text-gray-900">{{ procedure.name }}</div>
-                    <div class="text-sm text-gray-600">{{ procedure.description }}</div>
-                    <div class="text-xs text-gray-500 mt-1">
-                      Duration: {{ procedure.estimated_duration }} min • Cost: ${{ procedure.default_cost }}
-                    </div>
-                  </div>
+                   <!-- Category Filter -->
+                   <div class="flex flex-wrap gap-2">
+                     <button
+                       v-for="category in availableCategories"
+                       :key="category.value"
+                       @click="selectedCategory = selectedCategory === category.value ? '' : category.value"
+                       :class="[
+                         'px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200',
+                         selectedCategory === category.value
+                           ? 'bg-primary-100 text-primary-800 border border-primary-200'
+                           : 'bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200'
+                       ]"
+                     >
+                       {{ category.label }}
+                     </button>
+                   </div>
 
-                  <!-- Loading state -->
-                  <div v-if="loadingProcedures" class="text-center py-4">
-                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
-                    <p class="text-sm text-gray-500 mt-2">Loading procedures...</p>
-                  </div>
+                   <!-- Quick Filters -->
+                   <div class="flex gap-2">
+                     <button
+                       @click="showQuickFilters = !showQuickFilters"
+                       class="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                     >
+                       Advanced Filters
+                       <svg class="w-4 h-4 inline ml-1" :class="{ 'rotate-180': showQuickFilters }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                       </svg>
+                     </button>
+                   </div>
 
-                  <!-- No procedures found -->
-                  <div v-if="!loadingProcedures && filteredProcedures.length === 0" class="text-center py-4 text-gray-500">
-                    <p class="text-sm">No procedures found</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                   <!-- Advanced Filters -->
+                   <div v-if="showQuickFilters" class="space-y-3 p-4 bg-neutral-50 rounded-lg">
+                     <div class="grid grid-cols-2 gap-3">
+                       <div>
+                         <label class="block text-xs font-medium text-neutral-700 mb-1">Duration (min)</label>
+                         <select v-model="durationFilter" class="text-sm border border-neutral-300 rounded px-2 py-1">
+                           <option value="">Any</option>
+                           <option value="short">≤ 30 min</option>
+                           <option value="medium">30-60 min</option>
+                           <option value="long">> 60 min</option>
+                         </select>
+                       </div>
+                       <div>
+                         <label class="block text-xs font-medium text-neutral-700 mb-1">Cost Range</label>
+                         <select v-model="costFilter" class="text-sm border border-neutral-300 rounded px-2 py-1">
+                           <option value="">Any</option>
+                           <option value="low">≤ $100</option>
+                           <option value="medium">$100-500</option>
+                           <option value="high">> $500</option>
+                         </select>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
 
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              type="button"
-              @click="closeProcedureModal"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+                 <!-- Procedure List -->
+                 <div class="space-y-3 max-h-96 overflow-y-auto">
+                   <!-- Loading state -->
+                   <div v-if="loadingProcedures" class="text-center py-8">
+                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                     <p class="text-sm text-neutral-500 mt-3">Loading procedures...</p>
+                   </div>
+
+                   <!-- No procedures found -->
+                   <div v-else-if="!loadingProcedures && filteredProcedures.length === 0" class="text-center py-8">
+                     <svg class="w-12 h-12 mx-auto text-neutral-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                     </svg>
+                     <p class="text-sm text-neutral-500">No procedures found</p>
+                     <p class="text-xs text-neutral-400 mt-1">Try adjusting your search or filters</p>
+                   </div>
+
+                   <!-- Procedure Cards -->
+                   <div
+                     v-else
+                     v-for="procedure in filteredProcedures"
+                     :key="procedure.id"
+                     @click="selectProcedure(procedure)"
+                     class="cursor-pointer p-4 border border-neutral-200 rounded-xl hover:border-primary-300 hover:shadow-md transition-all duration-200 bg-white"
+                     :class="{ 'ring-2 ring-primary-500 border-primary-500': isSelected(procedure.id) }"
+                   >
+                     <div class="flex items-start justify-between mb-2">
+                       <div class="flex-1">
+                         <div class="flex items-center gap-2 mb-1">
+                           <h4 class="font-semibold text-neutral-900 text-sm">{{ procedure.name }}</h4>
+                           <span
+                             v-if="procedure.category"
+                             class="px-2 py-0.5 text-xs rounded-full"
+                             :class="getCategoryColor(procedure.category)"
+                           >
+                             {{ procedure.category }}
+                           </span>
+                         </div>
+                         <p class="text-xs text-neutral-600 line-clamp-2">{{ procedure.description }}</p>
+                       </div>
+                       <div v-if="isSelected(procedure.id)" class="ml-2">
+                         <svg class="w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                           <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                         </svg>
+                       </div>
+                     </div>
+
+                     <div class="flex items-center justify-between text-xs text-neutral-500">
+                       <div class="flex items-center gap-3">
+                         <span class="flex items-center gap-1">
+                           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                           </svg>
+                           {{ procedure.estimated_duration }}min
+                         </span>
+                         <span class="flex items-center gap-1">
+                           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                           </svg>
+                           ${{ procedure.default_cost }}
+                         </span>
+                       </div>
+                       <div class="flex gap-1">
+                         <span v-if="procedure.requires_anesthesia" class="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded">Anesthesia</span>
+                         <span v-if="procedure.requires_followup" class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">Follow-up</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+
+               <!-- Right Panel - Selected Procedures & Details -->
+               <div class="flex-1 p-6 lg:max-w-md">
+                 <!-- Selected Procedures -->
+                 <div class="mb-6">
+                   <h4 class="text-sm font-semibold text-neutral-900 mb-3 flex items-center">
+                     <svg class="w-4 h-4 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                     </svg>
+                     Selected Procedures ({{ selectedProcedures.length }})
+                   </h4>
+
+                   <div v-if="selectedProcedures.length === 0" class="text-center py-8 text-neutral-500">
+                     <svg class="w-8 h-8 mx-auto mb-2 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                     </svg>
+                     <p class="text-sm">No procedures selected</p>
+                   </div>
+
+                   <div v-else class="space-y-3 max-h-64 overflow-y-auto">
+                     <div
+                       v-for="(procedure, index) in selectedProcedures"
+                       :key="index"
+                       class="p-3 bg-neutral-50 rounded-lg border border-neutral-200"
+                     >
+                       <div class="flex items-start justify-between mb-2">
+                         <div class="flex-1">
+                           <h5 class="font-medium text-neutral-900 text-sm">{{ procedure.name }}</h5>
+                           <div class="flex items-center gap-2 mt-1">
+                             <span class="text-xs text-neutral-500">{{ procedure.estimated_duration }}min</span>
+                             <span class="text-xs text-neutral-500">${{ procedure.default_cost }}</span>
+                           </div>
+                         </div>
+                         <button
+                           @click="removeProcedure(index)"
+                           class="text-red-500 hover:text-red-700 transition-colors ml-2"
+                         >
+                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                           </svg>
+                         </button>
+                       </div>
+
+                       <!-- Customization Options -->
+                       <div class="space-y-2 mt-3 pt-3 border-t border-neutral-200">
+                         <div class="grid grid-cols-2 gap-2">
+                           <div>
+                             <label class="block text-xs text-neutral-600 mb-1">Duration (min)</label>
+                             <input
+                               v-model.number="procedure.custom_duration"
+                               type="number"
+                               min="5"
+                               :placeholder="procedure.estimated_duration"
+                               class="w-full px-2 py-1 text-xs border border-neutral-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                             />
+                           </div>
+                           <div>
+                             <label class="block text-xs text-neutral-600 mb-1">Cost ($)</label>
+                             <input
+                               v-model.number="procedure.custom_cost"
+                               type="number"
+                               min="0"
+                               step="0.01"
+                               :placeholder="procedure.default_cost"
+                               class="w-full px-2 py-1 text-xs border border-neutral-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                             />
+                           </div>
+                         </div>
+                         <div>
+                           <label class="block text-xs text-neutral-600 mb-1">Notes</label>
+                           <textarea
+                             v-model="procedure.custom_notes"
+                             rows="2"
+                             placeholder="Additional notes..."
+                             class="w-full px-2 py-1 text-xs border border-neutral-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                           ></textarea>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+
+                 <!-- Quick Add Common Combinations -->
+                 <div class="mb-6">
+                   <h4 class="text-sm font-semibold text-neutral-900 mb-3">Quick Add</h4>
+                   <div class="grid grid-cols-1 gap-2">
+                     <button
+                       v-for="combo in commonCombinations"
+                       :key="combo.id"
+                       @click="addProcedureCombination(combo)"
+                       class="p-3 text-left border border-neutral-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all duration-200"
+                     >
+                       <div class="font-medium text-sm text-neutral-900">{{ combo.name }}</div>
+                       <div class="text-xs text-neutral-600">{{ combo.description }}</div>
+                       <div class="text-xs text-neutral-500 mt-1">{{ combo.procedures.length }} procedures</div>
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             </div>
+
+             <!-- Modal Footer -->
+             <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-200 flex justify-between items-center">
+               <div class="text-sm text-neutral-600">
+                 {{ selectedProcedures.length }} procedure{{ selectedProcedures.length !== 1 ? 's' : '' }} selected
+               </div>
+               <div class="flex gap-3">
+                 <button
+                   @click="closeProcedureModal"
+                   class="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   @click="confirmProcedureSelection"
+                   :disabled="selectedProcedures.length === 0"
+                   class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                 >
+                   Add Procedures ({{ selectedProcedures.length }})
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
   </div>
 </template>
 
@@ -435,6 +784,7 @@ import { usePatientStore } from '../stores/patient'
 import { useClinicStore } from '../stores/clinic'
 import { useAppointmentStore } from '../stores/appointment'
 import { useAuthStore } from '../stores/auth'
+import apiService from '../services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -455,8 +805,45 @@ const showPatientDropdown = ref(false)
 const selectedProcedures = ref([])
 const availableProcedures = ref([])
 const showProcedureModal = ref(false)
+const showProcedureInline = ref(false)
 const procedureSearchQuery = ref('')
 const loadingProcedures = ref(false)
+const selectedCategory = ref('')
+const showQuickFilters = ref(false)
+const durationFilter = ref('')
+const costFilter = ref('')
+
+// Common procedure combinations for quick add
+const commonCombinations = ref([
+  {
+    id: 'checkup',
+    name: 'Routine Checkup',
+    description: 'Complete dental examination and cleaning',
+    procedures: ['Dental Cleaning', 'Oral Examination']
+  },
+  {
+    id: 'filling',
+    name: 'Simple Filling',
+    description: 'Tooth filling procedure',
+    procedures: ['Composite Filling']
+  },
+  {
+    id: 'extraction',
+    name: 'Tooth Extraction',
+    description: 'Simple tooth removal',
+    procedures: ['Simple Extraction']
+  }
+])
+
+// Available categories for filtering
+const availableCategories = ref([
+  { value: 'preventive', label: 'Preventive' },
+  { value: 'restorative', label: 'Restorative' },
+  { value: 'surgical', label: 'Surgical' },
+  { value: 'orthodontic', label: 'Orthodontic' },
+  { value: 'cosmetic', label: 'Cosmetic' },
+  { value: 'emergency', label: 'Emergency' }
+])
 
 const formData = ref({
   patient_id: '',
@@ -485,8 +872,7 @@ const isFormValid = computed(() => {
          formData.value.time &&
          formData.value.duration &&
          formData.value.doctor_id &&
-         branchId > 0 &&
-         branches.value.length > 0
+         (branchId > 0 || branches.value.length > 0)
 })
 
 const doctors = computed(() => {
@@ -497,17 +883,54 @@ const branches = computed(() => {
   return clinicStore.branches || []
 })
 
-// Procedure filtering
+// Enhanced procedure filtering
 const filteredProcedures = computed(() => {
-  if (!procedureSearchQuery.value) {
-    return availableProcedures.value
+  let procedures = availableProcedures.value
+
+  // Text search
+  if (procedureSearchQuery.value) {
+    const query = procedureSearchQuery.value.toLowerCase()
+    procedures = procedures.filter(procedure =>
+      procedure.name.toLowerCase().includes(query) ||
+      procedure.description.toLowerCase().includes(query) ||
+      (procedure.category && procedure.category.toLowerCase().includes(query))
+    )
   }
-  const query = procedureSearchQuery.value.toLowerCase()
-  return availableProcedures.value.filter(procedure =>
-    procedure.name.toLowerCase().includes(query) ||
-    procedure.description.toLowerCase().includes(query) ||
-    procedure.category.toLowerCase().includes(query)
-  )
+
+  // Category filter
+  if (selectedCategory.value) {
+    procedures = procedures.filter(procedure =>
+      procedure.category && procedure.category.toLowerCase() === selectedCategory.value.toLowerCase()
+    )
+  }
+
+  // Duration filter
+  if (durationFilter.value) {
+    procedures = procedures.filter(procedure => {
+      const duration = procedure.estimated_duration
+      switch (durationFilter.value) {
+        case 'short': return duration <= 30
+        case 'medium': return duration > 30 && duration <= 60
+        case 'long': return duration > 60
+        default: return true
+      }
+    })
+  }
+
+  // Cost filter
+  if (costFilter.value) {
+    procedures = procedures.filter(procedure => {
+      const cost = procedure.default_cost
+      switch (costFilter.value) {
+        case 'low': return cost <= 100
+        case 'medium': return cost > 100 && cost <= 500
+        case 'high': return cost > 500
+        default: return true
+      }
+    })
+  }
+
+  return procedures
 })
 
 const initializeForm = () => {
@@ -573,19 +996,14 @@ const loadProcedures = async () => {
 
   loadingProcedures.value = true
   try {
-    const response = await fetch('/api/procedure-templates', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    // Use apiService instead of raw fetch for proper authentication
+    const result = await apiService.get('/procedure-templates')
 
-    if (response.ok) {
-      const data = await response.json()
-      availableProcedures.value = data || []
+    if (result.success) {
+      availableProcedures.value = result.data || []
       console.log('Loaded procedures:', availableProcedures.value.length)
     } else {
-      console.error('Failed to load procedures:', response.status)
+      console.error('Failed to load procedures:', result.error)
       availableProcedures.value = []
     }
   } catch (error) {
@@ -598,7 +1016,16 @@ const loadProcedures = async () => {
 
 const addProcedure = () => {
   showProcedureModal.value = true
+  showProcedureInline.value = false
   if (availableProcedures.value.length === 0 && !loadingProcedures.value) {
+    loadProcedures()
+  }
+}
+
+const toggleProcedureInline = () => {
+  showProcedureInline.value = !showProcedureInline.value
+  showProcedureModal.value = false
+  if (showProcedureInline.value && availableProcedures.value.length === 0 && !loadingProcedures.value) {
     loadProcedures()
   }
 }
@@ -607,9 +1034,17 @@ const selectProcedure = (procedure) => {
   // Check if procedure is already selected
   const exists = selectedProcedures.value.find(p => p.id === procedure.id)
   if (!exists) {
-    selectedProcedures.value.push(procedure)
+    // Add customization fields
+    const procedureWithCustomization = {
+      ...procedure,
+      custom_duration: null,
+      custom_cost: null,
+      custom_notes: ''
+    }
+    selectedProcedures.value.push(procedureWithCustomization)
   }
-  closeProcedureModal()
+
+  // Don't close modal/inline automatically - let user select multiple
 }
 
 const removeProcedure = (index) => {
@@ -618,7 +1053,55 @@ const removeProcedure = (index) => {
 
 const closeProcedureModal = () => {
   showProcedureModal.value = false
+  showProcedureInline.value = false
   procedureSearchQuery.value = ''
+  selectedCategory.value = ''
+  showQuickFilters.value = false
+  durationFilter.value = ''
+  costFilter.value = ''
+}
+
+const isSelected = (procedureId) => {
+  return selectedProcedures.value.some(p => p.id === procedureId)
+}
+
+const getCategoryColor = (category) => {
+  const colors = {
+    preventive: 'bg-green-100 text-green-800',
+    restorative: 'bg-blue-100 text-blue-800',
+    surgical: 'bg-red-100 text-red-800',
+    orthodontic: 'bg-purple-100 text-purple-800',
+    cosmetic: 'bg-pink-100 text-pink-800',
+    emergency: 'bg-orange-100 text-orange-800'
+  }
+  return colors[category] || 'bg-gray-100 text-gray-800'
+}
+
+const addProcedureCombination = (combo) => {
+  // Find procedures by name and add them
+  combo.procedures.forEach(procedureName => {
+    const procedure = availableProcedures.value.find(p => p.name === procedureName)
+    if (procedure && !isSelected(procedure.id)) {
+      selectProcedure(procedure)
+    }
+  })
+}
+
+const confirmProcedureSelection = () => {
+  // Apply customizations to selected procedures
+  selectedProcedures.value.forEach(procedure => {
+    if (procedure.custom_duration) {
+      procedure.estimated_duration = procedure.custom_duration
+    }
+    if (procedure.custom_cost) {
+      procedure.default_cost = procedure.custom_cost
+    }
+    if (procedure.custom_notes) {
+      procedure.notes = procedure.custom_notes
+    }
+  })
+
+  closeProcedureModal()
 }
 
 const getSelectedBranchId = () => {
@@ -639,7 +1122,18 @@ const getSelectedBranchId = () => {
     return mainBranch.id
   }
 
-  // If no branches available, this is an error condition
+  // If no branches available yet, try to trigger loading
+  if (branches.value.length === 0) {
+    console.warn('No branches loaded yet, attempting to load...')
+    if (authStore.userClinicId) {
+      clinicStore.fetchBranches(authStore.userClinicId)
+    } else if (authStore.isClinicOwner) {
+      clinicStore.fetchBranches(1)
+    }
+    return 0 // Return 0 to indicate loading in progress
+  }
+
+  // If no branches available after loading attempt, this is an error condition
   console.error('No valid branch available for appointment')
   return 0 // This will cause validation to fail
 }
@@ -662,7 +1156,20 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    const branchId = getSelectedBranchId()
+    let branchId = getSelectedBranchId()
+
+    // If no branch is selected but branches exist, try to get one
+    if (branchId <= 0 && branches.value.length > 0) {
+      const mainBranch = clinicStore.getMainBranch
+      if (mainBranch) {
+        branchId = mainBranch.id
+        formData.value.branch_id = branchId.toString()
+      } else if (branches.value.length === 1) {
+        branchId = branches.value[0].id
+        formData.value.branch_id = branchId.toString()
+      }
+    }
+
     const patientId = parseInt(formData.value.patient_id)
     const doctorId = parseInt(formData.value.doctor_id)
 
@@ -677,7 +1184,7 @@ const handleSubmit = async () => {
     }
 
     if (branchId <= 0) {
-      alert('Please select a valid branch')
+      alert('Please wait for branches to load or select a valid branch')
       return
     }
 
@@ -715,20 +1222,14 @@ const handleSubmit = async () => {
       if (selectedProcedures.value.length > 0) {
         for (const procedure of selectedProcedures.value) {
           try {
-            const procedureResult = await fetch(`/api/appointments/${appointmentId}/procedures`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              },
-              body: JSON.stringify({
-                procedure_template_id: procedure.id,
-                cost: procedure.default_cost
-              })
+            // Use apiService instead of raw fetch for proper authentication
+            const procedureResult = await apiService.post(`/appointments/${appointmentId}/procedures`, {
+              procedure_template_id: procedure.id,
+              cost: procedure.default_cost
             })
 
-            if (!procedureResult.ok) {
-              console.error('Failed to add procedure:', procedure.name)
+            if (!procedureResult.success) {
+              console.error('Failed to add procedure:', procedure.name, procedureResult.error)
             }
           } catch (error) {
             console.error('Error adding procedure:', error)
@@ -774,16 +1275,25 @@ onMounted(() => {
     clinicStore.fetchDoctors()
   }
 
-  if (!branches.value.length) {
-    if (authStore.userClinicId) {
-      console.log('Fetching branches for clinic:', authStore.userClinicId)
-      clinicStore.fetchBranches(authStore.userClinicId)
-    } else if (authStore.isSuperAdmin) {
-      console.warn('Super admin detected, skipping branch fetch')
-    } else {
-      console.warn('No clinic ID available for non-super-admin user')
-    }
-  }
+   if (!branches.value.length) {
+     console.log('Current user data:', authStore.user)
+     console.log('User clinic ID:', authStore.userClinicId)
+     console.log('Is super admin:', authStore.isSuperAdmin)
+     console.log('Is clinic owner:', authStore.isClinicOwner)
+
+     if (authStore.userClinicId) {
+       console.log('Fetching branches for clinic:', authStore.userClinicId)
+       clinicStore.fetchBranches(authStore.userClinicId)
+     } else if (authStore.isSuperAdmin) {
+       console.warn('Super admin detected, skipping branch fetch')
+     } else if (authStore.isClinicOwner) {
+       // Clinic owner without clinic_id - try to fetch clinic 1
+       console.log('Clinic owner without clinic_id, trying clinic 1')
+       clinicStore.fetchBranches(1)
+     } else {
+       console.warn('No clinic ID available for non-super-admin user')
+     }
+   }
 })
 
 watch([() => formData.value.date, () => formData.value.time, () => formData.value.doctor_id], () => {

@@ -235,7 +235,7 @@
                      <div class="font-medium text-neutral-900">{{ procedure.name }}</div>
                      <div class="text-sm text-neutral-600">{{ procedure.description }}</div>
                      <div class="text-xs text-neutral-500 mt-1">
-                       Duration: {{ procedure.estimated_duration }} min • Cost: ${{ procedure.default_cost }}
+                       Duration: {{ procedure.estimated_duration }} min • Cost: {{ procedure.default_cost }}
                      </div>
                    </div>
                    <button
@@ -408,7 +408,7 @@
                     <div class="font-medium text-gray-900">{{ procedure.name }}</div>
                     <div class="text-sm text-gray-600">{{ procedure.description }}</div>
                     <div class="text-xs text-gray-500 mt-1">
-                      Duration: {{ procedure.estimated_duration }} min • Cost: ${{ procedure.default_cost }}
+                      Duration: {{ procedure.estimated_duration }} min • Cost: {{ procedure.default_cost }}
                     </div>
                   </div>
 
@@ -449,6 +449,7 @@ import { usePatientStore } from '../stores/patient'
 import { useClinicStore } from '../stores/clinic'
 import { useAppointmentStore } from '../stores/appointment'
 import { useAuthStore } from '../stores/auth'
+import apiService from '../services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -496,8 +497,7 @@ const isFormValid = computed(() => {
          formData.value.time &&
          formData.value.duration &&
          formData.value.doctor_id &&
-         branchId > 0 &&
-         branches.value.length > 0
+         (branchId > 0 || branches.value.length > 0)
 })
 
 const doctors = computed(() => {
@@ -571,19 +571,18 @@ const loadAppointment = async (appointmentId) => {
 
 const loadAppointmentProcedures = async (appointmentId) => {
   try {
-    const response = await fetch(`/api/appointments/${appointmentId}/procedures`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    // Use apiService instead of raw fetch for proper authentication
+    const result = await apiService.get(`/appointments/${appointmentId}/procedures`)
 
-    if (response.ok) {
-      const procedures = await response.json()
-      selectedProcedures.value = procedures || []
+    if (result.success) {
+      selectedProcedures.value = result.data || []
+    } else {
+      console.error('Failed to load appointment procedures:', result.error)
+      selectedProcedures.value = []
     }
   } catch (error) {
     console.error('Error loading appointment procedures:', error)
+    selectedProcedures.value = []
   }
 }
 
@@ -627,19 +626,14 @@ const loadProcedures = async () => {
 
   loadingProcedures.value = true
   try {
-    const response = await fetch('/api/procedure-templates', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    // Use apiService instead of raw fetch for proper authentication
+    const result = await apiService.get('/procedure-templates')
 
-    if (response.ok) {
-      const data = await response.json()
-      availableProcedures.value = data || []
+    if (result.success) {
+      availableProcedures.value = result.data || []
       console.log('Loaded procedures:', availableProcedures.value.length)
     } else {
-      console.error('Failed to load procedures:', response.status)
+      console.error('Failed to load procedures:', result.error)
       availableProcedures.value = []
     }
   } catch (error) {
@@ -693,7 +687,18 @@ const getSelectedBranchId = () => {
     return mainBranch.id
   }
 
-  // If no branches available, this is an error condition
+  // If no branches available yet, try to trigger loading
+  if (branches.value.length === 0) {
+    console.warn('No branches loaded yet, attempting to load...')
+    if (authStore.userClinicId) {
+      clinicStore.fetchBranches(authStore.userClinicId)
+    } else if (authStore.isClinicOwner) {
+      clinicStore.fetchBranches(1)
+    }
+    return 0 // Return 0 to indicate loading in progress
+  }
+
+  // If no branches available after loading attempt, this is an error condition
   console.error('No valid branch available for appointment')
   return 0 // This will cause validation to fail
 }
@@ -716,7 +721,20 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    const branchId = getSelectedBranchId()
+    let branchId = getSelectedBranchId()
+
+    // If no branch is selected but branches exist, try to get one
+    if (branchId <= 0 && branches.value.length > 0) {
+      const mainBranch = clinicStore.getMainBranch
+      if (mainBranch) {
+        branchId = mainBranch.id
+        formData.value.branch_id = branchId.toString()
+      } else if (branches.value.length === 1) {
+        branchId = branches.value[0].id
+        formData.value.branch_id = branchId.toString()
+      }
+    }
+
     const patientId = parseInt(formData.value.patient_id)
     const doctorId = parseInt(formData.value.doctor_id)
     const appointmentId = route.params.id
@@ -732,7 +750,7 @@ const handleSubmit = async () => {
     }
 
     if (branchId <= 0) {
-      alert('Please select a valid branch')
+      alert('Please wait for branches to load or select a valid branch')
       return
     }
 
@@ -783,26 +801,14 @@ const handleSubmit = async () => {
 const updateAppointmentProcedures = async (appointmentId) => {
   try {
     // First, get existing procedures
-    const existingResponse = await fetch(`/api/appointments/${appointmentId}/procedures`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    const existingProcedures = existingResponse.ok ? await existingResponse.json() : []
+    const existingResult = await apiService.get(`/appointments/${appointmentId}/procedures`)
+    const existingProcedures = existingResult.success ? existingResult.data : []
 
     // Remove procedures that are no longer selected
     for (const existingProc of existingProcedures) {
       const stillSelected = selectedProcedures.value.find(p => p.id === existingProc.procedure_template_id)
       if (!stillSelected) {
-        await fetch(`/api/appointments/${appointmentId}/procedures/${existingProc.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          }
-        })
+        await apiService.delete(`/appointment-procedures/${existingProc.id}`)
       }
     }
 
@@ -810,20 +816,13 @@ const updateAppointmentProcedures = async (appointmentId) => {
     for (const procedure of selectedProcedures.value) {
       const alreadyExists = existingProcedures.find(p => p.procedure_template_id === procedure.id)
       if (!alreadyExists) {
-        const procedureResult = await fetch(`/api/appointments/${appointmentId}/procedures`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            procedure_template_id: procedure.id,
-            cost: procedure.default_cost
-          })
+        const procedureResult = await apiService.post(`/appointments/${appointmentId}/procedures`, {
+          procedure_template_id: procedure.id,
+          cost: procedure.default_cost
         })
 
-        if (!procedureResult.ok) {
-          console.error('Failed to add procedure:', procedure.name)
+        if (!procedureResult.success) {
+          console.error('Failed to add procedure:', procedure.name, procedureResult.error)
         }
       }
     }
@@ -854,16 +853,25 @@ onMounted(async () => {
     clinicStore.fetchDoctors()
   }
 
-  if (!branches.value.length) {
-    if (authStore.userClinicId) {
-      console.log('Fetching branches for clinic:', authStore.userClinicId)
-      clinicStore.fetchBranches(authStore.userClinicId)
-    } else if (authStore.isSuperAdmin) {
-      console.warn('Super admin detected, skipping branch fetch')
-    } else {
-      console.warn('No clinic ID available for non-super-admin user')
-    }
-  }
+   if (!branches.value.length) {
+     console.log('Current user data:', authStore.user)
+     console.log('User clinic ID:', authStore.userClinicId)
+     console.log('Is super admin:', authStore.isSuperAdmin)
+     console.log('Is clinic owner:', authStore.isClinicOwner)
+
+     if (authStore.userClinicId) {
+       console.log('Fetching branches for clinic:', authStore.userClinicId)
+       clinicStore.fetchBranches(authStore.userClinicId)
+     } else if (authStore.isSuperAdmin) {
+       console.warn('Super admin detected, skipping branch fetch')
+     } else if (authStore.isClinicOwner) {
+       // Clinic owner without clinic_id - try to fetch clinic 1
+       console.log('Clinic owner without clinic_id, trying clinic 1')
+       clinicStore.fetchBranches(1)
+     } else {
+       console.warn('No clinic ID available for non-super-admin user')
+     }
+   }
 
   // Load the appointment data
   if (route.params.id) {

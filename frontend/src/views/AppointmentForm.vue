@@ -230,7 +230,7 @@
                      <div class="font-medium text-neutral-900">{{ procedure.name }}</div>
                      <div class="text-sm text-neutral-600">{{ procedure.description }}</div>
                      <div class="text-xs text-neutral-500 mt-1">
-                       Duration: {{ procedure.estimated_duration }} min • Cost: ${{ procedure.default_cost }}
+                       Duration: {{ procedure.estimated_duration }} min • Cost: {{ procedure.default_cost }}
                      </div>
                    </div>
                    <button
@@ -404,7 +404,7 @@
                   <div class="font-medium text-gray-900">{{ procedure.name }}</div>
                   <div class="text-sm text-gray-600">{{ procedure.description }}</div>
                   <div class="text-xs text-gray-500 mt-1">
-                    Duration: {{ procedure.estimated_duration }} min • Cost: ${{ procedure.default_cost }}
+                    Duration: {{ procedure.estimated_duration }} min • Cost: {{ procedure.default_cost }}
                   </div>
                 </div>
               </div>

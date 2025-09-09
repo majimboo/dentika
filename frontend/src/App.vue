@@ -3,7 +3,7 @@
     <router-view />
 
     <!-- Real-time notifications -->
-    <NotificationToast />
+    <!-- <NotificationToast /> -->
 
     <!-- Connection status overlay -->
     <ConnectionOverlay />
@@ -15,7 +15,7 @@ import { onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 import { useConnectionStore } from './stores/connection'
 import { useWebSocket } from './composables/useWebSocket'
-import NotificationToast from './components/NotificationToast.vue'
+// import NotificationToast from './components/NotificationToast.vue'
 import ConnectionOverlay from './components/ConnectionOverlay.vue'
 import './api/axios'
 

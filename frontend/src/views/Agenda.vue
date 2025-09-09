@@ -297,8 +297,16 @@ export default {
 
     const loading = computed(() => appointmentStore.isLoading)
     const appointments = computed(() => appointmentStore.appointments)
-    const selectedDate = ref(new Date().toISOString().split('T')[0])
-    const minDate = ref(new Date().toISOString().split('T')[0])
+    const getLocalDateString = () => {
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = String(today.getMonth() + 1).padStart(2, '0')
+      const day = String(today.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    const selectedDate = ref(getLocalDateString())
+    const minDate = ref(getLocalDateString())
 
     const loadAppointments = async () => {
       await appointmentStore.fetchAppointments({
@@ -320,7 +328,7 @@ export default {
     }
 
     const setToday = () => {
-      selectedDate.value = new Date().toISOString().split('T')[0]
+      selectedDate.value = getLocalDateString()
       loadAppointments()
     }
 

@@ -25,6 +25,23 @@ func main() {
 		log.Println("No .env file found")
 	}
 
+	// Configure timezone
+	timezone := os.Getenv("TIMEZONE")
+	if timezone == "" {
+		timezone = "UTC" // Default fallback
+	}
+
+	location, err := time.LoadLocation(timezone)
+	if err != nil {
+		log.Printf("Invalid timezone '%s', falling back to UTC: %v", timezone, err)
+		location = time.UTC
+	} else {
+		log.Printf("Using timezone: %s", timezone)
+	}
+
+	// Set the default timezone for the application
+	time.Local = location
+
 	// Connect to database
 	database.ConnectDatabase()
 
@@ -149,14 +166,6 @@ func main() {
 	api.Post("/procedure-templates", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.CreateProcedureTemplate)
 	api.Get("/diagnosis-templates", handlers.GetDiagnosisTemplates)
 	api.Post("/diagnosis-templates", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.CreateDiagnosisTemplate)
-
-	// Appointment procedures and diagnoses
-	api.Get("/appointments/:appointment_id/procedures", handlers.GetAppointmentProcedures)
-	api.Post("/appointments/:appointment_id/procedures", middleware.RoleMiddleware(models.Doctor), handlers.AddProcedureToAppointment)
-	api.Put("/appointment-procedures/:id", middleware.RoleMiddleware(models.Doctor), handlers.UpdateAppointmentProcedure)
-	api.Get("/appointments/:appointment_id/diagnoses", handlers.GetAppointmentDiagnoses)
-	api.Post("/appointments/:appointment_id/diagnoses", middleware.RoleMiddleware(models.Doctor), handlers.AddDiagnosisToAppointment)
-	api.Put("/appointment-diagnoses/:id", middleware.RoleMiddleware(models.Doctor), handlers.UpdateAppointmentDiagnosis)
 
 	// Appointment procedures and diagnoses
 	api.Get("/appointments/:appointment_id/procedures", handlers.GetAppointmentProcedures)

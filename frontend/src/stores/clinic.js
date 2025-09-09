@@ -114,13 +114,17 @@ export const useClinicStore = defineStore('clinic', {
     async fetchBranches(clinicId) {
       this.loading = true
       this.error = null
-      
+
       try {
+        console.log('Fetching branches for clinic:', clinicId)
         const result = await apiService.get(`/api/clinics/${clinicId}/branches`)
+        console.log('Branches API result:', result)
         if (result.success) {
           this.branches = result.data
+          console.log('Loaded branches:', this.branches)
         } else {
           this.error = result.error
+          console.error('Failed to fetch branches:', result.error)
         }
       } catch (error) {
         this.error = 'Failed to fetch branches'
@@ -155,13 +159,17 @@ export const useClinicStore = defineStore('clinic', {
     async fetchDoctors() {
       this.loading = true
       this.error = null
-      
+
       try {
+        console.log('Fetching doctors from API...')
         const result = await apiService.get('/api/users?role=doctor')
+        console.log('Doctors API result:', result)
         if (result.success) {
           this.doctors = result.data.users || result.data
+          console.log('Loaded doctors:', this.doctors)
         } else {
           this.error = result.error
+          console.error('Failed to fetch doctors:', result.error)
         }
       } catch (error) {
         this.error = 'Failed to fetch doctors'

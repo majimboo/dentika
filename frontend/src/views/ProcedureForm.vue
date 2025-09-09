@@ -90,9 +90,8 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="form-group">
-                <label class="form-label">Cost (USD) *</label>
+                <label class="form-label">Cost (PHP) *</label>
                 <div class="relative">
-                  <span class="absolute left-3 top-2.5 text-gray-500">$</span>
                   <input
                     v-model.number="formData.cost"
                     type="number"

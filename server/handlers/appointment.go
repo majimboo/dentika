@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 
@@ -21,8 +22,52 @@ type CreateAppointmentRequest struct {
 	PatientID           uint                     `json:"patient_id"`
 	DoctorID            uint                     `json:"doctor_id"`
 	BranchID            uint                     `json:"branch_id"`
-	EstimatedCost       float64                  `json:"estimated_cost"`
+	EstimatedCost       *float64                 `json:"estimated_cost,omitempty"`
 	PreAppointmentNotes string                   `json:"pre_appointment_notes"`
+}
+
+// Custom time parsing for JSON
+func (t *CreateAppointmentRequest) UnmarshalJSON(data []byte) error {
+	type Alias CreateAppointmentRequest
+	aux := &struct {
+		StartTime string `json:"start_time"`
+		EndTime   string `json:"end_time"`
+		*Alias
+	}{
+		Alias: (*Alias)(t),
+	}
+
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+
+	// Parse start time
+	if aux.StartTime != "" {
+		parsedStart, err := time.Parse(time.RFC3339, aux.StartTime)
+		if err != nil {
+			// Try alternative format
+			parsedStart, err = time.Parse("2006-01-02T15:04:05Z07:00", aux.StartTime)
+			if err != nil {
+				return err
+			}
+		}
+		t.StartTime = parsedStart
+	}
+
+	// Parse end time
+	if aux.EndTime != "" {
+		parsedEnd, err := time.Parse(time.RFC3339, aux.EndTime)
+		if err != nil {
+			// Try alternative format
+			parsedEnd, err = time.Parse("2006-01-02T15:04:05Z07:00", aux.EndTime)
+			if err != nil {
+				return err
+			}
+		}
+		t.EndTime = parsedEnd
+	}
+
+	return nil
 }
 
 type UpdateAppointmentStatusRequest struct {
@@ -150,7 +195,13 @@ func CreateAppointment(c *fiber.Ctx) error {
 
 	var req CreateAppointmentRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+		// Log the raw request body for debugging
+		body := c.Body()
+		return c.Status(400).JSON(fiber.Map{
+			"error":   "Invalid request",
+			"details": err.Error(),
+			"body":    string(body),
+		})
 	}
 
 	// Validate required fields
@@ -187,8 +238,8 @@ func CreateAppointment(c *fiber.Ctx) error {
 			return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 		}
 
-		// Check if doctor belongs to same clinic
-		if doctor.ClinicID == nil || *doctor.ClinicID != *user.ClinicID {
+		// Check if doctor belongs to same clinic (skip for super admin doctors)
+		if !doctor.IsSuperAdmin() && (doctor.ClinicID == nil || *doctor.ClinicID != *user.ClinicID) {
 			return c.Status(400).JSON(fiber.Map{"error": "Doctor does not belong to the same clinic"})
 		}
 	}
@@ -220,6 +271,12 @@ func CreateAppointment(c *fiber.Ctx) error {
 		})
 	}
 
+	// Set default estimated cost if not provided
+	estimatedCost := 0.0
+	if req.EstimatedCost != nil {
+		estimatedCost = *req.EstimatedCost
+	}
+
 	appointment := models.Appointment{
 		Title:               req.Title,
 		Description:         req.Description,
@@ -232,7 +289,7 @@ func CreateAppointment(c *fiber.Ctx) error {
 		DoctorID:            req.DoctorID,
 		BranchID:            req.BranchID,
 		ClinicID:            branch.ClinicID,
-		EstimatedCost:       req.EstimatedCost,
+		EstimatedCost:       estimatedCost,
 		PreAppointmentNotes: req.PreAppointmentNotes,
 	}
 
@@ -300,8 +357,8 @@ func UpdateAppointment(c *fiber.Ctx) error {
 	if req.Type != "" {
 		appointment.Type = req.Type
 	}
-	if req.EstimatedCost > 0 {
-		appointment.EstimatedCost = req.EstimatedCost
+	if req.EstimatedCost != nil {
+		appointment.EstimatedCost = *req.EstimatedCost
 	}
 	if req.PreAppointmentNotes != "" {
 		appointment.PreAppointmentNotes = req.PreAppointmentNotes

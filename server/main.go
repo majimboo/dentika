@@ -196,10 +196,12 @@ func createDefaultAdmin() {
 	if err := database.DB.Where("username = ?", "admin").First(&user).Error; err != nil {
 		// User doesn't exist, create it
 		adminUser := models.User{
-			Username: "admin",
-			Password: "admin",
-			Role:     models.SuperAdmin,
-			IsActive: true,
+			Username:  "admin",
+			Password:  "admin",
+			FirstName: "Admin",
+			LastName:  "User",
+			Role:      models.Doctor, // Use Doctor role so admin can be used for appointments
+			IsActive:  true,
 		}
 
 		if err := adminUser.HashPassword(); err != nil {
@@ -215,6 +217,7 @@ func createDefaultAdmin() {
 		log.Println("Default admin user created (username: admin, password: admin)")
 	} else {
 		log.Println("Admin user already exists")
+
 	}
 
 	// Check if any clinics exist, if not, create a default one
@@ -255,6 +258,7 @@ func createDefaultAdmin() {
 			}
 		}
 	}
+
 }
 
 func seedSampleData() {

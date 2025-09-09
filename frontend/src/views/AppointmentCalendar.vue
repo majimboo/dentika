@@ -344,10 +344,11 @@ const closeAppointmentDetails = () => {
   selectedAppointment.value = null
 }
 
-const createAppointmentAtTime = (date, time) => {
+const createAppointmentAtTime = (date, hour, minute = 0) => {
   // Navigate to appointment form with date/time parameters
   const dateStr = date.toISOString().split('T')[0]
-  router.push(`/appointments/new?date=${dateStr}&time=${time}`)
+  const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+  router.push(`/appointments/new?date=${dateStr}&time=${timeStr}`)
 }
 
 const selectDate = (date) => {

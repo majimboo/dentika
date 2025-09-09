@@ -351,6 +351,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { usePatientStore } from '../stores/patient'
 import { useClinicStore } from '../stores/clinic'
 import { useAppointmentStore } from '../stores/appointment'
+import { useAuthStore } from '../stores/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -358,6 +359,7 @@ const router = useRouter()
 const patientStore = usePatientStore()
 const clinicStore = useClinicStore()
 const appointmentStore = useAppointmentStore()
+const authStore = useAuthStore()
 
 const isEditing = ref(false)
 const isSubmitting = ref(false)
@@ -388,13 +390,15 @@ const minDate = computed(() => {
 })
 
 const isFormValid = computed(() => {
+  const branchId = getSelectedBranchId()
   return formData.value.patient_id &&
          formData.value.date &&
          formData.value.time &&
          formData.value.duration &&
          formData.value.type &&
          formData.value.doctor_id &&
-         getSelectedBranchId()
+         branchId > 0 &&
+         branches.value.length > 0
 })
 
 const doctors = computed(() => {
@@ -412,8 +416,13 @@ const initializeForm = () => {
   }
 
   if (route.query.time) {
-    const hour = parseInt(route.query.time)
-    formData.value.time = `${hour.toString().padStart(2, '0')}:00`
+    // route.query.time can now be in format "HH:MM" or just "HH"
+    if (route.query.time.includes(':')) {
+      formData.value.time = route.query.time
+    } else {
+      const hour = parseInt(route.query.time)
+      formData.value.time = `${hour.toString().padStart(2, '0')}:00`
+    }
   }
 
   // Auto-select main branch if available
@@ -458,7 +467,7 @@ const loadAppointment = async (appointmentId) => {
 }
 
 const searchPatients = async () => {
-  if (patientSearchQuery.value.length < 2) {
+  if (patientSearchQuery.value.length < 1) {
     filteredPatients.value = []
     return
   }
@@ -470,10 +479,13 @@ const searchPatients = async () => {
     })
 
     if (result.success) {
-      filteredPatients.value = result.data.patients || result.data
+      filteredPatients.value = result.data.patients || []
+    } else {
+      filteredPatients.value = []
     }
   } catch (error) {
     console.error('Error searching patients:', error)
+    filteredPatients.value = []
   }
 }
 
@@ -491,7 +503,8 @@ const createNewPatient = () => {
 const getSelectedBranchId = () => {
   // If branch is explicitly selected, use it
   if (formData.value.branch_id) {
-    return parseInt(formData.value.branch_id)
+    const branchId = parseInt(formData.value.branch_id)
+    if (branchId > 0) return branchId
   }
 
   // If only one branch, use it
@@ -505,27 +518,12 @@ const getSelectedBranchId = () => {
     return mainBranch.id
   }
 
-  return null
+  // If no branches available, this is an error condition
+  console.error('No valid branch available for appointment')
+  return 0 // This will cause validation to fail
 }
 
-const getEstimatedCost = () => {
-  const costMap = {
-    consultation: 100.00,
-    cleaning: 120.00,
-    filling: 150.00,
-    extraction: 200.00,
-    root_canal: 800.00,
-    crown: 1200.00,
-    bridge: 1500.00,
-    implant: 3000.00,
-    orthodontics: 5000.00,
-    emergency: 150.00,
-    follow_up: 80.00,
-    other: 100.00
-  }
 
-  return costMap[formData.value.type] || 100.00
-}
 
 const checkForConflicts = async () => {
   if (!formData.value.doctor_id || !formData.value.date || !formData.value.time) {
@@ -545,20 +543,49 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
+    const branchId = getSelectedBranchId()
+    const patientId = parseInt(formData.value.patient_id)
+    const doctorId = parseInt(formData.value.doctor_id)
+
+    if (isNaN(patientId) || patientId <= 0) {
+      alert('Please select a valid patient')
+      return
+    }
+
+    if (isNaN(doctorId) || doctorId <= 0) {
+      alert('Please select a valid doctor')
+      return
+    }
+
+    if (branchId <= 0) {
+      alert('Please select a valid branch')
+      return
+    }
+
+    if (!formData.value.date || !formData.value.time) {
+      alert('Please select a valid date and time')
+      return
+    }
+
+    // Validate appointment type
+    const validTypes = ['consultation', 'cleaning', 'filling', 'extraction', 'root_canal', 'crown', 'bridge', 'implant', 'orthodontics', 'emergency', 'follow_up', 'other']
+    const appointmentType = formData.value.type && validTypes.includes(formData.value.type) ? formData.value.type : 'consultation'
+
     const appointmentData = {
-      patient_id: parseInt(formData.value.patient_id),
-      doctor_id: parseInt(formData.value.doctor_id),
-      branch_id: getSelectedBranchId(),
-      type: formData.value.type,
-      start_time: `${formData.value.date}T${formData.value.time}:00`,
+      patient_id: Number(patientId),
+      doctor_id: Number(doctorId),
+      branch_id: Number(branchId),
+      type: appointmentType,
+      start_time: `${formData.value.date}T${formData.value.time}:00Z`,
       end_time: calculateEndTime(),
-      duration: parseInt(formData.value.duration),
-      pre_appointment_notes: formData.value.notes,
+      duration: Number(formData.value.duration) || 30,
+      pre_appointment_notes: formData.value.notes || '',
       title: generateAppointmentTitle(),
       description: formData.value.notes || '',
-      status: 'scheduled',
-      estimated_cost: getEstimatedCost()
+      status: 'scheduled'
     }
+
+    console.log('Appointment data to send:', appointmentData)
 
     let result
     if (isEditing.value) {
@@ -577,7 +604,8 @@ const handleSubmit = async () => {
       router.push('/appointments')
     } else {
       console.error('Failed to save appointment:', result.error)
-      // Could show error message to user here
+      // Show specific error message
+      alert(`Failed to create appointment: ${result.error}`)
     }
   } catch (error) {
     console.error('Error saving appointment:', error)
@@ -588,9 +616,9 @@ const handleSubmit = async () => {
 }
 
 const calculateEndTime = () => {
-  const startDateTime = new Date(`${formData.value.date}T${formData.value.time}:00`)
+  const startDateTime = new Date(`${formData.value.date}T${formData.value.time}:00Z`)
   const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.value.duration) * 60000)
-  return endDateTime.toISOString().slice(0, 19)
+  return endDateTime.toISOString()
 }
 
 const generateAppointmentTitle = () => {
@@ -624,11 +652,19 @@ onMounted(() => {
 
   // Load initial data
   if (!doctors.value.length) {
+    console.log('Fetching doctors...')
     clinicStore.fetchDoctors()
   }
 
   if (!branches.value.length) {
-    clinicStore.fetchBranches()
+    if (authStore.userClinicId) {
+      console.log('Fetching branches for clinic:', authStore.userClinicId)
+      clinicStore.fetchBranches(authStore.userClinicId)
+    } else if (authStore.isSuperAdmin) {
+      console.log('Super admin detected, skipping branch fetch')
+    } else {
+      console.warn('No clinic ID available for non-super-admin user')
+    }
   }
 })
 

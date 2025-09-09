@@ -154,7 +154,7 @@
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Cost</span>
-                <span class="text-sm text-gray-900 font-semibold">${{ procedure.default_cost }}</span>
+                <span class="text-sm text-gray-900 font-semibold">{{ procedure.default_cost }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Category</span>
@@ -220,7 +220,7 @@
                    </span>
                  </td>
                  <td class="px-6 py-4 text-sm text-gray-900">{{ procedure.estimated_duration }} min</td>
-                 <td class="px-6 py-4 text-sm font-semibold text-gray-900">${{ procedure.default_cost }}</td>
+                 <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ procedure.default_cost }}</td>
                 <td class="px-6 py-4">
                   <div class="flex items-center space-x-2">
                     <router-link

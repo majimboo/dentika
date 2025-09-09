@@ -28,7 +28,12 @@ func GetUsers(c *fiber.Ctx) error {
 	// Filter by role if the query parameter is provided
 	role := c.Query("role")
 	if role != "" {
-		db = db.Where("role = ?", role)
+		if role == "doctor" {
+			// Include super admins as doctors for testing purposes
+			db = db.Where("role IN (?, ?)", role, models.SuperAdmin)
+		} else {
+			db = db.Where("role = ?", role)
+		}
 	}
 
 	var users []models.User

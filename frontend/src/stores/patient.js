@@ -70,12 +70,34 @@ export const usePatientStore = defineStore('patient', {
       }
     },
 
-    async searchPatients(query) {
-      this.searchQuery = query
+    async searchPatients(options = {}) {
+      const { query = '', limit = 10 } = options
       this.searchLoading = true
-      
+
       try {
-        await this.fetchPatients({ page: 1 })
+        const queryParams = new URLSearchParams({
+          page: 1,
+          limit: limit,
+          search: query
+        })
+
+        const result = await apiService.get(`/api/patients?${queryParams}`)
+        if (result.success) {
+          return {
+            success: true,
+            data: {
+              patients: result.data.patients || [],
+              total: result.data.total || 0,
+              page: result.data.page || 1,
+              limit: result.data.limit || limit
+            }
+          }
+        } else {
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        console.error('Error searching patients:', error)
+        return { success: false, error: 'Failed to search patients' }
       } finally {
         this.searchLoading = false
       }

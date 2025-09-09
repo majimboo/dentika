@@ -88,6 +88,7 @@ func main() {
 	api.Get("/auth/me", handlers.GetCurrentUser)
 	api.Get("/users", handlers.GetUsers)
 	api.Get("/users/:id", handlers.GetUser)
+	api.Post("/users", middleware.RoleMiddleware(models.SuperAdmin), handlers.CreateUser)
 	api.Put("/users/:id", handlers.UpdateUser)
 	api.Delete("/users/:id", handlers.DeleteUser)
 
@@ -102,6 +103,9 @@ func main() {
 	api.Put("/clinics/:id", handlers.UpdateClinic)
 	api.Get("/clinics/:id/branches", handlers.GetClinicBranches)
 	api.Post("/clinics/:id/branches", handlers.CreateBranch)
+	api.Put("/clinics/:id/branches/:branch_id", handlers.UpdateBranch)
+	api.Delete("/clinics/:id/branches/:branch_id", handlers.DeleteBranch)
+	api.Delete("/clinics/:id", handlers.DeleteClinic)
 
 	// Patient management routes
 	api.Get("/patients", handlers.GetPatients)

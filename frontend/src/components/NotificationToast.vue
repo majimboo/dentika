@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div class="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
-      <TransitionGroup name="toast" tag="div">
+      <TransitionGroup name="toast">
         <div
           v-for="notification in visibleNotifications"
           :key="notification.id"

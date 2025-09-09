@@ -1,5 +1,5 @@
 <template>
-  <div class="navigation-header bg-white border-b border-gray-200 sticky top-0 z-40 ml-64">
+  <div class="navigation-header bg-white border-b border-gray-200 sticky top-0 z-40 lg:ml-64">
     <div class="flex items-center h-14 px-4 lg:px-6">
       <!-- Left Actions Slot (hamburger menu, etc.) -->
       <div v-if="$slots.leftActions" class="flex items-center space-x-2 flex-shrink-0 mr-3">
@@ -79,7 +79,8 @@ const getParentRouteName = () => {
     'PatientList': 'Patients',
     'AppointmentCalendar': 'Appointments', 
     'ProcedureManagement': 'Procedures',
-    'UserList': 'Users'
+    'UserList': 'Users',
+    'ClinicManagement': 'Clinics'
   }
   
   return displayNames[parentName] || parentName
@@ -96,7 +97,8 @@ const goBack = () => {
       'PatientList': '/patients',
       'AppointmentCalendar': '/appointments',
       'ProcedureManagement': '/procedures',
-      'UserList': '/users'
+      'UserList': '/users',
+      'ClinicManagement': '/clinics'
     }
     
     const parentPath = routeMap[parentRouteName]

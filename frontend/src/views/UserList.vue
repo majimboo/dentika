@@ -398,8 +398,7 @@ export default {
     }
     
     const addNewUser = () => {
-      // TODO: Implement add new user modal or redirect
-      alert('Add new user feature coming soon!')
+      router.push('/users/new')
     }
     
     const confirmDelete = (user) => {

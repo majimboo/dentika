@@ -19,12 +19,17 @@
       </span>
     </button>
 
-    <!-- Notification Panel - Mobile: full-screen, Desktop: dropdown -->
+    <!-- Notification Panel - Mobile: full-screen, Desktop: right sidebar -->
     <div
-      v-if="isOpen"
-      class="fixed inset-0 lg:top-0 lg:right-0 lg:bottom-0 lg:w-96 bg-white lg:shadow-xl lg:border-l lg:border-gray-200 flex flex-col z-50 overflow-hidden"
+      v-show="isOpen"
+      class="fixed inset-0 bg-white flex flex-col z-50 overflow-hidden transition-transform duration-300 ease-in-out
+             lg:inset-auto lg:top-0 lg:right-0 lg:bottom-0 lg:w-96 lg:shadow-xl lg:border-l lg:border-gray-200"
+      :class="isOpen ? 'translate-x-0' : 'translate-x-full'"
       @click.stop
     >
+
+    <!-- Overlay for sidebar -->
+    <div v-if="isOpen" @click="closePanel" class="fixed inset-0 bg-black/30 z-40 hidden lg:block"></div>
       <!-- Panel Header - Mobile: matches nav height, Desktop: sidebar header -->
       <div class="h-14 lg:h-16 px-4 py-0 lg:py-4 border-b border-gray-200 flex items-center justify-between bg-white">
         <h3 class="text-lg lg:text-xl font-semibold text-gray-900">Notifications</h3>
@@ -38,7 +43,7 @@
           </button>
           <button
             @click="closePanel"
-            class="p-1 rounded-md hover:bg-gray-100 transition-colors"
+            class="p-1 rounded-md hover:bg-gray-100 transition-colors lg:hidden"
           >
             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -129,18 +134,20 @@ const displayedNotifications = computed(() => {
 // Methods
 const togglePanel = () => {
   isOpen.value = !isOpen.value
-  // Prevent background scrolling on mobile
-  if (isOpen.value) {
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = ''
+  if (window.innerWidth < 1024) { // lg breakpoint
+    if (isOpen.value) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
   }
 }
 
 const closePanel = () => {
   isOpen.value = false
-  // Re-enable background scrolling
-  document.body.style.overflow = ''
+  if (window.innerWidth < 1024) {
+    document.body.style.overflow = ''
+  }
 }
 
 const markAllAsRead = () => {

@@ -13,6 +13,8 @@ import DiagnosisForm from '../views/DiagnosisForm.vue'
 import TreatmentPlanForm from '../views/TreatmentPlanForm.vue'
 import ConsentForm from '../views/ConsentForm.vue'
 import PrescriptionForm from '../views/PrescriptionForm.vue'
+import ClinicManagement from '../views/ClinicManagement.vue'
+import ClinicForm from '../views/ClinicForm.vue'
 import AppLayout from '../layouts/AppLayout.vue'
 
 const routes = [
@@ -66,8 +68,26 @@ const routes = [
         component: UserList,
         meta: { level: 1, title: 'Users', parent: 'Dashboard' }
       },
+      {
+        path: '/clinics',
+        name: 'ClinicManagement',
+        component: ClinicManagement,
+        meta: { level: 1, title: 'Clinics', parent: 'Dashboard' }
+      },
       
       // Level 2 pages (show back button to level 1)
+      {
+        path: '/clinics/new',
+        name: 'ClinicCreate',
+        component: ClinicForm,
+        meta: { level: 2, title: 'New Clinic', parent: 'ClinicManagement' }
+      },
+      {
+        path: '/clinics/:id/edit',
+        name: 'ClinicEdit',
+        component: ClinicForm,
+        meta: { level: 2, title: 'Edit Clinic', parent: 'ClinicManagement' }
+      },
       {
         path: '/patients/new',
         name: 'PatientCreate',
@@ -150,6 +170,12 @@ const routes = [
         name: 'UserEdit',
         component: UserEdit,
         meta: { level: 2, title: 'Edit User', parent: 'UserList' }
+      },
+      {
+        path: '/users/new',
+        name: 'UserCreate',
+        component: UserEdit, // Reusing the same component for creation
+        meta: { level: 2, title: 'New User', parent: 'UserList' }
       },
       
       {

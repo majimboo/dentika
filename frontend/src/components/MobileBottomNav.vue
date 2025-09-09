@@ -1,53 +1,63 @@
 <template>
   <div class="fixed bottom-0 left-0 right-0 mobile-bottom-nav bg-white border-t border-gray-200 px-2 py-1 z-30">
     <div class="flex justify-around items-center">
-      <!-- Dashboard/Home -->
-      <router-link
-        to="/"
-        class="nav-item flex flex-col items-center py-2 px-3 rounded-lg transition-colors"
-        :class="isActive('/') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'"
-      >
-        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-        </svg>
-        <span class="text-xs font-medium">Home</span>
-      </router-link>
+      <!-- Clinic User Links -->
+      <template v-if="!isSuperAdmin">
+        <router-link
+          to="/"
+          class="nav-item flex flex-col items-center py-2 px-3 rounded-lg transition-colors"
+          :class="isActive('/') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'"
+        >
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          <span class="text-xs font-medium">Home</span>
+        </router-link>
+        <router-link
+          to="/patients"
+          class="nav-item flex flex-col items-center py-2 px-3 rounded-lg transition-colors"
+          :class="isActive('/patients') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'"
+        >
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+          </svg>
+          <span class="text-xs font-medium">Patients</span>
+        </router-link>
+        <router-link
+          to="/appointments"
+          class="nav-item flex flex-col items-center py-2 px-3 rounded-lg transition-colors"
+          :class="isActive('/appointments') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'"
+        >
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span class="text-xs font-medium">Schedule</span>
+        </router-link>
+      </template>
 
-      <!-- Patients -->
-      <router-link
-        to="/patients"
-        class="nav-item flex flex-col items-center py-2 px-3 rounded-lg transition-colors"
-        :class="isActive('/patients') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'"
-      >
-        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-        </svg>
-        <span class="text-xs font-medium">Patients</span>
-      </router-link>
-
-      <!-- Appointments -->
-      <router-link
-        to="/appointments"
-        class="nav-item flex flex-col items-center py-2 px-3 rounded-lg transition-colors"
-        :class="isActive('/appointments') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'"
-      >
-        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-        </svg>
-        <span class="text-xs font-medium">Schedule</span>
-      </router-link>
-
-      <!-- Procedures -->
-      <router-link
-        to="/procedures"
-        class="nav-item flex flex-col items-center py-2 px-3 rounded-lg transition-colors"
-        :class="isActive('/procedures') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'"
-      >
-        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
-        </svg>
-        <span class="text-xs font-medium">Procedures</span>
-      </router-link>
+      <!-- Super Admin Links -->
+      <template v-if="isSuperAdmin">
+        <router-link
+          to="/clinics"
+          class="nav-item flex flex-col items-center py-2 px-3 rounded-lg transition-colors"
+          :class="isActive('/clinics') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'"
+        >
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+          </svg>
+          <span class="text-xs font-medium">Clinics</span>
+        </router-link>
+        <router-link
+          to="/users"
+          class="nav-item flex flex-col items-center py-2 px-3 rounded-lg transition-colors"
+          :class="isActive('/users') ? 'text-blue-600 bg-blue-50' : 'text-gray-600'"
+        >
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+          </svg>
+          <span class="text-xs font-medium">Users</span>
+        </router-link>
+      </template>
 
       <!-- More/Profile -->
       <div
@@ -132,9 +142,12 @@ const authStore = useAuthStore()
 const showMoreMenu = ref(false)
 
 // Computed properties
+const userClinicId = computed(() => authStore.userClinicId)
+const isSuperAdmin = computed(() => authStore.isSuperAdmin)
+
 const canManageUsers = computed(() => {
   const role = authStore.user?.role
-  return role === 'SuperAdmin' || role === 'ClinicOwner'
+  return role === 'super_admin' || role === 'clinic_owner'
 })
 
 // Methods

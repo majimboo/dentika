@@ -26,7 +26,7 @@
         <div class="mb-6">
           <h3 class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">Main Menu</h3>
           <ul class="space-y-2" role="list">
-            <li role="listitem">
+            <li role="listitem" v-if="!isSuperAdmin">
               <router-link 
                 to="/" 
                 @click="closeSidebarOnMobile"
@@ -46,7 +46,7 @@
                 </div>
               </router-link>
             </li>
-            <li role="listitem">
+            <li role="listitem" v-if="!isSuperAdmin">
               <router-link 
                 to="/patients" 
                 @click="closeSidebarOnMobile"
@@ -66,7 +66,7 @@
                 </div>
               </router-link>
             </li>
-            <li role="listitem">
+            <li role="listitem" v-if="!isSuperAdmin">
               <router-link 
                 to="/appointments" 
                 @click="closeSidebarOnMobile"
@@ -86,7 +86,7 @@
                 </div>
               </router-link>
             </li>
-            <li role="listitem">
+            <li role="listitem" v-if="!isSuperAdmin">
               <router-link 
                 to="/procedures" 
                 @click="closeSidebarOnMobile"
@@ -106,7 +106,27 @@
                 </div>
               </router-link>
             </li>
-            <li role="listitem">
+            <li role="listitem" v-if="isSuperAdmin">
+              <router-link 
+                to="/clinics"
+                @click="closeSidebarOnMobile"
+                class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/clinics') }"
+                :aria-current="$route.path.startsWith('/clinics') ? 'page' : null"
+              >
+                <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200" 
+                     :class="{ 'bg-blue-200': $route.path.startsWith('/clinics') }">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="font-medium">Clinics</div>
+                  <div class="text-xs text-gray-400">Manage clinics</div>
+                </div>
+              </router-link>
+            </li>
+            <li role="listitem" v-if="isSuperAdmin">
               <router-link 
                 to="/users" 
                 @click="closeSidebarOnMobile"
@@ -179,11 +199,16 @@
 <script>
 import BaseTooltip from './BaseTooltip.vue'
 import { useSidebar } from '../composables/useSidebar'
+import { useAuthStore } from '../stores/auth'
+import { mapState } from 'pinia'
 
 export default {
   name: 'AppSidebar',
   components: {
     BaseTooltip
+  },
+  computed: {
+    ...mapState(useAuthStore, ['userClinicId', 'isSuperAdmin'])
   },
   setup() {
     const { isSidebarOpen, closeSidebar } = useSidebar()

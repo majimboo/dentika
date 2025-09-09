@@ -227,3 +227,119 @@ func CreateBranch(c *fiber.Ctx) error {
 
 	return c.Status(201).JSON(branch)
 }
+
+func DeleteClinic(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	clinicID, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// Only super admin can delete clinics
+	if !user.IsSuperAdmin() {
+		return c.Status(403).JSON(fiber.Map{"error": "Only super admin can delete clinics"})
+	}
+
+	// Use a transaction to ensure all or nothing
+	tx := database.DB.Begin()
+
+	// Deactivate users associated with the clinic
+	if err := tx.Model(&models.User{}).Where("clinic_id = ?", clinicID).Update("is_active", false).Error; err != nil {
+		tx.Rollback()
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to deactivate users in clinic"})
+	}
+
+	// Soft delete branches of the clinic
+	if err := tx.Where("clinic_id = ?", clinicID).Delete(&models.Branch{}).Error; err != nil {
+		tx.Rollback()
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete branches of clinic"})
+	}
+
+	// Soft delete the clinic itself
+	if err := tx.Delete(&models.Clinic{}, clinicID).Error; err != nil {
+		tx.Rollback()
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete clinic"})
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to commit transaction"})
+	}
+
+	return c.SendStatus(204) // No Content
+}
+
+func UpdateBranch(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	clinicID, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+	branchID, err := strconv.ParseUint(c.Params("branch_id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid branch ID"})
+	}
+
+	// Check access - super admin or clinic owner
+	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != uint(clinicID) || !user.HasRole(models.ClinicOwner)) {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+	}
+
+	var branch models.Branch
+	if err := database.DB.Where("id = ? AND clinic_id = ?", branchID, clinicID).First(&branch).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Branch not found"})
+	}
+
+	var req CreateBranchRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	// If this is supposed to be main branch, unset other main branches
+	if req.IsMainBranch && !branch.IsMainBranch {
+		database.DB.Model(&models.Branch{}).Where("clinic_id = ?", clinicID).Update("is_main_branch", false)
+	}
+
+	branch.Name = req.Name
+	branch.Address = req.Address
+	branch.Phone = req.Phone
+	branch.IsMainBranch = req.IsMainBranch
+
+	if err := database.DB.Save(&branch).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to update branch"})
+	}
+
+	return c.JSON(branch)
+}
+
+func DeleteBranch(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	clinicID, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+	branchID, err := strconv.ParseUint(c.Params("branch_id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid branch ID"})
+	}
+
+	// Check access - super admin or clinic owner
+	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != uint(clinicID) || !user.HasRole(models.ClinicOwner)) {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+	}
+
+	var branch models.Branch
+	if err := database.DB.Where("id = ? AND clinic_id = ?", branchID, clinicID).First(&branch).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Branch not found"})
+	}
+
+	// Prevent deleting the main branch
+	if branch.IsMainBranch {
+		return c.Status(400).JSON(fiber.Map{"error": "Cannot delete the main branch. Please assign another branch as main first."})
+	}
+
+	if err := database.DB.Delete(&branch).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete branch"})
+	}
+
+	return c.SendStatus(204)
+}

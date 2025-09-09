@@ -6,6 +6,7 @@ export const useClinicStore = defineStore('clinic', {
     clinics: [],
     currentClinic: null,
     branches: [],
+    doctors: [],
     loading: false,
     error: null
   }),
@@ -143,6 +144,106 @@ export const useClinicStore = defineStore('clinic', {
         this.error = 'Failed to create branch'
         console.error('Error creating branch:', error)
         return { success: false, error: 'Failed to create branch' }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchDoctors() {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const result = await apiService.get('/api/users?role=doctor')
+        if (result.success) {
+          this.doctors = result.data.users || result.data
+        } else {
+          this.error = result.error
+        }
+      } catch (error) {
+        this.error = 'Failed to fetch doctors'
+        console.error('Error fetching doctors:', error)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async deleteClinic(clinicId) {
+      this.loading = true
+      this.error = null
+      try {
+        const result = await apiService.delete(`/api/clinics/${clinicId}`)
+        if (result.success) {
+          this.clinics = this.clinics.filter(c => c.id !== clinicId)
+          return { success: true }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to delete clinic'
+        console.error('Error deleting clinic:', error)
+        return { success: false, error: 'Failed to delete clinic' }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async updateBranch(clinicId, branchId, branchData) {
+      this.loading = true
+      this.error = null
+      try {
+        const result = await apiService.put(`/api/clinics/${clinicId}/branches/${branchId}`, branchData)
+        if (result.success) {
+          const clinicIndex = this.clinics.findIndex(c => c.id === clinicId)
+          if (clinicIndex !== -1) {
+            const branchIndex = this.clinics[clinicIndex].branches.findIndex(b => b.id === branchId)
+            if (branchIndex !== -1) {
+              this.clinics[clinicIndex].branches[branchIndex] = result.data
+            }
+          }
+          if (this.currentClinic && this.currentClinic.id === clinicId) {
+            const branchIndex = this.currentClinic.branches.findIndex(b => b.id === branchId)
+            if (branchIndex !== -1) {
+              this.currentClinic.branches[branchIndex] = result.data
+            }
+          }
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to update branch'
+        console.error('Error updating branch:', error)
+        return { success: false, error: 'Failed to update branch' }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async deleteBranch(clinicId, branchId) {
+      this.loading = true
+      this.error = null
+      try {
+        const result = await apiService.delete(`/api/clinics/${clinicId}/branches/${branchId}`)
+        if (result.success) {
+          const clinicIndex = this.clinics.findIndex(c => c.id === clinicId)
+          if (clinicIndex !== -1) {
+            this.clinics[clinicIndex].branches = this.clinics[clinicIndex].branches.filter(b => b.id !== branchId)
+          }
+          if (this.currentClinic && this.currentClinic.id === clinicId) {
+            this.currentClinic.branches = this.currentClinic.branches.filter(b => b.id !== branchId)
+          }
+          return { success: true }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to delete branch'
+        console.error('Error deleting branch:', error)
+        return { success: false, error: 'Failed to delete branch' }
       } finally {
         this.loading = false
       }

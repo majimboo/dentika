@@ -10,6 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// UserRole defines the roles a user can have in the system.
+// Possible values are: super_admin, clinic_owner, doctor, secretary, assistant.
 type UserRole string
 
 const (

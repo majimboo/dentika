@@ -320,7 +320,6 @@
             <div class="form-group">
               <label class="form-label">Total Cost</label>
               <div class="relative">
-                <span class="absolute left-3 top-2.5 text-gray-500">$</span>
                 <input
                   :value="totalCost"
                   type="text"
@@ -346,7 +345,6 @@
             <div class="form-group">
               <label class="form-label">Patient Portion</label>
               <div class="relative">
-                <span class="absolute left-3 top-2.5 text-gray-500">$</span>
                 <input
                   :value="patientPortion"
                   type="text"

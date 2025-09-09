@@ -1,29 +1,33 @@
 <template>
   <div class="month-calendar">
     <div class="calendar-grid">
-      <!-- Days of week header -->
-      <div class="calendar-header grid grid-cols-7 border-b">
-        <div 
-          v-for="day in daysOfWeek" 
-          :key="day"
-          class="day-header p-2 text-center text-sm font-medium text-gray-600 uppercase"
-        >
-          {{ day }}
-        </div>
-      </div>
+       <!-- Days of week header -->
+       <div class="calendar-header grid grid-cols-7 border-b px-2 py-3">
+         <div
+           v-for="(day, dayIndex) in daysOfWeek"
+           :key="day"
+           :class="[
+             'day-header px-2 py-1 text-center text-sm font-medium text-gray-600 uppercase',
+             dayIndex < daysOfWeek.length - 1 ? 'border-r' : ''
+           ]"
+         >
+           {{ day }}
+         </div>
+       </div>
 
       <!-- Calendar days grid -->
       <div class="calendar-body grid grid-cols-7">
-        <div
-          v-for="(day, index) in calendarDays"
-          :key="index"
-          class="calendar-day border-r border-b min-h-24 relative cursor-pointer transition-colors"
-          :class="{
-            'bg-gray-50 text-gray-400': !day.isCurrentMonth,
-            'bg-blue-50 border-blue-200': day.isToday,
-            'hover:bg-blue-25': day.isCurrentMonth && !day.isToday
-          }"
-          @click="selectDate(day.date)"
+          <div
+            v-for="(day, index) in calendarDays"
+            :key="index"
+            :class="[
+              'calendar-day border-b min-h-24 relative cursor-pointer transition-colors',
+              (index + 1) % 7 !== 0 ? 'border-r' : '',
+              !day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : '',
+              day.isToday ? 'bg-blue-50 border-blue-200' : '',
+              day.isCurrentMonth && !day.isToday ? 'hover:bg-blue-25' : ''
+            ]"
+           @click="selectDate(day.date)"
         >
           <!-- Day number -->
           <div class="day-number p-1">

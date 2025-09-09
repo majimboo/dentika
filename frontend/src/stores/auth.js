@@ -38,7 +38,22 @@ export const useAuthStore = defineStore('auth', {
       const role = state.user?.role
       return ['super_admin', 'doctor'].includes(role)
     },
-    canCreateClinics: (state) => state.user?.role === 'super_admin'
+    canCreateClinics: (state) => state.user?.role === 'super_admin',
+    hasPermission: (state) => (permission) => {
+      if (!state.user) return false
+
+      const role = state.user.role
+      const permissions = {
+        'appointments.update': ['super_admin', 'clinic_owner', 'doctor', 'secretary'],
+        'appointments.create': ['super_admin', 'clinic_owner', 'doctor', 'secretary'],
+        'appointments.delete': ['super_admin', 'clinic_owner', 'doctor'],
+        'patients.manage': ['super_admin', 'clinic_owner', 'doctor', 'secretary'],
+        'procedures.manage': ['super_admin', 'doctor'],
+        'clinics.manage': ['super_admin']
+      }
+
+      return permissions[permission]?.includes(role) || false
+    }
   },
 
   actions: {

@@ -12,12 +12,12 @@
       </button>
 
       <div>
-        <h1 class="text-2xl font-bold text-neutral-900">
-          Edit Appointment
-        </h1>
-        <p class="text-neutral-600">
-          Update appointment details
-        </p>
+         <h1 class="text-2xl font-bold text-neutral-900">
+           {{ isReadOnly ? 'Appointment Details' : 'Edit Appointment' }}
+         </h1>
+         <p class="text-neutral-600">
+           {{ isReadOnly ? 'View appointment information' : 'Update appointment details' }}
+         </p>
       </div>
     </div>
 
@@ -44,17 +44,18 @@
                 <span class="text-danger-500 ml-1">*</span>
               </label>
               <div class="relative">
-                <input
-                  v-model="patientSearchQuery"
-                  @input="searchPatients"
-                  @focus="showPatientDropdown = true"
-                  type="text"
-                  class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                  :class="{ 'border-red-500': errors.patient_id }"
-                  placeholder="Search for patient..."
-                  autocomplete="off"
-                  required
-                />
+                 <input
+                   v-model="patientSearchQuery"
+                   @input="searchPatients"
+                   @focus="showPatientDropdown = true"
+                   type="text"
+                   class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
+                   :class="{ 'border-red-500': errors.patient_id }"
+                   placeholder="Search for patient..."
+                   autocomplete="off"
+                   :readonly="isReadOnly"
+                   required
+                 />
 
                 <!-- Patient Dropdown -->
                 <div
@@ -103,13 +104,14 @@
                   Date
                   <span class="text-danger-500 ml-1">*</span>
                 </label>
-                <input
-                  v-model="formData.date"
-                  type="date"
-                  class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                  :class="{ 'border-red-500': errors.date }"
-                  required
-                />
+                 <input
+                   v-model="formData.date"
+                   type="date"
+                   class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
+                   :class="{ 'border-red-500': errors.date }"
+                   :readonly="isReadOnly"
+                   required
+                 />
                 <span v-if="errors.date" class="text-red-500 text-sm mt-1">{{ errors.date }}</span>
               </div>
 
@@ -121,13 +123,14 @@
                   Time
                   <span class="text-danger-500 ml-1">*</span>
                 </label>
-                <input
-                  v-model="formData.time"
-                  type="time"
-                  class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                  :class="{ 'border-red-500': errors.time }"
-                  required
-                />
+                 <input
+                   v-model="formData.time"
+                   type="time"
+                   class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
+                   :class="{ 'border-red-500': errors.time }"
+                   :readonly="isReadOnly"
+                   required
+                 />
                 <span v-if="errors.time" class="text-red-500 text-sm mt-1">{{ errors.time }}</span>
               </div>
             </div>
@@ -140,12 +143,13 @@
                 Duration (minutes)
                 <span class="text-danger-500 ml-1">*</span>
               </label>
-              <select
-                v-model="formData.duration"
-                class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                :class="{ 'border-red-500': errors.duration }"
-                required
-              >
+               <select
+                 v-model="formData.duration"
+                 class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
+                 :class="{ 'border-red-500': errors.duration }"
+                 :disabled="isReadOnly"
+                 required
+               >
                 <option value="15">15 minutes</option>
                 <option value="30">30 minutes</option>
                 <option value="45">45 minutes</option>
@@ -170,12 +174,13 @@
                   Doctor
                   <span class="text-danger-500 ml-1">*</span>
                 </label>
-                <select
-                  v-model="formData.doctor_id"
-                  class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                  :class="{ 'border-red-500': errors.doctor_id }"
-                  required
-                >
+                 <select
+                   v-model="formData.doctor_id"
+                   class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
+                   :class="{ 'border-red-500': errors.doctor_id }"
+                   :disabled="isReadOnly"
+                   required
+                 >
                   <option value="">Select doctor...</option>
                   <option v-for="doctor in doctors" :key="doctor.id" :value="doctor.id">
                     Dr. {{ doctor.first_name }} {{ doctor.last_name }}
@@ -192,10 +197,11 @@
                 </svg>
                 Branch
               </label>
-              <select
-                v-model="formData.branch_id"
-                class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-              >
+               <select
+                 v-model="formData.branch_id"
+                 class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
+                 :disabled="isReadOnly"
+               >
                 <option value="">Select branch...</option>
                 <option v-for="branch in branches" :key="branch.id" :value="branch.id">
                   {{ branch.name }}
@@ -212,16 +218,17 @@
                    </svg>
                    Procedures
                  </label>
-                 <button
-                   type="button"
-                   @click="addProcedure"
-                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
-                 >
-                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                   </svg>
-                   Add Procedure
-                 </button>
+                  <button
+                    v-if="!isReadOnly"
+                    type="button"
+                    @click="addProcedure"
+                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+                  >
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Add Procedure
+                  </button>
                </div>
 
                <!-- Selected Procedures -->
@@ -267,12 +274,13 @@
                  </svg>
                  Notes
                </label>
-              <textarea
-                v-model="formData.notes"
-                rows="3"
-                class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white resize-none"
-                placeholder="Additional notes or special instructions..."
-              ></textarea>
+               <textarea
+                 v-model="formData.notes"
+                 rows="3"
+                 class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white resize-none"
+                 placeholder="Additional notes or special instructions..."
+                 :readonly="isReadOnly"
+               ></textarea>
             </div>
           </div>
 
@@ -346,30 +354,43 @@
             </div>
           </div>
 
-          <!-- Form Actions -->
-          <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-neutral-200">
-            <button
-              type="button"
-              @click="$router.go(-1)"
-              class="inline-flex items-center px-6 py-3 border border-neutral-300 rounded-xl text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200"
-            >
-              Cancel
-            </button>
+           <!-- Form Actions -->
+           <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-neutral-200">
+             <button
+               type="button"
+               @click="$router.go(-1)"
+               class="inline-flex items-center px-6 py-3 border border-neutral-300 rounded-xl text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200"
+             >
+               {{ isReadOnly ? 'Back' : 'Cancel' }}
+             </button>
 
-            <button
-              type="submit"
-              :disabled="isSubmitting || !isFormValid"
-              class="inline-flex items-center px-6 py-3 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              <div v-if="isSubmitting" class="flex items-center justify-center">
-                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Updating...
-              </div>
-              <span v-else>
-                Update Appointment
-              </span>
-            </button>
-          </div>
+             <button
+               v-if="isReadOnly"
+               type="button"
+               @click="editAppointment"
+               class="inline-flex items-center px-6 py-3 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200"
+             >
+               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+               </svg>
+               Edit Appointment
+             </button>
+
+             <button
+               v-else
+               type="submit"
+               :disabled="isSubmitting || !isFormValid"
+               class="inline-flex items-center px-6 py-3 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+             >
+               <div v-if="isSubmitting" class="flex items-center justify-center">
+                 <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                 Updating...
+               </div>
+               <span v-else>
+                 Update Appointment
+               </span>
+             </button>
+           </div>
         </form>
       </div>
     </div>
@@ -463,6 +484,11 @@ const isSubmitting = ref(false)
 const loading = ref(false)
 const errors = ref({})
 const hasConflicts = ref(false)
+
+// Check if this is read-only view mode
+const isReadOnly = computed(() => {
+  return route.meta.readOnly === true
+})
 
 const patientSearchQuery = ref('')
 const filteredPatients = ref([])
@@ -835,6 +861,10 @@ const calculateEndTime = () => {
   const startDateTime = new Date(`${formData.value.date}T${formData.value.time}:00Z`)
   const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.value.duration) * 60000)
   return endDateTime.toISOString()
+}
+
+const editAppointment = () => {
+  router.push(`/appointments/${route.params.id}/edit`)
 }
 
 // Close dropdown when clicking outside

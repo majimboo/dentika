@@ -86,14 +86,14 @@
                  </div>
                </router-link>
              </li>
-             <li role="listitem">
-               <router-link
-                 to="/appointments"
-                 @click="closeSidebarOnMobile"
-                 class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                 :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/appointments') }"
-                 :aria-current="$route.path.startsWith('/appointments') ? 'page' : null"
-               >
+              <li role="listitem">
+                <router-link
+                  to="/appointments/list"
+                  @click="closeSidebarOnMobile"
+                  class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/appointments') }"
+                  :aria-current="$route.path.startsWith('/appointments') ? 'page' : null"
+                >
                  <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200"
                       :class="{ 'bg-blue-200': $route.path.startsWith('/appointments') }">
                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

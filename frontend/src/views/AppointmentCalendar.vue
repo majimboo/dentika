@@ -41,11 +41,21 @@
         </button>
         
         <router-link
+          to="/appointments/list"
+          class="btn btn-secondary flex items-center"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          List View
+        </router-link>
+
+        <router-link
           to="/appointments/new"
           class="btn btn-primary flex items-center"
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
           </svg>
           New Appointment
         </router-link>
@@ -137,7 +147,12 @@
 
       <!-- Day View -->
       <div v-else-if="currentView === 'day'" class="day-view">
+         <div v-if="filteredAppointments.length === 0" class="text-center py-12 px-4 text-gray-500">
+           <p>No appointments for this day</p>
+           <p class="text-sm mt-2">Click on a time slot to create a new appointment</p>
+         </div>
         <DayCalendar
+          v-else
           :current-date="currentDate"
           :appointments="filteredAppointments"
           @appointment-click="viewAppointment"
@@ -147,7 +162,12 @@
 
       <!-- Week View -->
       <div v-else-if="currentView === 'week'" class="week-view">
+         <div v-if="filteredAppointments.length === 0" class="text-center py-12 px-4 text-gray-500">
+           <p>No appointments for this week</p>
+           <p class="text-sm mt-2">Click on a time slot to create a new appointment</p>
+         </div>
         <WeekCalendar
+          v-else
           :current-date="currentDate"
           :appointments="filteredAppointments"
           @appointment-click="viewAppointment"
@@ -157,7 +177,12 @@
 
       <!-- Month View -->
       <div v-else-if="currentView === 'month'" class="month-view">
+         <div v-if="filteredAppointments.length === 0" class="text-center py-12 px-4 text-gray-500">
+           <p>No appointments for this month</p>
+           <p class="text-sm mt-2">Click on a date to create a new appointment</p>
+         </div>
         <MonthCalendar
+          v-else
           :current-date="currentDate"
           :appointments="filteredAppointments"
           @appointment-click="viewAppointment"
@@ -172,18 +197,19 @@
       class="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-40 transform transition-transform"
       :class="selectedAppointment ? 'translate-x-0' : 'translate-x-full'"
     >
-      <AppointmentDetails
-        :appointment="selectedAppointment"
-        @close="closeAppointmentDetails"
-        @update="handleAppointmentUpdate"
-      />
+     <AppointmentDetails
+         :appointment="selectedAppointment"
+         @close="closeAppointmentDetails"
+         @update="handleAppointmentUpdate"
+         @edit="handleAppointmentEdit"
+       />
     </div>
 
 
     <!-- Overlay when sidebar is open -->
     <div
       v-if="selectedAppointment"
-      class="fixed inset-0 bg-black bg-opacity-25 z-30"
+      class="fixed inset-0 bg-black/25 z-30"
       @click="closeAppointmentDetails"
     ></div>
   </div>
@@ -361,7 +387,7 @@ const selectDate = (date) => {
 const handleAppointmentUpdate = async (appointmentId, updateData) => {
   await appointmentStore.updateAppointment(appointmentId, updateData)
   await loadAppointments()
-  
+
   // Update selected appointment if it's the one being updated
   if (selectedAppointment.value && selectedAppointment.value.id === appointmentId) {
     const updated = appointments.value.find(apt => apt.id === appointmentId)
@@ -369,6 +395,11 @@ const handleAppointmentUpdate = async (appointmentId, updateData) => {
       selectedAppointment.value = updated
     }
   }
+}
+
+const handleAppointmentEdit = (appointment) => {
+  router.push(`/appointments/${appointment.id}/edit`)
+  closeAppointmentDetails()
 }
 
 
@@ -412,30 +443,52 @@ watch([currentView, currentDate], () => {
 }
 
 .calendar-container {
-  min-height: 600px;
+  min-height: 500px;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .page-header {
-    @apply flex-col items-start;
+    @apply flex-col items-start gap-3;
   }
-  
+
   .header-actions {
-    @apply w-full flex-wrap;
+    @apply w-full flex-wrap gap-2;
   }
-  
+
   .calendar-navigation {
-    @apply flex-col gap-4;
+    @apply flex-col gap-3 p-3;
   }
-  
+
   .calendar-filters {
     @apply flex-wrap gap-2;
   }
-  
+
+  .calendar-container {
+    @apply mx-2;
+  }
+
   /* Sidebar on mobile takes full screen */
   .fixed.right-0.w-96 {
     @apply w-full;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    @apply px-3 py-2;
+  }
+
+  .calendar-navigation {
+    @apply p-2 gap-2;
+  }
+
+  .calendar-container {
+    @apply mx-1;
+  }
+
+  .btn {
+    @apply px-3 py-2 text-sm;
   }
 }
 

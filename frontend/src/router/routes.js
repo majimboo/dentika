@@ -11,6 +11,7 @@ import NewUser from '../views/NewUser.vue';
 import PatientList from '../views/PatientList.vue';
 import PatientForm from '../views/PatientForm.vue';
 import AppointmentCalendar from '../views/AppointmentCalendar.vue';
+import AppointmentList from '../views/AppointmentList.vue';
 import NewAppointment from '../views/NewAppointment.vue';
 import EditAppointment from '../views/EditAppointment.vue';
 import ProcedureManagement from '../views/ProcedureManagement.vue';
@@ -63,11 +64,17 @@ const routes = [
                 meta: { level: 1, title: 'Patients', parent: 'Dashboard' },
             },
             {
-                path: '/appointments',
-                name: 'AppointmentCalendar',
-                component: AppointmentCalendar,
-                meta: { level: 1, title: 'Appointments', parent: 'Dashboard' },
-            },
+                 path: '/appointments',
+                 name: 'AppointmentCalendar',
+                 component: AppointmentCalendar,
+                 meta: { level: 1, title: 'Appointments', parent: 'Dashboard' },
+             },
+             {
+                 path: '/appointments/list',
+                 name: 'AppointmentList',
+                 component: AppointmentList,
+                 meta: { level: 1, title: 'Appointment List', parent: 'Dashboard' },
+             },
             {
                 path: '/procedures',
                 name: 'ProcedureManagement',
@@ -151,26 +158,37 @@ const routes = [
                 },
             },
 
-            {
-                path: '/appointments/new',
-                name: 'AppointmentCreate',
-                component: NewAppointment,
-                meta: {
-                    level: 2,
-                    title: 'New Appointment',
-                    parent: 'AppointmentCalendar',
-                },
-            },
-            {
-                path: '/appointments/:id/edit',
-                name: 'AppointmentEdit',
-                component: EditAppointment,
-                meta: {
-                    level: 2,
-                    title: 'Edit Appointment',
-                    parent: 'AppointmentCalendar',
-                },
-            },
+             {
+                 path: '/appointments/new',
+                 name: 'AppointmentCreate',
+                 component: NewAppointment,
+                 meta: {
+                     level: 2,
+                     title: 'New Appointment',
+                     parent: 'AppointmentCalendar',
+                 },
+             },
+             {
+                 path: '/appointments/:id',
+                 name: 'AppointmentView',
+                 component: EditAppointment,
+                 meta: {
+                     level: 2,
+                     title: 'Appointment Details',
+                     parent: 'AppointmentCalendar',
+                     readOnly: true,
+                 },
+             },
+             {
+                 path: '/appointments/:id/edit',
+                 name: 'AppointmentEdit',
+                 component: EditAppointment,
+                 meta: {
+                     level: 2,
+                     title: 'Edit Appointment',
+                     parent: 'AppointmentCalendar',
+                 },
+             },
 
             {
                 path: '/procedures/new',

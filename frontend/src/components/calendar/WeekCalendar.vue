@@ -1,18 +1,21 @@
 <template>
   <div class="week-calendar">
     <div class="calendar-grid">
-      <!-- Header with days -->
-      <div class="calendar-header grid grid-cols-8 border-b">
+       <!-- Header with days -->
+       <div class="calendar-header border-b px-2 py-3" :style="headerGridStyle">
         <!-- Empty cell for time column -->
-        <div class="time-column-header border-r"></div>
-        
-        <!-- Day headers -->
-        <div
-          v-for="day in weekDays"
-          :key="day.date.getTime()"
-          class="day-header p-2 text-center border-r"
-          :class="{ 'bg-blue-50': isToday(day.date), 'text-blue-600': isToday(day.date) }"
-        >
+        <div class="time-column-header"></div>
+
+         <!-- Day headers -->
+         <div
+           v-for="(day, dayIndex) in weekDays"
+           :key="day.date.getTime()"
+           :class="[
+             'day-header px-2 py-1 text-center',
+             { 'bg-blue-50': isToday(day.date), 'text-blue-600': isToday(day.date) },
+             dayIndex < weekDays.length - 1 ? 'border-r' : ''
+           ]"
+         >
           <div class="day-name text-xs font-medium text-gray-600 uppercase">
             {{ day.name }}
           </div>
@@ -23,90 +26,93 @@
         </div>
       </div>
 
-      <!-- Time Grid -->
-      <div class="time-grid grid grid-cols-8 flex-1 overflow-y-auto" style="height: calc(100vh - 250px);">
-        <!-- Time Labels Column -->
-        <div class="time-labels border-r">
-          <div
-            v-for="hour in hours"
-            :key="hour"
-            class="time-label h-16 flex items-center justify-center text-xs text-gray-500 border-b"
-          >
-            {{ formatHour(hour) }}
-          </div>
-        </div>
-
-        <!-- Day Columns -->
-        <div
-          v-for="(day, dayIndex) in weekDays"
-          :key="day.date.getTime()"
-          class="day-column border-r relative"
-        >
-          <!-- Time Slots -->
-          <div class="time-slots">
+       <!-- Time Grid -->
+       <div class="time-grid flex-1 overflow-y-auto relative" :style="combinedGridStyle">
+          <!-- Time Labels Column -->
+          <div class="time-labels border-r">
             <div
               v-for="hour in hours"
               :key="hour"
-              class="time-slot h-16 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors"
-              @click="selectTimeSlot(day.date, hour)"
+              class="time-label h-16 flex items-center justify-center text-xs text-gray-500 border-b px-1"
             >
-              <!-- 30-minute marker -->
-              <div class="absolute top-1/2 left-0 right-0 h-px bg-gray-50"></div>
-            </div>
-          </div>
+             {{ formatHour(hour) }}
+           </div>
+         </div>
 
-          <!-- Appointments for this day -->
-          <div class="appointments-layer absolute inset-0 pointer-events-none">
-            <div
-              v-for="appointment in getDayAppointments(day.date)"
-              :key="appointment.id"
-              class="appointment-block absolute left-0.5 right-0.5 text-white rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow pointer-events-auto"
-              :style="getAppointmentStyle(appointment)"
-              @click="$emit('appointment-click', appointment)"
-            >
-              <div class="appointment-content p-1.5">
-                <div class="appointment-time text-xs font-medium">
-                  {{ formatTime(appointment.start_time) }}
-                </div>
-                <div class="patient-name text-sm font-semibold truncate">
-                  {{ appointment.patient?.first_name }} {{ appointment.patient?.last_name }}
-                </div>
-                <div class="appointment-type text-xs opacity-90 truncate">
-                  {{ formatAppointmentType(appointment.type) }}
-                </div>
-              </div>
+          <!-- Day Columns -->
+          <div
+            v-for="(day, dayIndex) in weekDays"
+            :key="day.date.getTime()"
+            :class="[
+              'day-column relative',
+              dayIndex < weekDays.length - 1 ? 'border-r' : ''
+            ]"
+          >
+           <!-- Time Slots -->
+           <div class="time-slots">
+             <div
+               v-for="hour in hours"
+               :key="hour"
+               class="time-slot h-16 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors"
+               @click="selectTimeSlot(day.date, hour)"
+             >
+               <!-- 30-minute marker -->
+               <div class="absolute top-1/2 left-0 right-0 h-px bg-gray-50"></div>
+             </div>
+           </div>
 
-              <!-- Status indicator -->
-              <div 
-                class="status-indicator absolute top-1 right-1 w-1.5 h-1.5 rounded-full"
-                :class="getStatusIndicatorColor(appointment.status)"
-              ></div>
+           <!-- Appointments for this day -->
+           <div class="appointments-layer absolute inset-0 pointer-events-none">
+             <div
+               v-for="appointment in getDayAppointments(day.date)"
+               :key="appointment.id"
+               class="appointment-block absolute left-0.5 right-0.5 text-white rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow pointer-events-auto"
+               :style="getAppointmentStyle(appointment)"
+               @click="$emit('appointment-click', appointment)"
+             >
+               <div class="appointment-content p-1.5">
+                 <div class="appointment-time text-xs font-medium">
+                   {{ formatTime(appointment.start_time) }}
+                 </div>
+                 <div class="patient-name text-sm font-semibold truncate">
+                   {{ appointment.patient?.first_name }} {{ appointment.patient?.last_name }}
+                 </div>
+                 <div class="appointment-type text-xs opacity-90 truncate">
+                   {{ formatAppointmentType(appointment.type) }}
+                 </div>
+               </div>
 
-              <!-- Patient arrival indicator -->
-              <div
-                v-if="appointment.patient_arrived"
-                class="arrival-indicator absolute bottom-1 right-1"
-              >
-                <svg class="w-2.5 h-2.5 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+               <!-- Status indicator -->
+               <div
+                 class="status-indicator absolute top-1 right-1 w-1.5 h-1.5 rounded-full"
+                 :class="getStatusIndicatorColor(appointment.status)"
+               ></div>
 
-    <!-- Current Time Indicators -->
-    <div
-      v-if="todayColumn !== -1"
-      class="current-time-line absolute bg-red-500 z-10 pointer-events-none"
-      :style="getCurrentTimeStyle()"
-    >
-      <div class="absolute -left-16 -top-2 bg-red-500 text-white text-xs px-1 py-0.5 rounded whitespace-nowrap">
-        {{ currentTimeLabel }}
-      </div>
-    </div>
+               <!-- Patient arrival indicator -->
+               <div
+                 v-if="appointment.patient_arrived"
+                 class="arrival-indicator absolute bottom-1 right-1"
+               >
+                 <svg class="w-2.5 h-2.5 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                 </svg>
+               </div>
+             </div>
+           </div>
+         </div>
+
+         <!-- Current Time Indicator -->
+         <!-- <div
+           v-if="todayColumn !== -1"
+           class="current-time-line absolute bg-red-500 z-10 pointer-events-none"
+           :style="getCurrentTimeStyle()"
+         >
+           <div class="absolute -left-16 -top-2 bg-red-500 text-white text-xs px-1 py-0.5 rounded whitespace-nowrap">
+             {{ currentTimeLabel }}
+           </div>
+         </div> -->
+       </div>
+     </div>
   </div>
 </template>
 
@@ -166,10 +172,50 @@ const currentTimeLabel = computed(() => {
   })
 })
 
-const isToday = (date) => {
+ const isToday = (date) => {
   const today = new Date()
   return date.toDateString() === today.toDateString()
 }
+
+const timeLabelsWidth = computed(() => {
+  // Match the width of time-labels column
+  if (window.innerWidth <= 640) {
+    return '40px'
+  } else if (window.innerWidth <= 768) {
+    return '48px'
+  } else {
+    return '64px' // w-16 = 4rem = 64px
+  }
+})
+
+const headerGridStyle = computed(() => {
+  const timeWidth = timeLabelsWidth.value
+  return {
+    display: 'grid',
+    gridTemplateColumns: `${timeWidth} repeat(7, 1fr)`
+  }
+})
+
+const timeGridStyle = computed(() => {
+  // Responsive height based on screen size
+  if (window.innerWidth <= 640) {
+    return { height: 'calc(100vh - 400px)' }
+  } else if (window.innerWidth <= 768) {
+    return { height: 'calc(100vh - 350px)' }
+  } else {
+    return { height: 'calc(100vh - 280px)' }
+  }
+})
+
+const combinedGridStyle = computed(() => {
+  const timeWidth = timeLabelsWidth.value
+  const height = timeGridStyle.value.height
+  return {
+    ...timeGridStyle.value,
+    display: 'grid',
+    gridTemplateColumns: `${timeWidth} repeat(7, 1fr)`
+  }
+})
 
 const formatHour = (hour) => {
   if (hour === 0) return '12 AM'
@@ -256,34 +302,41 @@ const getStatusIndicatorColor = (status) => {
 }
 
 const getCurrentTimeStyle = () => {
-  if (todayColumn.value === -1) return { display: 'none' }
-  
-  const now = currentTime.value
-  const hours = now.getHours()
-  const minutes = now.getMinutes()
-  
-  const startHour = 6
-  const endHour = 22
-  const totalMinutes = (endHour - startHour) * 60
-  const currentMinutes = (hours - startHour) * 60 + minutes
-  
-  if (currentMinutes < 0 || currentMinutes > totalMinutes) {
-    return { display: 'none' }
-  }
-  
-  const topPercent = (currentMinutes / totalMinutes) * 100
-  
-  // Calculate horizontal position (account for time column + day columns)
-  const columnWidth = `${100 / 8}%` // 8 columns total
-  const leftPercent = (1 + todayColumn.value) * (100 / 8) // 1 for time column + day index
-  
-  return {
-    top: `${topPercent}%`,
-    left: `${leftPercent}%`,
-    width: columnWidth,
-    height: '2px'
-  }
-}
+   if (todayColumn.value === -1) return { display: 'none' }
+
+   const now = currentTime.value
+   const hours = now.getHours()
+   const minutes = now.getMinutes()
+
+   const startHour = 6
+   const endHour = 22
+   const totalMinutes = (endHour - startHour) * 60
+   const currentMinutes = (hours - startHour) * 60 + minutes
+
+   if (currentMinutes < 0) {
+     return { display: 'none' }
+   }
+
+   // If current time is after 10 PM, position at the bottom
+   if (currentMinutes > totalMinutes) {
+     return {
+       top: '100%',
+       left: `${(todayColumn.value + 1) * 12.5}%`, // Position in today's column (skip time column)
+       width: '12.5%', // Each day column is 12.5% (100% / 8 columns, but skip time column)
+       height: '2px',
+       transform: 'translateY(-2px)'
+     }
+   }
+
+   const topPercent = (currentMinutes / totalMinutes) * 100
+
+   return {
+     top: `${topPercent}%`,
+     left: `${(todayColumn.value + 1) * 12.5}%`, // Position in today's column (skip time column)
+     width: '12.5%', // Each day column is 12.5% (100% / 8 columns, but skip time column)
+     height: '2px'
+   }
+ }
 
 const selectTimeSlot = (date, hour) => {
   const slotDate = new Date(date)
@@ -336,10 +389,9 @@ onUnmounted(() => {
   @apply flex-1 overflow-hidden;
 }
 
-.current-time-line {
-  @apply relative;
-  margin-top: calc(100vh - 250px); /* Adjust based on header height */
-}
+ .current-time-line {
+   @apply relative;
+ }
 
 /* Custom scrollbar */
 .time-grid::-webkit-scrollbar {
@@ -363,35 +415,66 @@ onUnmounted(() => {
   .appointment-content {
     @apply p-1;
   }
-  
+
   .appointment-time,
   .patient-name,
   .appointment-type {
     @apply text-xs;
   }
-  
+
   .patient-name {
     @apply text-xs font-medium;
   }
-  
+
   .day-header {
     @apply p-1;
   }
-  
+
   .day-number {
     @apply text-sm;
+  }
+
+
+
+  .time-label {
+    @apply text-xs px-1 h-12;
+  }
+
+  .time-slot {
+    @apply h-12;
+  }
+
+  .appointment-block {
+    min-height: 30px;
   }
 }
 
 /* Grid layout adjustments for mobile */
-@media (max-width: 640px) {
-  .calendar-header,
-  .time-grid {
-    grid-template-columns: 60px repeat(7, 1fr);
-  }
-  
+
+
+
   .time-label {
-    @apply text-xs px-1;
+    @apply text-xs px-1 h-10;
+  }
+
+  .time-slot {
+    @apply h-10;
+  }
+
+  .appointment-block {
+    min-height: 25px;
+  }
+
+  .appointment-content {
+    @apply p-0.5;
+  }
+
+  .day-header {
+    @apply p-0.5;
+  }
+
+  .day-number {
+    @apply text-xs;
   }
 }
 </style>

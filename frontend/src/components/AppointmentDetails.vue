@@ -205,7 +205,7 @@
     </div>
 
     <!-- Cancel Confirmation Modal -->
-    <div v-if="showCancelConfirm" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div v-if="showCancelConfirm" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
         <div class="flex items-center mb-4">
           <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-4">

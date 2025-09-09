@@ -2,8 +2,8 @@
   <div class="day-calendar">
     <!-- Time slots -->
     <div class="calendar-grid">
-      <!-- Header -->
-      <div class="calendar-header p-4 border-b">
+       <!-- Header -->
+       <div class="calendar-header px-4 py-3 border-b">
         <div class="day-header text-center">
           <div class="day-name text-lg font-semibold text-gray-900">
             {{ dayName }}
@@ -14,89 +14,89 @@
         </div>
       </div>
 
-      <!-- Time Grid -->
-      <div class="time-grid flex">
-        <!-- Time Labels -->
-        <div class="time-labels w-16 border-r">
-          <div
-            v-for="hour in hours"
-            :key="hour"
-            class="time-label h-16 flex items-center justify-center text-xs text-gray-500 border-b"
-          >
-            {{ formatHour(hour) }}
-          </div>
-        </div>
+       <!-- Time Grid -->
+       <div class="time-grid flex relative">
+         <!-- Time Labels -->
+         <div class="time-labels w-16 border-r">
+           <div
+             v-for="hour in hours"
+             :key="hour"
+             class="time-label h-16 flex items-center justify-center text-xs text-gray-500 border-b"
+           >
+             {{ formatHour(hour) }}
+           </div>
+         </div>
 
-        <!-- Appointment Slots -->
-        <div class="appointment-slots flex-1 relative">
-          <!-- Time Slot Grid -->
-          <div class="time-slot-grid">
-            <div
-              v-for="hour in hours"
-              :key="hour"
-              class="hour-slot h-16 border-b border-gray-100 relative cursor-pointer hover:bg-blue-50 transition-colors"
-              @click="selectTimeSlot(hour)"
-            >
-              <!-- 30-minute markers -->
-              <div class="absolute top-1/2 left-0 right-0 h-px bg-gray-100"></div>
-            </div>
-          </div>
+         <!-- Appointment Slots -->
+         <div class="appointment-slots flex-1 relative">
+           <!-- Time Slot Grid -->
+           <div class="time-slot-grid">
+             <div
+               v-for="hour in hours"
+               :key="hour"
+               class="hour-slot h-16 border-b border-gray-100 relative cursor-pointer hover:bg-blue-50 transition-colors"
+               @click="selectTimeSlot(hour)"
+             >
+               <!-- 30-minute markers -->
+               <div class="absolute top-1/2 left-0 right-0 h-px bg-gray-100"></div>
+             </div>
+           </div>
 
-          <!-- Appointments -->
-          <div class="appointments-layer absolute inset-0">
-            <div
-              v-for="appointment in dayAppointments"
-              :key="appointment.id"
-              class="appointment-block absolute left-1 right-1 bg-blue-500 text-white rounded-md shadow-sm cursor-pointer hover:bg-blue-600 transition-colors"
-              :style="getAppointmentStyle(appointment)"
-              @click="$emit('appointment-click', appointment)"
-            >
-              <div class="appointment-content p-2">
-                <div class="appointment-time text-xs font-medium">
-                  {{ formatAppointmentTime(appointment.start_time) }} - {{ formatAppointmentTime(appointment.end_time) }}
-                </div>
-                <div class="patient-name text-sm font-semibold truncate">
-                  {{ appointment.patient?.first_name }} {{ appointment.patient?.last_name }}
-                </div>
-                <div class="appointment-type text-xs opacity-90 truncate">
-                  {{ formatAppointmentType(appointment.type) }}
-                </div>
-                <div class="doctor-name text-xs opacity-75 truncate">
-                  Dr. {{ appointment.doctor?.first_name }} {{ appointment.doctor?.last_name }}
-                </div>
-              </div>
+           <!-- Appointments -->
+           <div class="appointments-layer absolute inset-0">
+             <div
+               v-for="appointment in dayAppointments"
+               :key="appointment.id"
+               class="appointment-block absolute left-1 right-1 bg-blue-500 text-white rounded-md shadow-sm cursor-pointer hover:bg-blue-600 transition-colors"
+               :style="getAppointmentStyle(appointment)"
+               @click="$emit('appointment-click', appointment)"
+             >
+               <div class="appointment-content p-2">
+                 <div class="appointment-time text-xs font-medium">
+                   {{ formatAppointmentTime(appointment.start_time) }} - {{ formatAppointmentTime(appointment.end_time) }}
+                 </div>
+                 <div class="patient-name text-sm font-semibold truncate">
+                   {{ appointment.patient?.first_name }} {{ appointment.patient?.last_name }}
+                 </div>
+                 <div class="appointment-type text-xs opacity-90 truncate">
+                   {{ formatAppointmentType(appointment.type) }}
+                 </div>
+                 <div class="doctor-name text-xs opacity-75 truncate">
+                   Dr. {{ appointment.doctor?.first_name }} {{ appointment.doctor?.last_name }}
+                 </div>
+               </div>
 
-              <!-- Status indicator -->
-              <div 
-                class="status-indicator absolute top-1 right-1 w-2 h-2 rounded-full"
-                :class="getStatusColor(appointment.status)"
-              ></div>
+               <!-- Status indicator -->
+               <div
+                 class="status-indicator absolute top-1 right-1 w-2 h-2 rounded-full"
+                 :class="getStatusColor(appointment.status)"
+               ></div>
 
-              <!-- Patient arrival indicator -->
-              <div
-                v-if="appointment.patient_arrived"
-                class="arrival-indicator absolute bottom-1 right-1"
-              >
-                <svg class="w-3 h-3 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+               <!-- Patient arrival indicator -->
+               <div
+                 v-if="appointment.patient_arrived"
+                 class="arrival-indicator absolute bottom-1 right-1"
+               >
+                 <svg class="w-3 h-3 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                 </svg>
+               </div>
+             </div>
+           </div>
+         </div>
 
-    <!-- Current Time Indicator -->
-    <div
-      v-if="isToday"
-      class="current-time-line absolute left-16 right-0 h-0.5 bg-red-500 z-10 pointer-events-none"
-      :style="currentTimeStyle"
-    >
-      <div class="absolute -left-16 -top-2 bg-red-500 text-white text-xs px-1 py-0.5 rounded">
-        {{ currentTimeLabel }}
-      </div>
-    </div>
+         <!-- Current Time Indicator -->
+         <!-- <div
+           v-if="isToday"
+           class="current-time-line absolute left-16 right-0 h-0.5 bg-red-500 z-10 pointer-events-none"
+           :style="currentTimeStyle"
+         >
+           <div class="absolute -left-16 -top-2 bg-red-500 text-white text-xs px-1 py-0.5 rounded">
+             {{ currentTimeLabel }}
+           </div>
+         </div> -->
+       </div>
+     </div>
   </div>
 </template>
 
@@ -141,26 +141,31 @@ const dayAppointments = computed(() => {
   )
 })
 
-const currentTimeStyle = computed(() => {
-  if (!isToday.value) return {}
-  
-  const now = currentTime.value
-  const hours = now.getHours()
-  const minutes = now.getMinutes()
-  
-  // Calculate position (6 AM = 0%, 10 PM = 100%)
-  const startHour = 6
-  const endHour = 22
-  const totalMinutes = (endHour - startHour) * 60
-  const currentMinutes = (hours - startHour) * 60 + minutes
-  
-  if (currentMinutes < 0 || currentMinutes > totalMinutes) {
-    return { display: 'none' }
-  }
-  
-  const percentage = (currentMinutes / totalMinutes) * 100
-  return { top: `${percentage}%` }
-})
+  const currentTimeStyle = computed(() => {
+   if (!isToday.value) return {}
+
+   const now = currentTime.value
+   const hours = now.getHours()
+   const minutes = now.getMinutes()
+
+   // Calculate position (6 AM = 0%, 10 PM = 100%)
+   const startHour = 6
+   const endHour = 22
+   const totalMinutes = (endHour - startHour) * 60
+   const currentMinutes = (hours - startHour) * 60 + minutes
+
+   if (currentMinutes < 0) {
+     return { display: 'none' }
+   }
+
+   // If current time is after 10 PM, position at the bottom
+   if (currentMinutes > totalMinutes) {
+     return { top: '100%', transform: 'translateY(-2px)' }
+   }
+
+   const percentage = (currentMinutes / totalMinutes) * 100
+   return { top: `${percentage}%` }
+ })
 
 const currentTimeLabel = computed(() => {
   return currentTime.value.toLocaleTimeString('en-US', {
@@ -285,6 +290,19 @@ onUnmounted(() => {
   height: calc(100vh - 200px);
 }
 
+/* Mobile responsive height */
+@media (max-width: 768px) {
+  .time-grid {
+    height: calc(100vh - 300px);
+  }
+}
+
+@media (max-width: 640px) {
+  .time-grid {
+    height: calc(100vh - 350px);
+  }
+}
+
 .appointment-block {
   @apply flex flex-col justify-between;
   min-height: 60px;
@@ -328,16 +346,54 @@ onUnmounted(() => {
   .appointment-content {
     @apply p-1;
   }
-  
+
   .appointment-time,
   .patient-name,
   .appointment-type,
   .doctor-name {
     @apply text-xs;
   }
-  
+
   .patient-name {
     @apply text-sm;
+  }
+
+  .time-labels {
+    @apply w-12;
+  }
+
+  .time-label {
+    @apply text-xs px-1;
+  }
+
+  .hour-slot {
+    @apply h-12;
+  }
+
+  .appointment-block {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .time-labels {
+    @apply w-10;
+  }
+
+  .time-label {
+    @apply text-xs px-0.5;
+  }
+
+  .hour-slot {
+    @apply h-10;
+  }
+
+  .appointment-block {
+    min-height: 35px;
+  }
+
+  .appointment-content {
+    @apply p-0.5;
   }
 }
 </style>

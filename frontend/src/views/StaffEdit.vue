@@ -3,8 +3,8 @@
     <!-- Loading State -->
     <BaseTransition name="fade">
       <div v-if="loading" class="bg-white rounded-2xl p-12 shadow-lg border border-neutral-100 text-center">
-        <BaseLoading type="spinner" size="large" color="primary" text="Loading user data..." />
-        <p class="text-neutral-600 mt-4">Please wait while we fetch the user information.</p>
+        <BaseLoading type="spinner" size="large" color="primary" text="Loading staff data..." />
+        <p class="text-neutral-600 mt-4">Please wait while we fetch the staff information.</p>
       </div>
     </BaseTransition>
 
@@ -16,9 +16,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </div>
-         <h3 class="text-lg font-semibold text-neutral-900 mb-2">Error loading user</h3>
+         <h3 class="text-lg font-semibold text-neutral-900 mb-2">Error loading staff member</h3>
         <p class="text-danger-600 mb-4">{{ error }}</p>
-        <button 
+        <button
           @click="loadUser"
           class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-danger-600 hover:bg-danger-700 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2 transition-all duration-200"
         >
@@ -32,12 +32,12 @@
       <div v-if="!loading && !error && originalUser" class="bg-white rounded-2xl shadow-lg border border-neutral-100 overflow-hidden">
         <div class="p-6 sm:p-8">
           <form @submit.prevent="handleSubmit" class="space-y-8">
-            
+
             <!-- Avatar Section -->
             <div class="pb-6 border-b border-neutral-200">
               <h3 class="text-lg font-semibold text-neutral-900 mb-4">Profile Picture</h3>
-              <AvatarUpload 
-                :user="form" 
+              <AvatarUpload
+                :user="form"
                 @avatar-updated="handleAvatarUpdated"
               />
             </div>
@@ -45,7 +45,7 @@
             <!-- Basic Information -->
             <div class="space-y-6">
               <h3 class="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-2">Basic Information</h3>
-              
+
                <!-- Username -->
                <div class="space-y-2">
                  <label for="username" class="block text-sm font-semibold text-gray-700 flex items-center">
@@ -67,7 +67,7 @@
                </div>
 
 
-               <!-- Role (for create mode and clinic owners in edit mode) -->
+               <!-- Role (for clinic owners in edit mode) -->
                 <div v-if="currentUserRole === 'clinic_owner' || currentUserRole === 'super_admin'" class="space-y-2">
                  <label for="role" class="block text-sm font-semibold text-gray-700 flex items-center">
                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,7 +98,7 @@
                </div>
 
                <!-- Current Role Display (for non-clinic owners in edit mode) -->
-               <div v-if="!isCreateMode && currentUserRole !== 'clinic_owner' && currentUserRole !== 'super_admin'" class="space-y-2">
+               <div v-if="currentUserRole !== 'clinic_owner' && currentUserRole !== 'super_admin'" class="space-y-2">
                  <label class="block text-sm font-semibold text-gray-700 flex items-center">
                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
@@ -109,32 +109,6 @@
                    <p class="text-sm text-gray-800 capitalize">{{ form.role.replace('_', ' ') }}</p>
                    <p class="text-xs text-gray-500 mt-1">Contact your clinic administrator to change your role.</p>
                  </div>
-                </div>
-
-                <!-- Clinic Assignment (only for super admin editing non-super-admin users) -->
-                <div v-if="currentUserRole === 'super_admin' && form.role && form.role !== 'super_admin' && clinics.length > 0" class="space-y-2">
-                  <label for="clinic_id" class="block text-sm font-semibold text-gray-700 flex items-center">
-                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                    Clinic Assignment
-                    <span class="text-danger-500 ml-1">*</span>
-                  </label>
-                  <select
-                    v-model="form.clinic_id"
-                    id="clinic_id"
-                    name="clinic_id"
-                    :required="form.role !== 'super_admin'"
-                    class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                  >
-                    <option value="">Select clinic</option>
-                    <option v-for="clinic in clinics" :key="clinic.id" :value="clinic.id">
-                      {{ clinic.name }}
-                    </option>
-                  </select>
-                   <p class="text-xs text-neutral-500 mt-1">
-                     Assign this user to a specific clinic.
-                   </p>
                 </div>
 
                <!-- Email -->
@@ -209,7 +183,7 @@
             <div class="space-y-6 pt-6 border-t border-neutral-200">
             <h3 class="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-2">Change Password</h3>
             <p class="text-sm text-neutral-600">Leave blank to keep current password</p>
-              
+
                <!-- New Password -->
                <div class="space-y-2">
                  <label for="password" class="block text-sm font-semibold text-gray-700 flex items-center">
@@ -263,7 +237,7 @@
                   <svg class="w-5 h-5 text-success-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
-                     <p class="text-sm text-success-700">Profile updated successfully!</p>
+                     <p class="text-sm text-success-700">Staff profile updated successfully!</p>
                 </div>
               </div>
             </BaseTransition>
@@ -278,7 +252,7 @@
                   <BaseLoading v-if="saving" type="spinner" size="small" color="white" :show-text="false" class="mr-2" />
                     {{ saving ? 'Saving...' : 'Save Changes' }}
                </button>
-              
+
               <button
                 type="button"
                 @click="resetForm"
@@ -299,7 +273,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { useClinicStore } from '../stores/clinic'
 import apiService from '../services/api'
 import UserAvatar from '../components/UserAvatar.vue'
 import AvatarUpload from '../components/AvatarUpload.vue'
@@ -307,7 +280,7 @@ import BaseLoading from '../components/BaseLoading.vue'
 import BaseTransition from '../components/BaseTransition.vue'
 
 export default {
-  name: 'UserEdit',
+  name: 'StaffEdit',
   components: {
     UserAvatar,
     AvatarUpload,
@@ -318,7 +291,6 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const authStore = useAuthStore()
-    const clinicStore = useClinicStore()
 
     const loading = ref(true)
     const saving = ref(false)
@@ -326,7 +298,6 @@ export default {
     const submitError = ref('')
     const submitSuccess = ref(false)
     const showPassword = ref(false)
-    const clinics = ref([])
 
     const originalUser = ref(null)
     const form = ref({
@@ -337,12 +308,10 @@ export default {
       gender: '',
       avatar: '',
       password: '',
-      role: '',
-      clinic_id: null
+      role: ''
     })
-    
+
     const userId = computed(() => route.params.id)
-    const clinicIdFromQuery = computed(() => route.query.clinic_id)
     const currentUserRole = computed(() => authStore.user?.role || '')
 
     const hasChanges = computed(() => {
@@ -365,15 +334,9 @@ export default {
         hasRoleChanges = form.value.role !== (originalUser.value.role || '')
       }
 
-      // Check clinic_id changes (only for super admins)
-      let hasClinicChanges = false
-      if (currentUserRole.value === 'super_admin') {
-        hasClinicChanges = form.value.clinic_id !== (originalUser.value.clinic_id || null)
-      }
-
-      return hasBasicChanges || hasRoleChanges || hasClinicChanges
+      return hasBasicChanges || hasRoleChanges
     })
-    
+
     const loadUser = async () => {
       try {
         loading.value = true
@@ -385,16 +348,16 @@ export default {
           originalUser.value = result.data
           resetForm()
         } else {
-          error.value = result.error || 'Failed to load user. Please try again.'
+          error.value = result.error || 'Failed to load staff member. Please try again.'
         }
       } catch (err) {
-        error.value = 'An unexpected error occurred while loading the user.'
+        error.value = 'An unexpected error occurred while loading the staff member.'
         console.error(err)
       } finally {
         loading.value = false
       }
     }
-    
+
     const resetForm = () => {
       if (originalUser.value) {
         // Reset to original user data
@@ -406,27 +369,15 @@ export default {
           gender: originalUser.value.gender || '',
           avatar: originalUser.value.avatar || '',
           password: '',
-          role: originalUser.value.role || '',
-          clinic_id: originalUser.value.clinic_id || null
+          role: originalUser.value.role || ''
         }
       }
     }
-    
+
     const handleAvatarUpdated = (avatarPath) => {
       form.value.avatar = avatarPath || ''
     }
 
-    const loadClinics = async () => {
-      try {
-        const result = await apiService.getClinics()
-        if (result.success) {
-          clinics.value = result.data
-        }
-      } catch (err) {
-        console.error('Error loading clinics:', err)
-      }
-    }
-    
     const handleSubmit = async () => {
       try {
         saving.value = true
@@ -464,12 +415,6 @@ export default {
           updateData.role = form.value.role
         }
 
-        // Include clinic_id changes for super admins
-        if (currentUserRole.value === 'super_admin' &&
-            form.value.clinic_id !== (originalUser.value.clinic_id || null)) {
-          updateData.clinic_id = form.value.clinic_id
-        }
-
         const result = await apiService.updateUser(userId.value, updateData)
 
         if (result.success) {
@@ -482,29 +427,24 @@ export default {
             submitSuccess.value = false
           }, 3000)
         } else {
-          submitError.value = result.error || 'Failed to update user'
+          submitError.value = result.error || 'Failed to update staff member'
         }
       } catch (err) {
-        console.error('Update user error:', err)
-        submitError.value = 'Failed to update user. Please try again.'
+        console.error('Update staff error:', err)
+        submitError.value = 'Failed to update staff member. Please try again.'
       } finally {
         saving.value = false
       }
     }
-    
+
     // Clear messages when form changes
     watch(() => form.value, () => {
       submitError.value = ''
       submitSuccess.value = false
     }, { deep: true })
 
-
-
     onMounted(async () => {
       await loadUser()
-      if (currentUserRole.value === 'super_admin') {
-        loadClinics()
-      }
     })
 
     return {
@@ -514,7 +454,6 @@ export default {
       submitError,
       submitSuccess,
       showPassword,
-      clinics,
       originalUser,
       form,
       currentUserRole,

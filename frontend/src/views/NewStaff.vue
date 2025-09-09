@@ -33,9 +33,22 @@
             />
           </div>
 
-          <!-- Basic Information -->
-          <div class="space-y-6">
-            <h3 class="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-2">Basic Information</h3>
+           <!-- Basic Information -->
+           <div class="space-y-6">
+             <h3 class="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-2">Basic Information</h3>
+
+             <!-- Clinic Info (when pre-selected from clinic edit page) -->
+             <div v-if="clinicIdFromQuery" class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+               <div class="flex items-center space-x-2">
+                 <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                 </svg>
+                 <div>
+                   <p class="text-sm font-medium text-blue-900">Adding staff to clinic</p>
+                   <p class="text-xs text-blue-700">Clinic ID: {{ clinicIdFromQuery }}</p>
+                 </div>
+               </div>
+             </div>
 
             <!-- Username -->
             <div class="space-y-2">
@@ -284,7 +297,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import apiService from '../services/api'
 import AvatarUpload from '../components/AvatarUpload.vue'
@@ -300,6 +313,7 @@ export default {
   },
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const authStore = useAuthStore()
 
     const saving = ref(false)
@@ -317,8 +331,18 @@ export default {
       avatar: '',
       password: '',
       confirmPassword: '',
-      role: ''
+      role: '',
+      clinic_id: null
     })
+
+    // Handle clinic_id from query parameter
+    const clinicIdFromQuery = route.query.clinic_id
+    if (clinicIdFromQuery) {
+      form.value.clinic_id = parseInt(clinicIdFromQuery)
+    } else {
+      // Default to current user's clinic if no query parameter
+      form.value.clinic_id = authStore.userClinicId
+    }
 
     const passwordMismatch = computed(() => {
       return form.value.password && form.value.confirmPassword &&
@@ -345,7 +369,8 @@ export default {
         avatar: '',
         password: '',
         confirmPassword: '',
-        role: ''
+        role: '',
+        clinic_id: clinicIdFromQuery ? parseInt(clinicIdFromQuery) : authStore.userClinicId
       }
       submitError.value = ''
       submitSuccess.value = false
@@ -374,7 +399,8 @@ export default {
           gender: form.value.gender,
           avatar: form.value.avatar,
           password: form.value.password,
-          role: form.value.role
+          role: form.value.role,
+          clinic_id: form.value.clinic_id
         }
 
         const result = await apiService.post('/api/users', submitData)

@@ -4,6 +4,7 @@ import Dashboard from '../views/Dashboard.vue';
 import UserManagementWrapper from '../views/UserManagementWrapper.vue';
 import UserList from '../views/UserList.vue'; // Keep for backward compatibility
 import UserEdit from '../views/UserEdit.vue';
+import StaffEdit from '../views/StaffEdit.vue';
 import NewStaff from '../views/NewStaff.vue';
 import NewUser from '../views/NewUser.vue';
 import PatientList from '../views/PatientList.vue';
@@ -251,7 +252,7 @@ const routes = [
             {
                 path: '/staff/:id/edit',
                 name: 'StaffEdit',
-                component: UserEdit,
+                component: StaffEdit,
                 meta: { level: 2, title: 'Edit Staff Member', parent: 'StaffManagement' },
             },
 

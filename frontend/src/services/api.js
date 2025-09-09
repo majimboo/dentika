@@ -164,6 +164,10 @@ class ApiService {
     return this.request('get', '/users')
   }
 
+  async getClinics() {
+    return this.request('get', '/clinics')
+  }
+
   async getUser(id) {
     return this.request('get', `/users/${id}`)
   }

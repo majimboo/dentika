@@ -209,7 +209,7 @@ export default {
     }
 
     const addUserToClinic = () => {
-      router.push(`/users/new?clinic_id=${clinicId}`)
+      router.push(`/staff/new?clinic_id=${clinicId}`)
     }
 
     const editUser = (userId) => {

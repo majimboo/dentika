@@ -1,33 +1,5 @@
 <template>
   <div class="space-y-8">
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div class="flex items-center space-x-4">
-        <router-link 
-          to="/users"
-          class="p-2 rounded-xl hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 transition-colors"
-          title="Back to users"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-          </svg>
-        </router-link>
-        <div>
-          <h1 class="text-2xl sm:text-3xl font-bold text-neutral-900">Edit Profile</h1>
-          <p class="mt-2 text-base sm:text-lg text-neutral-600">Update your account information</p>
-        </div>
-      </div>
-      
-      <!-- User Info Display -->
-      <div v-if="originalUser" class="flex items-center space-x-3">
-        <UserAvatar :user="originalUser" size="lg" />
-        <div>
-          <h3 class="text-lg font-semibold text-neutral-900">{{ originalUser.username }}</h3>
-          <p class="text-sm text-neutral-500">User ID: {{ originalUser.id }}</p>
-        </div>
-      </div>
-    </div>
-
     <!-- Loading State -->
     <BaseTransition name="fade">
       <div v-if="loading" class="bg-white rounded-2xl p-12 shadow-lg border border-neutral-100 text-center">

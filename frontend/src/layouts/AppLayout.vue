@@ -70,7 +70,7 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, watch, onUnmounted } from 'vue'
 import { mapState } from 'pinia'
 import NavigationHeader from '../components/NavigationHeader.vue'
 import AppSidebar from '../components/AppSidebar.vue'
@@ -97,13 +97,45 @@ export default {
   setup() {
     const { isSidebarOpen, closeSidebar, toggleSidebar } = useSidebar()
     const authStore = useAuthStore()
-    
+
     const userInitials = computed(() => {
       const user = authStore.user
       if (!user) return 'U'
       return `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase() || 'U'
     })
-    
+
+    // Handle body scroll lock for mobile sidebar
+    const updateBodyScroll = () => {
+      if (typeof window !== 'undefined') {
+        const isMobile = window.innerWidth < 1024
+        if (isSidebarOpen.value && isMobile) {
+          document.body.style.overflow = 'hidden'
+        } else {
+          document.body.style.overflow = ''
+        }
+      }
+    }
+
+    // Watch for sidebar state changes
+    watch(isSidebarOpen, updateBodyScroll)
+
+    // Watch for window resize
+    const handleResize = () => {
+      updateBodyScroll()
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize)
+    }
+
+    // Cleanup
+    onUnmounted(() => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', handleResize)
+        document.body.style.overflow = ''
+      }
+    })
+
     return {
       isSidebarOpen,
       closeSidebar,

@@ -152,10 +152,31 @@ const canManageUsers = computed(() => {
 
 // Methods
 const isActive = (path) => {
+  const currentPath = route.path
+
+  // Exact match for home
   if (path === '/') {
-    return route.path === '/'
+    return currentPath === '/'
   }
-  return route.path.startsWith(path)
+
+  // For other paths, use more specific matching
+  if (path === '/patients') {
+    return currentPath === '/patients' || currentPath.startsWith('/patients/')
+  }
+
+  if (path === '/appointments') {
+    return currentPath === '/appointments' || currentPath.startsWith('/appointments/')
+  }
+
+  if (path === '/clinics') {
+    return currentPath === '/clinics' || currentPath.startsWith('/clinics/')
+  }
+
+  if (path === '/users') {
+    return currentPath === '/users' || currentPath.startsWith('/users/')
+  }
+
+  return false
 }
 
 const toggleMoreMenu = () => {

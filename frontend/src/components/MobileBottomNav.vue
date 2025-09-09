@@ -153,27 +153,28 @@ const canManageUsers = computed(() => {
 // Methods
 const isActive = (path) => {
   const currentPath = route.path
+  const currentName = route.name
 
-  // Exact match for home
+  // Home is only active when exactly on the dashboard route
   if (path === '/') {
-    return currentPath === '/'
+    return currentName === 'Dashboard' || currentPath === '/'
   }
 
-  // For other paths, use more specific matching
+  // For other paths, check if current path starts with the nav path
   if (path === '/patients') {
-    return currentPath === '/patients' || currentPath.startsWith('/patients/')
+    return currentPath.startsWith('/patients')
   }
 
   if (path === '/appointments') {
-    return currentPath === '/appointments' || currentPath.startsWith('/appointments/')
+    return currentPath.startsWith('/appointments')
   }
 
   if (path === '/clinics') {
-    return currentPath === '/clinics' || currentPath.startsWith('/clinics/')
+    return currentPath.startsWith('/clinics')
   }
 
   if (path === '/users') {
-    return currentPath === '/users' || currentPath.startsWith('/users/')
+    return currentPath.startsWith('/users')
   }
 
   return false

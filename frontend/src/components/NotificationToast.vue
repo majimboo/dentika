@@ -5,8 +5,12 @@
         <div
           v-for="notification in visibleNotifications"
           :key="notification.id"
-          class="toast-container bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm"
+          class="toast-container bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm cursor-grab active:cursor-grabbing"
           :class="getToastClasses(notification)"
+          :style="{ transform: getSwipeTransform(notification.id) }"
+          @touchstart="handleTouchStart($event, notification.id)"
+          @touchmove="handleTouchMove($event, notification.id)"
+          @touchend="handleTouchEnd($event, notification.id)"
         >
           <div class="flex items-start">
             <!-- Icon -->
@@ -78,12 +82,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
 
 const router = useRouter()
 const notificationStore = useNotificationStore()
+
+// Swipe handling
+const swipeData = ref({})
 
 // Show only recent notifications that haven't been dismissed
 const visibleNotifications = computed(() => {
@@ -148,6 +155,59 @@ const handleAction = (notification, action) => {
 // Remove notification
 const removeNotification = (id) => {
   notificationStore.removeNotification(id)
+}
+
+// Swipe handling methods
+const handleTouchStart = (event, notificationId) => {
+  const touch = event.touches[0]
+  swipeData.value[notificationId] = {
+    startX: touch.clientX,
+    startY: touch.clientY,
+    currentX: touch.clientX,
+    isSwiping: false
+  }
+}
+
+const handleTouchMove = (event, notificationId) => {
+  if (!swipeData.value[notificationId]) return
+
+  event.preventDefault()
+  const touch = event.touches[0]
+  const data = swipeData.value[notificationId]
+
+  data.currentX = touch.clientX
+  const deltaX = data.currentX - data.startX
+  const deltaY = Math.abs(touch.clientY - data.startY)
+
+  // Only consider it a swipe if horizontal movement is greater than vertical
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+    data.isSwiping = true
+  }
+}
+
+const handleTouchEnd = (event, notificationId) => {
+  if (!swipeData.value[notificationId]) return
+
+  const data = swipeData.value[notificationId]
+  const deltaX = data.currentX - data.startX
+
+  // If swiped to the right with sufficient distance, dismiss the notification
+  if (data.isSwiping && deltaX > 100) {
+    removeNotification(notificationId)
+  }
+
+  // Reset swipe data
+  delete swipeData.value[notificationId]
+}
+
+const getSwipeTransform = (notificationId) => {
+  const data = swipeData.value[notificationId]
+  if (!data || !data.isSwiping) return ''
+
+  const deltaX = data.currentX - data.startX
+  // Only allow rightward movement
+  const translateX = Math.max(0, deltaX)
+  return `translateX(${translateX}px)`
 }
 
 // Set up event listeners for WebSocket events
@@ -243,9 +303,24 @@ const handleSystemAlert = (event) => {
   .fixed.top-4.right-4 {
     @apply top-2 right-2 left-2 max-w-none;
   }
-  
+
   .toast-container {
     @apply max-w-none;
   }
+}
+
+/* Swipe animations */
+.toast-container {
+  transition: transform 0.2s ease-out;
+  will-change: transform;
+}
+
+.toast-container:active {
+  transition: none;
+}
+
+/* Swipe feedback */
+.toast-container.swipe-active {
+  opacity: 0.8;
 }
 </style>

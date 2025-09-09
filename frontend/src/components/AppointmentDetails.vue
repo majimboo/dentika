@@ -374,7 +374,7 @@ const cancelAppointment = async () => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../styles/main.css";
 
 .btn-small {
   @apply px-2 py-1 text-xs font-medium rounded;

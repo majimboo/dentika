@@ -41,18 +41,21 @@ export const useClinicStore = defineStore('clinic', {
     async fetchClinic(clinicId) {
       this.loading = true
       this.error = null
-      
+
       try {
         const result = await apiService.get(`/api/clinics/${clinicId}`)
         if (result.success) {
           this.currentClinic = result.data
           this.branches = result.data.branches || []
+          return { success: true, data: result.data }
         } else {
           this.error = result.error
+          return { success: false, error: result.error }
         }
       } catch (error) {
         this.error = 'Failed to fetch clinic'
         console.error('Error fetching clinic:', error)
+        return { success: false, error: 'Failed to fetch clinic' }
       } finally {
         this.loading = false
       }

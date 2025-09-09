@@ -370,10 +370,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useAppointmentStore } from '../stores/appointment'
 import { usePatientStore } from '../stores/patient'
+import apiService from '../services/api'
 
 const authStore = useAuthStore()
 const appointmentStore = useAppointmentStore()
@@ -418,7 +419,8 @@ const userName = computed(() => {
 })
 
 const maxDayAppointments = computed(() => {
-  return Math.max(...dashboardData.value.weeklyStats.map(day => Math.max(day.scheduled, day.completed)))
+  if (dashboardData.value.weeklyStats.length === 0) return 10
+  return Math.max(...dashboardData.value.weeklyStats.map(day => Math.max(day.scheduled || 0, day.completed || 0)))
 })
 
 const loadDashboardData = async () => {
@@ -443,15 +445,60 @@ const loadDashboardData = async () => {
 }
 
 const loadMetrics = async () => {
-  // Simulate loading metrics
-  dashboardData.value.totalAppointments = 156
-  dashboardData.value.appointmentsChange = 12
-  dashboardData.value.totalRevenue = 12900
-  dashboardData.value.revenueChange = 8.5
-  dashboardData.value.newPatients = 23
-  dashboardData.value.patientsChange = -2
-  dashboardData.value.completionRate = 87.5
-  dashboardData.value.completionChange = 3.2
+  try {
+    const response = await apiService.getDashboardMetrics(selectedPeriod.value)
+
+    if (response.success) {
+      const data = response.data
+
+      // Ensure metrics object exists
+      const metrics = data.metrics || {}
+
+      // Update metrics from API response with safe defaults
+      dashboardData.value.totalAppointments = metrics.total_appointments || 0
+      dashboardData.value.totalRevenue = metrics.total_revenue || 0
+      dashboardData.value.newPatients = metrics.new_patients || 0
+
+      // Calculate completion rate from appointments
+      dashboardData.value.completionRate = metrics.total_appointments > 0
+        ? (metrics.completed_appointments / metrics.total_appointments) * 100
+        : 0
+
+      // Update weekly stats - handle both date-based and label-based formats
+      dashboardData.value.weeklyStats = (data.weekly_stats || []).map(stat => ({
+        label: stat.label || new Date(stat.date).toLocaleDateString('en-US', { weekday: 'short' }),
+        scheduled: stat.scheduled || 0,
+        completed: stat.completed || 0
+      }))
+
+      // Update revenue by category
+      dashboardData.value.revenueByCategory = (data.revenue_by_type || []).map(item => ({
+        name: item.type || 'Unknown',
+        amount: item.amount || 0,
+        color: item.color || 'bg-blue-500'
+      }))
+
+      // Calculate changes (simplified - in a real app you'd compare with previous period)
+      dashboardData.value.appointmentsChange = 0
+      dashboardData.value.revenueChange = 0
+      dashboardData.value.patientsChange = 0
+      dashboardData.value.completionChange = 0
+    } else {
+      console.error('Failed to load dashboard metrics:', response.error)
+      // Set default values on error
+      dashboardData.value.totalAppointments = 0
+      dashboardData.value.totalRevenue = 0
+      dashboardData.value.newPatients = 0
+      dashboardData.value.completionRate = 0
+    }
+  } catch (error) {
+    console.error('Error loading dashboard metrics:', error)
+    // Set default values on error
+    dashboardData.value.totalAppointments = 0
+    dashboardData.value.totalRevenue = 0
+    dashboardData.value.newPatients = 0
+    dashboardData.value.completionRate = 0
+  }
 }
 
 const loadTodayAppointments = async () => {
@@ -489,17 +536,8 @@ const loadAlerts = async () => {
 }
 
 const updateMetricsForPeriod = () => {
-  // Adjust metrics based on selected period
-  const multipliers = {
-    today: 1,
-    week: 7,
-    month: 30,
-    quarter: 90,
-    year: 365
-  }
-  
-  const multiplier = multipliers[selectedPeriod.value] || 1
-  // Update metrics accordingly (simplified)
+  // Metrics are now fetched from API based on selected period
+  // No manual adjustment needed
 }
 
 const refreshDashboard = () => {
@@ -631,6 +669,11 @@ const getAlertMessageClass = (type) => {
   return classes[type] || classes.info
 }
 
+// Load dashboard data on component mount
+onMounted(() => {
+  loadDashboardData()
+})
+
 const getAlertIconPath = (type) => {
   const paths = {
     info: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
@@ -647,7 +690,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../styles/main.css";
 
 .btn {
   @apply px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;

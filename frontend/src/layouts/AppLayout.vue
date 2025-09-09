@@ -45,7 +45,8 @@
     ></div>
     
     <!-- Sidebar - Slides in from left on mobile, always visible on desktop -->
-    <AppSidebar />
+    <SuperAdminSidebar v-if="isSuperAdmin" />
+    <AppSidebar v-else />
     
     <div class="flex flex-col min-h-screen lg:ml-64">
       <!-- Main Content -->
@@ -70,8 +71,10 @@
 
 <script>
 import { computed } from 'vue'
+import { mapState } from 'pinia'
 import NavigationHeader from '../components/NavigationHeader.vue'
 import AppSidebar from '../components/AppSidebar.vue'
+import SuperAdminSidebar from '../components/SuperAdminSidebar.vue'
 import AppFooter from '../components/AppFooter.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import NotificationPanel from '../components/NotificationPanel.vue'
@@ -83,9 +86,13 @@ export default {
   components: {
     NavigationHeader,
     AppSidebar,
+    SuperAdminSidebar,
     AppFooter,
     MobileBottomNav,
     NotificationPanel
+  },
+  computed: {
+    ...mapState(useAuthStore, ['isSuperAdmin'])
   },
   setup() {
     const { isSidebarOpen, closeSidebar, toggleSidebar } = useSidebar()

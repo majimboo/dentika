@@ -65,15 +65,25 @@ type CreateUserRequest struct {
 }
 
 func CreateUser(c *fiber.Ctx) error {
-	// Authorization check
-	requestingUser := c.Locals("user").(models.User)
-	if !requestingUser.IsSuperAdmin() {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Only super admins can create users"})
-	}
-
+	// Parse request first
 	var req CreateUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	// Authorization check
+	requestingUser := c.Locals("user").(models.User)
+
+	// Authorization logic
+	if requestingUser.IsSuperAdmin() {
+		// Super admin can create users for any clinic or without clinic
+	} else if requestingUser.HasRole(models.ClinicOwner) && requestingUser.ClinicID != nil {
+		// Clinic owner can only create users for their own clinic
+		if req.ClinicID == nil || *req.ClinicID != *requestingUser.ClinicID {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Clinic owners can only create users for their own clinic"})
+		}
+	} else {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Insufficient permissions to create users"})
 	}
 
 	// Validation
@@ -93,7 +103,7 @@ func CreateUser(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "Email already exists"})
 		}
 	}
-	
+
 	// Check if clinic exists if provided
 	if req.ClinicID != nil {
 		var clinic models.Clinic
@@ -137,18 +147,66 @@ func UpdateUser(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "User not found"})
 	}
 
+	// Get the requesting user for authorization
+	requestingUser := c.Locals("user").(models.User)
+
 	var req struct {
-		Username  string `json:"username"`
-		Email     string `json:"email"`
-		FirstName string `json:"first_name"`
-		LastName  string `json:"last_name"`
-		Gender    string `json:"gender"`
-		Avatar    string `json:"avatar"`
-		Password  string `json:"password"`
+		Username  string          `json:"username"`
+		Email     string          `json:"email"`
+		FirstName string          `json:"first_name"`
+		LastName  string          `json:"last_name"`
+		Gender    string          `json:"gender"`
+		Avatar    string          `json:"avatar"`
+		Password  string          `json:"password"`
+		Role      models.UserRole `json:"role"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	// Authorization logic for role updates
+	if req.Role != "" {
+		if requestingUser.IsSuperAdmin() {
+			// Super admin can set any role
+		} else if requestingUser.HasRole(models.ClinicOwner) && requestingUser.ClinicID != nil {
+			// Clinic owner can only update roles for users in their clinic
+			if user.ClinicID == nil || *user.ClinicID != *requestingUser.ClinicID {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Clinic owners can only update users in their own clinic"})
+			}
+
+			// Clinic owner can only assign staff roles (not super_admin or clinic_owner)
+			validRoles := []models.UserRole{models.Doctor, models.Secretary, models.Assistant}
+			isValidRole := false
+			for _, validRole := range validRoles {
+				if req.Role == validRole {
+					isValidRole = true
+					break
+				}
+			}
+			if !isValidRole {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Clinic owners can only assign Doctor, Secretary, or Assistant roles"})
+			}
+		} else {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Insufficient permissions to update user roles"})
+		}
+	}
+
+	// General authorization for non-role updates
+	if req.Role == "" {
+		if requestingUser.IsSuperAdmin() {
+			// Super admin can update any user
+		} else if requestingUser.HasRole(models.ClinicOwner) && requestingUser.ClinicID != nil {
+			// Clinic owner can only update users in their clinic
+			if user.ClinicID == nil || *user.ClinicID != *requestingUser.ClinicID {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Clinic owners can only update users in their own clinic"})
+			}
+		} else {
+			// Users can only update their own profile
+			if requestingUser.ID != uint(userID) {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "You can only update your own profile"})
+			}
+		}
 	}
 
 	if req.Username != "" {
@@ -188,6 +246,10 @@ func UpdateUser(c *fiber.Ctx) error {
 		if err := user.HashPassword(); err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "Could not hash password"})
 		}
+	}
+
+	if req.Role != "" {
+		user.Role = req.Role
 	}
 
 	if err := database.DB.Save(&user).Error; err != nil {

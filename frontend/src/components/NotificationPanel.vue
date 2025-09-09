@@ -219,7 +219,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../styles/main.css";
 
 .notification-item {
   transition: all 0.2s ease-in-out;

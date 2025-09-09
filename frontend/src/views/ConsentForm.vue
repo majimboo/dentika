@@ -675,7 +675,7 @@ watch(() => form.treatment_type, () => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../styles/main.css";
 
 .form-section {
   @apply bg-gray-50 lg:bg-white p-4 lg:p-0 rounded-lg lg:rounded-none mb-6;

@@ -197,6 +197,30 @@ class ApiService {
     localStorage.removeItem('token')
   }
 
+  // Analytics methods
+  async getDashboardMetrics(period = 'today') {
+    return this.request('get', `/analytics/dashboard?period=${period}`)
+  }
+
+  // Procedure and diagnosis template methods
+  async getProcedureTemplates(params = {}) {
+    const queryParams = new URLSearchParams(params)
+    return this.request('get', `/procedure-templates?${queryParams}`)
+  }
+
+  async createProcedureTemplate(templateData) {
+    return this.request('post', '/procedure-templates', templateData)
+  }
+
+  async getDiagnosisTemplates(params = {}) {
+    const queryParams = new URLSearchParams(params)
+    return this.request('get', `/diagnosis-templates?${queryParams}`)
+  }
+
+  async createDiagnosisTemplate(templateData) {
+    return this.request('post', '/diagnosis-templates', templateData)
+  }
+
   // Avatar upload methods
   async uploadAvatar(formData) {
     return this.request('post', '/upload/avatar', formData, {

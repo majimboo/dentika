@@ -111,10 +111,16 @@
         </div>
       </div>
 
+      <!-- Loading State -->
+      <div v-if="proceduresLoading" class="loading-state flex items-center justify-center py-12 bg-white rounded-lg shadow-sm border">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span class="ml-3 text-gray-600">Loading procedures...</span>
+      </div>
+
       <!-- Procedures Grid/List View -->
-      <div v-if="procedureViewMode === 'grid'" class="procedures-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div 
-          v-for="procedure in filteredProcedures" 
+      <div v-else-if="procedureViewMode === 'grid'" class="procedures-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          v-for="procedure in filteredProcedures"
           :key="procedure.id"
           class="procedure-card bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
         >
@@ -140,15 +146,15 @@
             
             <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ procedure.name }}</h3>
             <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ procedure.description }}</p>
-            
+
             <div class="procedure-details space-y-2">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</span>
-                <span class="text-sm text-gray-900">{{ procedure.duration }} min</span>
+                <span class="text-sm text-gray-900">{{ procedure.estimated_duration }} min</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Cost</span>
-                <span class="text-sm text-gray-900 font-semibold">{{ procedure.cost }}</span>
+                <span class="text-sm text-gray-900 font-semibold">${{ procedure.default_cost }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Category</span>
@@ -159,6 +165,19 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Empty State for Procedures -->
+      <div v-else-if="filteredProcedures.length === 0" class="empty-state text-center py-12 bg-white rounded-lg shadow-sm border">
+        <div class="empty-icon text-gray-300 mb-4">
+          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No procedures found</h3>
+        <p class="text-gray-500 mb-4">
+          {{ procedureSearchQuery ? 'No procedures match your search criteria.' : 'Get started by adding your first procedure.' }}
+        </p>
       </div>
 
       <!-- Procedures List View -->
@@ -189,19 +208,19 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getProcedureIcon(procedure.category)"></path>
                       </svg>
                     </div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">{{ procedure.name }}</div>
-                      <div class="text-sm text-gray-500 line-clamp-1">{{ procedure.description }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="text-xs px-2 py-1 rounded-full" :class="getProcedureCategoryBadge(procedure.category)">
-                    {{ formatCategory(procedure.category) }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-900">{{ procedure.duration }} min</td>
-                <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ procedure.cost }}</td>
+                     <div>
+                       <div class="text-sm font-medium text-gray-900">{{ procedure.name }}</div>
+                       <div class="text-sm text-gray-500 line-clamp-1">{{ procedure.description }}</div>
+                     </div>
+                   </div>
+                 </td>
+                 <td class="px-6 py-4">
+                   <span class="text-xs px-2 py-1 rounded-full" :class="getProcedureCategoryBadge(procedure.category)">
+                     {{ formatCategory(procedure.category) }}
+                   </span>
+                 </td>
+                 <td class="px-6 py-4 text-sm text-gray-900">{{ procedure.estimated_duration }} min</td>
+                 <td class="px-6 py-4 text-sm font-semibold text-gray-900">${{ procedure.default_cost }}</td>
                 <td class="px-6 py-4">
                   <div class="flex items-center space-x-2">
                     <router-link
@@ -283,7 +302,7 @@
                     <div class="text-sm text-gray-500 line-clamp-1">{{ diagnosis.description }}</div>
                   </div>
                 </td>
-                <td class="px-6 py-4 text-sm font-mono text-gray-900">{{ diagnosis.icd10_code }}</td>
+                 <td class="px-6 py-4 text-sm font-mono text-gray-900">{{ diagnosis.code }}</td>
                 <td class="px-6 py-4">
                   <span class="text-xs px-2 py-1 rounded-full" :class="getDiagnosisCategoryBadge(diagnosis.category)">
                     {{ formatCategory(diagnosis.category) }}
@@ -434,6 +453,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import apiService from '../services/api'
 
 const activeTab = ref('procedures')
 const procedureViewMode = ref('grid')
@@ -446,152 +466,98 @@ const selectedDiagnosisCategory = ref('')
 
 
 // Data
-const procedures = ref([
-  {
-    id: 1,
-    name: 'Dental Cleaning',
-    description: 'Professional teeth cleaning and plaque removal',
-    category: 'preventive',
-    duration: 45,
-    cost: 120,
-    created_at: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: 2,
-    name: 'Root Canal Treatment',
-    description: 'Endodontic treatment to save infected tooth',
-    category: 'restorative',
-    duration: 90,
-    cost: 800,
-    created_at: '2024-01-16T14:30:00Z'
-  },
-  {
-    id: 3,
-    name: 'Tooth Extraction',
-    description: 'Surgical removal of damaged or problematic tooth',
-    category: 'surgical',
-    duration: 30,
-    cost: 200,
-    created_at: '2024-01-17T09:15:00Z'
-  }
-])
-
-const diagnoses = ref([
-  {
-    id: 1,
-    name: 'Dental Caries',
-    description: 'Tooth decay affecting enamel and dentin',
-    icd10_code: 'K02.9',
-    category: 'caries',
-    severity: 'moderate',
-    created_at: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: 2,
-    name: 'Gingivitis',
-    description: 'Inflammation of gums due to bacterial infection',
-    icd10_code: 'K05.0',
-    category: 'periodontal',
-    severity: 'mild',
-    created_at: '2024-01-16T14:30:00Z'
-  }
-])
-
-const treatmentPlans = ref([
-  {
-    id: 1,
-    name: 'Full Mouth Restoration',
-    patient: {
-      id: 1,
-      first_name: 'John',
-      last_name: 'Smith',
-      phone: '(555) 123-4567'
-    },
-    procedures: [1, 2, 3],
-    status: 'active',
-    progress: 65,
-    total_cost: 2500,
-    created_at: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: 2,
-    name: 'Orthodontic Treatment',
-    patient: {
-      id: 2,
-      first_name: 'Jane',
-      last_name: 'Doe',
-      phone: '(555) 987-6543'
-    },
-    procedures: [4, 5],
-    status: 'on_hold',
-    progress: 30,
-    total_cost: 4500,
-    created_at: '2024-01-16T14:30:00Z'
-  }
-])
-
+const procedures = ref([])
+const diagnoses = ref([])
+const treatmentPlans = ref([])
 const treatmentStats = ref({
-  active: 12,
-  completed: 45,
-  onHold: 3,
-  revenue: 125000
+  active: 0,
+  completed: 0,
+  onHold: 0,
+  revenue: 0
 })
+
+// Loading states
+const proceduresLoading = ref(false)
+const diagnosesLoading = ref(false)
+const treatmentsLoading = ref(false)
 
 // Computed properties
 const filteredProcedures = computed(() => {
-  let filtered = procedures.value
-
-  if (procedureSearchQuery.value) {
-    const query = procedureSearchQuery.value.toLowerCase()
-    filtered = filtered.filter(proc => 
-      proc.name.toLowerCase().includes(query) ||
-      proc.description.toLowerCase().includes(query)
-    )
-  }
-
-  if (selectedProcedureCategory.value) {
-    filtered = filtered.filter(proc => proc.category === selectedProcedureCategory.value)
-  }
-
-  return filtered
+  // Since we're now loading filtered data from API, just return the procedures
+  return procedures.value
 })
 
 const filteredDiagnoses = computed(() => {
-  let filtered = diagnoses.value
-
-  if (diagnosisSearchQuery.value) {
-    const query = diagnosisSearchQuery.value.toLowerCase()
-    filtered = filtered.filter(diag => 
-      diag.name.toLowerCase().includes(query) ||
-      diag.description.toLowerCase().includes(query) ||
-      diag.icd10_code.toLowerCase().includes(query)
-    )
-  }
-
-  if (selectedDiagnosisCategory.value) {
-    filtered = filtered.filter(diag => diag.category === selectedDiagnosisCategory.value)
-  }
-
-  return filtered
+  // Since we're now loading filtered data from API, just return the diagnoses
+  return diagnoses.value
 })
 
 // Methods
+const loadProcedures = async () => {
+  try {
+    proceduresLoading.value = true
+    const params = {}
+    if (procedureSearchQuery.value) {
+      params.search = procedureSearchQuery.value
+    }
+    if (selectedProcedureCategory.value) {
+      params.category = selectedProcedureCategory.value
+    }
+
+    const result = await apiService.getProcedureTemplates(params)
+    if (result.success) {
+      procedures.value = result.data
+    }
+  } catch (error) {
+    console.error('Error loading procedures:', error)
+  } finally {
+    proceduresLoading.value = false
+  }
+}
+
+const loadDiagnoses = async () => {
+  try {
+    diagnosesLoading.value = true
+    const params = {}
+    if (diagnosisSearchQuery.value) {
+      params.search = diagnosisSearchQuery.value
+    }
+    if (selectedDiagnosisCategory.value) {
+      params.category = selectedDiagnosisCategory.value
+    }
+
+    const result = await apiService.getDiagnosisTemplates(params)
+    if (result.success) {
+      diagnoses.value = result.data
+    }
+  } catch (error) {
+    console.error('Error loading diagnoses:', error)
+  } finally {
+    diagnosesLoading.value = false
+  }
+}
+
+const loadTreatmentPlans = async () => {
+  // For now, treatment plans are not implemented in the backend
+  // This would load treatment plans from a future API endpoint
+  treatmentsLoading.value = false
+}
+
 const searchProcedures = () => {
-  // Search is reactive via computed property
+  loadProcedures()
 }
 
 const searchDiagnoses = () => {
-  // Search is reactive via computed property
+  loadDiagnoses()
 }
 
 const filterProcedures = () => {
-  // Filter is reactive via computed property
+  loadProcedures()
 }
 
 const filterDiagnoses = () => {
-  // Filter is reactive via computed property
+  loadDiagnoses()
 }
-
 
 const deleteProcedure = (procedureId) => {
   if (confirm('Are you sure you want to delete this procedure?')) {
@@ -700,13 +666,14 @@ const getProcedureIcon = (category) => {
 }
 
 onMounted(() => {
-  // Load initial data
-  // This would typically fetch from APIs
+  loadProcedures()
+  loadDiagnoses()
+  loadTreatmentPlans()
 })
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../styles/main.css";
 
 .btn {
   @apply px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;

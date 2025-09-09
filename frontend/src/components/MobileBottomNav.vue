@@ -124,7 +124,7 @@
     <!-- Overlay to close more menu -->
     <div
       v-if="showMoreMenu"
-      class="fixed inset-0 bg-black bg-opacity-25 z-40"
+      class="fixed inset-0 bg-black/75 z-40"
       @click="closeMoreMenu"
     ></div>
   </div>
@@ -174,7 +174,7 @@ const logout = async () => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../styles/main.css";
 
 .mobile-bottom-nav {
   /* Fixed height to prevent layout shifts */

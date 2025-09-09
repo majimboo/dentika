@@ -236,7 +236,7 @@ const selectDate = (date) => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../../styles/main.css";
 
 .month-calendar {
   @apply h-full;

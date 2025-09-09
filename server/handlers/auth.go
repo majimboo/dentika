@@ -143,3 +143,11 @@ func GetCurrentUser(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 	return c.JSON(user)
 }
+
+func HealthCheck(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{
+		"status":    "healthy",
+		"timestamp": time.Now().Unix(),
+		"service":   "dentika-server",
+	})
+}

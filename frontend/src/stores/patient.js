@@ -84,17 +84,20 @@ export const usePatientStore = defineStore('patient', {
     async fetchPatient(patientId) {
       this.loading = true
       this.error = null
-      
+
       try {
         const result = await apiService.get(`/api/patients/${patientId}`)
         if (result.success) {
           this.currentPatient = result.data
+          return { success: true, data: result.data }
         } else {
           this.error = result.error
+          return { success: false, error: result.error }
         }
       } catch (error) {
         this.error = 'Failed to fetch patient'
         console.error('Error fetching patient:', error)
+        return { success: false, error: 'Failed to fetch patient' }
       } finally {
         this.loading = false
       }

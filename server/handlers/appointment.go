@@ -231,6 +231,7 @@ func CreateAppointment(c *fiber.Ctx) error {
 		PatientID:           req.PatientID,
 		DoctorID:            req.DoctorID,
 		BranchID:            req.BranchID,
+		ClinicID:            branch.ClinicID,
 		EstimatedCost:       req.EstimatedCost,
 		PreAppointmentNotes: req.PreAppointmentNotes,
 	}

@@ -117,9 +117,9 @@ const getIconClasses = (notification) => {
 // Get progress bar width for temporary notifications
 const getProgressWidth = (notification) => {
   if (!notification.createdAt) return 100
-  
+
   const elapsed = Date.now() - notification.createdAt
-  const total = 30000 // 30 seconds
+  const total = 5000 // 5 seconds
   return Math.max(0, 100 - (elapsed / total) * 100)
 }
 
@@ -213,7 +213,7 @@ const handleSystemAlert = (event) => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../styles/main.css";
 
 .toast-enter-active,
 .toast-leave-active {

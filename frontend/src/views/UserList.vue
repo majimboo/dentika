@@ -3,8 +3,8 @@
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-neutral-900">User Management</h1>
-        <p class="mt-2 text-base sm:text-lg text-neutral-600">Manage and organize your system users</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-neutral-900">Staff Management</h1>
+        <p class="mt-2 text-base sm:text-lg text-neutral-600">Manage members of your team</p>
       </div>
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
         <button 
@@ -15,16 +15,17 @@
           <svg class="w-4 h-4 sm:mr-2" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
-          <span class="hidden sm:inline">Refresh</span>
+           <span class="sm:ml-2">Refresh</span>
         </button>
-        <button 
+        <button
+          v-if="canManageUsers"
           @click="addNewUser"
           class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200"
         >
           <svg class="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
           </svg>
-          <span class="hidden sm:inline">Add New User</span>
+            <span class="sm:ml-2">Add Staff</span>
         </button>
       </div>
     </div>
@@ -34,7 +35,7 @@
       <div class="bg-white rounded-2xl p-6 shadow-lg border border-neutral-100">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-neutral-600">Total Users</p>
+             <p class="text-sm font-medium text-neutral-600">Total Staff</p>
             <p class="text-3xl font-bold text-neutral-900 mt-2">{{ users.length }}</p>
             <p class="text-xs text-success-600 mt-1 flex items-center">
               <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,8 +102,8 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Search users by name or ID..."
-              aria-label="Search users"
+              placeholder="Search staff by name or ID..."
+              aria-label="Search staff"
               class="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
             />
           </div>
@@ -231,12 +232,12 @@
           </svg>
         </div>
         <h3 class="text-lg font-semibold text-neutral-900 mb-2">
-          {{ searchQuery ? 'No users found' : 'No users yet' }}
+          {{ searchQuery ? 'No staff found' : 'No staff yet' }}
         </h3>
         <p class="text-neutral-600 mb-6">
-          {{ searchQuery 
-            ? `No users match your search for "${searchQuery}"` 
-            : 'Get started by creating your first user account.' 
+          {{ searchQuery
+            ? `No staff match your search for "${searchQuery}"`
+            : 'Get started by adding your first staff member.'
           }}
         </p>
         <button 
@@ -247,7 +248,7 @@
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
           </svg>
-          Create First User
+           Add First Staff Member
         </button>
         </div>
       </BaseTransition>
@@ -317,6 +318,7 @@
 <script>
 import { ref, computed, onMounted, TransitionGroup } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 import apiService from '../services/api'
 import BaseLoading from '../components/BaseLoading.vue'
 import BaseTransition from '../components/BaseTransition.vue'
@@ -330,6 +332,7 @@ export default {
   },
   setup() {
     const router = useRouter()
+    const authStore = useAuthStore()
     const users = ref([])
     const loading = ref(true)
     const error = ref('')
@@ -369,10 +372,15 @@ export default {
         return aVal > bVal ? 1 : -1
       })
       
-      return filtered
-    })
-    
-    const loadUsers = async () => {
+        return filtered
+      })
+
+      const canManageUsers = computed(() => {
+        const role = authStore.user?.role
+        return ['super_admin', 'clinic_owner'].includes(role)
+      })
+
+     const loadUsers = async () => {
       try {
         loading.value = true
         error.value = ''
@@ -398,7 +406,12 @@ export default {
     }
     
     const addNewUser = () => {
-      router.push('/users/new')
+      const clinicId = authStore.userClinicId
+      if (clinicId) {
+        router.push(`/users/new?clinic_id=${clinicId}`)
+      } else {
+        router.push('/users/new')
+      }
     }
     
     const confirmDelete = (user) => {

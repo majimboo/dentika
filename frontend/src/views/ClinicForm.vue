@@ -114,7 +114,7 @@
         <div class="p-6 sm:p-8">
           <div class="flex justify-between items-center border-b border-neutral-200 pb-2 mb-4">
             <h3 class="text-lg font-semibold text-neutral-900">Staff</h3>
-            <button @click="addUserToClinic" class="inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">Add User</button>
+            <button @click="addUserToClinic" class="inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">Add Staff</button>
           </div>
           <ul class="space-y-2">
             <li v-for="user in clinic.staff" :key="user.id" class="p-4 border rounded-md flex justify-between items-center">

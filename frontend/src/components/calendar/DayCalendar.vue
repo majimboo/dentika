@@ -270,7 +270,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../../styles/main.css";
 
 .day-calendar {
   @apply relative h-full;

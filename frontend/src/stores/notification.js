@@ -25,11 +25,11 @@ export const useNotificationStore = defineStore('notification', () => {
     notifications.value.unshift(newNotification)
     unreadCount.value++
 
-    // Auto-remove after 30 seconds if it's a temporary notification
+    // Auto-remove after 5 seconds if it's a temporary notification
     if (notification.temporary !== false) {
       setTimeout(() => {
         removeNotification(newNotification.id)
-      }, 30000)
+      }, 5000)
     }
 
     return newNotification

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"math/rand"
 	"os"
 	"time"
 
@@ -26,6 +27,9 @@ func main() {
 
 	// Connect to database
 	database.ConnectDatabase()
+
+	// Update existing appointments before migration
+	updateExistingAppointments()
 
 	// Auto-migrate the models
 	if err := database.DB.AutoMigrate(
@@ -56,6 +60,10 @@ func main() {
 	// Create default admin user if it doesn't exist
 	createDefaultAdmin()
 
+	// Seed sample data for testing
+	seedSampleData()
+	seedDefaultTemplates()
+
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
 		AppName:      "CDK Engine",
@@ -81,6 +89,7 @@ func main() {
 	// Auth routes
 	app.Post("/api/auth/login", handlers.Login)
 	app.Post("/api/auth/register", handlers.Register)
+	app.Get("/api/auth/health", handlers.HealthCheck)
 
 	// Protected routes
 	api := app.Group("/api", middleware.AuthMiddleware())
@@ -88,7 +97,7 @@ func main() {
 	api.Get("/auth/me", handlers.GetCurrentUser)
 	api.Get("/users", handlers.GetUsers)
 	api.Get("/users/:id", handlers.GetUser)
-	api.Post("/users", middleware.RoleMiddleware(models.SuperAdmin), handlers.CreateUser)
+	api.Post("/users", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.CreateUser)
 	api.Put("/users/:id", handlers.UpdateUser)
 	api.Delete("/users/:id", handlers.DeleteUser)
 
@@ -114,6 +123,9 @@ func main() {
 	api.Put("/patients/:id", handlers.UpdatePatient)
 	api.Delete("/patients/:id", handlers.DeactivatePatient)
 
+	// Analytics routes
+	api.Get("/analytics/dashboard", handlers.GetDashboardMetrics)
+
 	// Appointment routes
 	api.Get("/appointments", handlers.GetAppointments)
 	api.Get("/appointments/upcoming", handlers.GetUpcomingAppointments)
@@ -137,6 +149,14 @@ func main() {
 	api.Post("/procedure-templates", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.CreateProcedureTemplate)
 	api.Get("/diagnosis-templates", handlers.GetDiagnosisTemplates)
 	api.Post("/diagnosis-templates", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.CreateDiagnosisTemplate)
+
+	// Appointment procedures and diagnoses
+	api.Get("/appointments/:appointment_id/procedures", handlers.GetAppointmentProcedures)
+	api.Post("/appointments/:appointment_id/procedures", middleware.RoleMiddleware(models.Doctor), handlers.AddProcedureToAppointment)
+	api.Put("/appointment-procedures/:id", middleware.RoleMiddleware(models.Doctor), handlers.UpdateAppointmentProcedure)
+	api.Get("/appointments/:appointment_id/diagnoses", handlers.GetAppointmentDiagnoses)
+	api.Post("/appointments/:appointment_id/diagnoses", middleware.RoleMiddleware(models.Doctor), handlers.AddDiagnosisToAppointment)
+	api.Put("/appointment-diagnoses/:id", middleware.RoleMiddleware(models.Doctor), handlers.UpdateAppointmentDiagnosis)
 
 	// Appointment procedures and diagnoses
 	api.Get("/appointments/:appointment_id/procedures", handlers.GetAppointmentProcedures)
@@ -186,5 +206,385 @@ func createDefaultAdmin() {
 		log.Println("Default admin user created (username: admin, password: admin)")
 	} else {
 		log.Println("Admin user already exists")
+	}
+
+	// Check if any clinics exist, if not, create a default one
+	var clinicCount int64
+	if err := database.DB.Model(&models.Clinic{}).Count(&clinicCount).Error; err != nil {
+		log.Printf("Failed to count clinics: %v", err)
+		return
+	}
+
+	if clinicCount == 0 {
+		// Create a default clinic
+		defaultClinic := models.Clinic{
+			Name:     "Default Clinic",
+			Address:  "123 Main Street, City, State",
+			Phone:    "+1 (555) 123-4567",
+			Email:    "info@defaultclinic.com",
+			Website:  "https://defaultclinic.com",
+			IsActive: true,
+		}
+
+		if err := database.DB.Create(&defaultClinic).Error; err != nil {
+			log.Printf("Failed to create default clinic: %v", err)
+		} else {
+			// Create main branch for the clinic
+			mainBranch := models.Branch{
+				Name:         "Main Branch",
+				Address:      defaultClinic.Address,
+				Phone:        defaultClinic.Phone,
+				IsMainBranch: true,
+				IsActive:     true,
+				ClinicID:     defaultClinic.ID,
+			}
+
+			if err := database.DB.Create(&mainBranch).Error; err != nil {
+				log.Printf("Failed to create main branch: %v", err)
+			} else {
+				log.Printf("Default clinic created (ID: %d, Name: %s)", defaultClinic.ID, defaultClinic.Name)
+			}
+		}
+	}
+}
+
+func seedSampleData() {
+	// Check if sample data already exists
+	var appointmentCount int64
+	if err := database.DB.Model(&models.Appointment{}).Count(&appointmentCount).Error; err == nil && appointmentCount > 0 {
+		log.Println("Sample appointments already exist, skipping seed")
+		return
+	}
+
+	// Get the default clinic and branch
+	var clinic models.Clinic
+	if err := database.DB.First(&clinic).Error; err != nil {
+		log.Printf("No clinic found, skipping seed")
+		return
+	}
+
+	var branch models.Branch
+	if err := database.DB.Where("clinic_id = ?", clinic.ID).First(&branch).Error; err != nil {
+		log.Printf("No branch found, skipping seed")
+		return
+	}
+
+	// Create sample patients
+	dob1 := time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC)
+	dob2 := time.Date(1990, 3, 22, 0, 0, 0, 0, time.UTC)
+	dob3 := time.Date(1975, 7, 10, 0, 0, 0, 0, time.UTC)
+
+	patients := []models.Patient{
+		{
+			FirstName:   "John",
+			LastName:    "Doe",
+			Email:       "john.doe@example.com",
+			Phone:       "+1234567890",
+			DateOfBirth: &dob1,
+			ClinicID:    clinic.ID,
+		},
+		{
+			FirstName:   "Jane",
+			LastName:    "Smith",
+			Email:       "jane.smith@example.com",
+			Phone:       "+1234567891",
+			DateOfBirth: &dob2,
+			ClinicID:    clinic.ID,
+		},
+		{
+			FirstName:   "Bob",
+			LastName:    "Johnson",
+			Email:       "bob.johnson@example.com",
+			Phone:       "+1234567892",
+			DateOfBirth: &dob3,
+			ClinicID:    clinic.ID,
+		},
+	}
+
+	var createdPatients []models.Patient
+	for i := range patients {
+		// Generate patient number
+		patients[i].GeneratePatientNumber(clinic.ID)
+
+		if err := database.DB.Create(&patients[i]).Error; err != nil {
+			log.Printf("Failed to create patient %s: %v", patients[i].FirstName, err)
+			continue
+		}
+		createdPatients = append(createdPatients, patients[i])
+
+		// Create dental record for each patient
+		dentalRecord := models.DentalRecord{
+			PatientID: patients[i].ID,
+			ClinicID:  patients[i].ClinicID,
+		}
+		if err := database.DB.Create(&dentalRecord).Error; err != nil {
+			log.Printf("Failed to create dental record for patient %s: %v", patients[i].FirstName, err)
+		}
+	}
+
+	if len(createdPatients) == 0 {
+		log.Printf("No patients created, skipping appointment creation")
+		return
+	}
+
+	// Get admin user for appointments
+	var adminUser models.User
+	if err := database.DB.Where("username = ?", "admin").First(&adminUser).Error; err != nil {
+		log.Printf("Admin user not found, skipping appointment creation")
+		return
+	}
+
+	// Create sample appointments
+	now := time.Now()
+	appointmentTypes := []models.AppointmentType{
+		models.TypeCheckup,
+		models.TypeCleaning,
+		models.TypeConsultation,
+		models.TypeTreatment,
+	}
+
+	statuses := []models.AppointmentStatus{
+		models.StatusCompleted,
+		models.StatusScheduled,
+		models.StatusConfirmed,
+	}
+
+	// Create some appointments for today to ensure dashboard has data
+	for i := 0; i < 5; i++ {
+		todayAppointment := models.Appointment{
+			Title:         "Today's Appointment " + string(rune(i+65)),
+			Description:   "Sample appointment for today",
+			StartTime:     now.Add(time.Duration(i+1) * time.Hour), // Spread throughout today
+			EndTime:       now.Add(time.Duration(i+1)*time.Hour + time.Hour),
+			Duration:      60,
+			Status:        statuses[rand.Intn(len(statuses))],
+			Type:          appointmentTypes[rand.Intn(len(appointmentTypes))],
+			PatientID:     createdPatients[rand.Intn(len(createdPatients))].ID,
+			DoctorID:      adminUser.ID,
+			BranchID:      branch.ID,
+			ClinicID:      clinic.ID,
+			EstimatedCost: float64(50 + rand.Intn(200)),
+			ActualCost:    float64(50 + rand.Intn(200)),
+			IsPaid:        rand.Intn(2) == 1,
+		}
+
+		if err := database.DB.Create(&todayAppointment).Error; err != nil {
+			log.Printf("Failed to create today's appointment %d: %v", i+1, err)
+		}
+	}
+
+	// Create historical appointments
+	for i := 0; i < 15; i++ {
+		appointmentDate := now.AddDate(0, 0, rand.Intn(30)-15) // Random date within ±15 days
+
+		appointment := models.Appointment{
+			Title:         "Sample Appointment " + string(rune(i+70)), // F, G, H...
+			Description:   "Sample appointment description",
+			StartTime:     appointmentDate,
+			EndTime:       appointmentDate.Add(time.Hour),
+			Duration:      60,
+			Status:        statuses[rand.Intn(len(statuses))],
+			Type:          appointmentTypes[rand.Intn(len(appointmentTypes))],
+			PatientID:     createdPatients[rand.Intn(len(createdPatients))].ID,
+			DoctorID:      adminUser.ID,
+			BranchID:      branch.ID,
+			ClinicID:      clinic.ID,
+			EstimatedCost: float64(50 + rand.Intn(200)), // $50-$250
+			ActualCost:    float64(50 + rand.Intn(200)),
+			IsPaid:        rand.Intn(2) == 1,
+		}
+
+		if err := database.DB.Create(&appointment).Error; err != nil {
+			log.Printf("Failed to create appointment %d: %v", i+1, err)
+			continue
+		}
+	}
+
+	// Create sample daily sales data for the last 30 days
+	for i := 0; i < 30; i++ {
+		saleDate := now.AddDate(0, 0, -i)
+
+		dailySales := models.DailySales{
+			Date:                  saleDate,
+			TotalAppointments:     rand.Intn(10) + 5,              // 5-15 appointments
+			CompletedAppointments: rand.Intn(8) + 3,               // 3-11 completed
+			CancelledAppointments: rand.Intn(3),                   // 0-3 cancelled
+			NoShowAppointments:    rand.Intn(2),                   // 0-2 no-shows
+			TotalRevenue:          float64(rand.Intn(2000) + 500), // $500-$2500
+			PaidRevenue:           float64(rand.Intn(1800) + 400),
+			PendingRevenue:        float64(rand.Intn(300)),
+			NewPatients:           rand.Intn(3),     // 0-3 new patients
+			ReturningPatients:     rand.Intn(8) + 2, // 2-10 returning
+			TotalInquiries:        rand.Intn(5) + 1, // 1-6 inquiries
+			ConvertedInquiries:    rand.Intn(4),     // 0-4 converted
+			ClinicID:              clinic.ID,
+		}
+
+		// Calculate conversion rate
+		dailySales.CalculateConversionRate()
+
+		if err := database.DB.Create(&dailySales).Error; err != nil {
+			log.Printf("Failed to create daily sales for %s: %v", saleDate.Format("2006-01-02"), err)
+		}
+	}
+
+	log.Println("Sample data seeded successfully!")
+}
+
+func seedDefaultTemplates() {
+	// Check if templates already exist
+	var procedureCount int64
+	if err := database.DB.Model(&models.ProcedureTemplate{}).Count(&procedureCount).Error; err == nil && procedureCount > 0 {
+		log.Println("Procedure templates already exist, skipping seed")
+		return
+	}
+
+	// Seed default procedure templates
+	procedureTemplates := []models.ProcedureTemplate{
+		{
+			Code:              "DC001",
+			Name:              "Dental Cleaning",
+			Description:       "Professional teeth cleaning and plaque removal",
+			Category:          "preventive",
+			EstimatedDuration: 45,
+			DefaultCost:       120.00,
+			IsActive:          true,
+		},
+		{
+			Code:              "RCT001",
+			Name:              "Root Canal Treatment",
+			Description:       "Endodontic treatment to save infected tooth",
+			Category:          "restorative",
+			EstimatedDuration: 90,
+			DefaultCost:       800.00,
+			IsActive:          true,
+		},
+		{
+			Code:              "TE001",
+			Name:              "Tooth Extraction",
+			Description:       "Surgical removal of damaged or problematic tooth",
+			Category:          "surgical",
+			EstimatedDuration: 30,
+			DefaultCost:       200.00,
+			IsActive:          true,
+		},
+		{
+			Code:              "FILL001",
+			Name:              "Dental Filling",
+			Description:       "Restoration of tooth structure using filling material",
+			Category:          "restorative",
+			EstimatedDuration: 60,
+			DefaultCost:       150.00,
+			IsActive:          true,
+		},
+		{
+			Code:              "CROWN001",
+			Name:              "Dental Crown",
+			Description:       "Custom cap placed over damaged tooth",
+			Category:          "restorative",
+			EstimatedDuration: 120,
+			DefaultCost:       1200.00,
+			IsActive:          true,
+		},
+		{
+			Code:              "ORTHO001",
+			Name:              "Orthodontic Consultation",
+			Description:       "Initial consultation for orthodontic treatment",
+			Category:          "orthodontic",
+			EstimatedDuration: 30,
+			DefaultCost:       100.00,
+			IsActive:          true,
+		},
+	}
+
+	for _, template := range procedureTemplates {
+		if err := database.DB.Create(&template).Error; err != nil {
+			log.Printf("Failed to create procedure template %s: %v", template.Name, err)
+		}
+	}
+
+	// Check if diagnosis templates already exist
+	var diagnosisCount int64
+	if err := database.DB.Model(&models.DiagnosisTemplate{}).Count(&diagnosisCount).Error; err == nil && diagnosisCount > 0 {
+		log.Println("Diagnosis templates already exist, skipping seed")
+		return
+	}
+
+	// Seed default diagnosis templates
+	diagnosisTemplates := []models.DiagnosisTemplate{
+		{
+			Code:        "K02.9",
+			Name:        "Dental Caries",
+			Description: "Tooth decay affecting enamel and dentin",
+			Category:    "caries",
+			Severity:    "moderate",
+			IsActive:    true,
+		},
+		{
+			Code:        "K05.0",
+			Name:        "Gingivitis",
+			Description: "Inflammation of gums due to bacterial infection",
+			Category:    "periodontal",
+			Severity:    "mild",
+			IsActive:    true,
+		},
+		{
+			Code:        "K05.3",
+			Name:        "Periodontitis",
+			Description: "Advanced gum disease with bone loss",
+			Category:    "periodontal",
+			Severity:    "severe",
+			IsActive:    true,
+		},
+		{
+			Code:        "K04.5",
+			Name:        "Apical Periodontitis",
+			Description: "Inflammation of tissue around tooth root",
+			Category:    "endodontic",
+			Severity:    "moderate",
+			IsActive:    true,
+		},
+		{
+			Code:        "K08.1",
+			Name:        "Complete Loss of Teeth",
+			Description: "Edentulism - complete tooth loss",
+			Category:    "other",
+			Severity:    "severe",
+			IsActive:    true,
+		},
+	}
+
+	for _, template := range diagnosisTemplates {
+		if err := database.DB.Create(&template).Error; err != nil {
+			log.Printf("Failed to create diagnosis template %s: %v", template.Name, err)
+		}
+	}
+
+	log.Println("Default templates seeded successfully!")
+}
+
+func updateExistingAppointments() {
+	// Update existing appointments that don't have ClinicID set
+	result := database.DB.Model(&models.Appointment{}).
+		Joins("JOIN branches ON appointments.branch_id = branches.id").
+		Where("appointments.clinic_id IS NULL OR appointments.clinic_id = 0").
+		Update("clinic_id", database.DB.Table("branches").Select("clinic_id").Where("branches.id = appointments.branch_id"))
+
+	if result.Error != nil {
+		log.Printf("Failed to update existing appointments: %v", result.Error)
+	} else if result.RowsAffected > 0 {
+		log.Printf("Updated %d existing appointments with ClinicID", result.RowsAffected)
+	}
+
+	// Update existing dental records that don't have ClinicID set
+	dentalResult := database.DB.Model(&models.DentalRecord{}).
+		Joins("JOIN patients ON dental_records.patient_id = patients.id").
+		Where("dental_records.clinic_id IS NULL OR dental_records.clinic_id = 0").
+		Update("clinic_id", database.DB.Table("patients").Select("clinic_id").Where("patients.id = dental_records.patient_id"))
+
+	if dentalResult.Error != nil {
+		log.Printf("Failed to update existing dental records: %v", dentalResult.Error)
+	} else if dentalResult.RowsAffected > 0 {
+		log.Printf("Updated %d existing dental records with ClinicID", dentalResult.RowsAffected)
 	}
 }

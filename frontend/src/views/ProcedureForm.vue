@@ -344,7 +344,7 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-@reference "tailwindcss";
+@import "../styles/main.css";
 
 .form-label {
   @apply block text-sm font-medium text-gray-700 mb-1;

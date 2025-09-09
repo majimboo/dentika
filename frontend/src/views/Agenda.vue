@@ -10,120 +10,42 @@
       <!-- Date Selector -->
       <div class="flex items-center gap-3">
         <div class="relative">
-          <input
-            v-model="selectedDate"
-            type="date"
-            :min="minDate"
+          <input v-model="selectedDate" type="date" :min="minDate"
             class="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
-            @change="loadAppointments"
-          />
+            @change="loadAppointments" />
         </div>
 
-        <button
-          @click="setToday"
-          class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-        >
+        <button @click="setToday"
+          class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           Today
         </button>
 
-        <button
-          @click="refreshAgenda"
-          :disabled="loading"
-          class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all"
-        >
-          <svg class="w-4 h-4 mr-2" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        <button @click="refreshAgenda" :disabled="loading"
+          class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all">
+          <svg class="w-4 h-4 mr-2" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           Refresh
         </button>
       </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
-      <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">Arriving</p>
-            <p class="text-xl font-bold text-gray-900">{{ getColumnCount('scheduled') }}</p>
-          </div>
-          <div class="w-8 h-8 bg-blue-50 rounded-md flex items-center justify-center">
-            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">Arrived</p>
-            <p class="text-xl font-bold text-gray-900">{{ getColumnCount('confirmed') }}</p>
-          </div>
-          <div class="w-8 h-8 bg-green-50 rounded-md flex items-center justify-center">
-            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">Started</p>
-            <p class="text-xl font-bold text-gray-900">{{ getColumnCount('in_progress') }}</p>
-          </div>
-          <div class="w-8 h-8 bg-yellow-50 rounded-md flex items-center justify-center">
-            <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">Finished</p>
-            <p class="text-xl font-bold text-gray-900">{{ getColumnCount('completed') }}</p>
-          </div>
-          <div class="w-8 h-8 bg-purple-50 rounded-md flex items-center justify-center">
-            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">No Show</p>
-            <p class="text-xl font-bold text-gray-900">{{ getColumnCount('cancelled') }}</p>
-          </div>
-          <div class="w-8 h-8 bg-red-50 rounded-md flex items-center justify-center">
-            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Kanban Board -->
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-3">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 lg:gap-0">
       <!-- Arriving Column -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-white shadow-sm border border-gray-200 overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
           <h3 class="text-sm font-semibold text-gray-900 flex items-center justify-between">
             <div class="flex items-center">
               <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Arriving
             </div>
@@ -133,26 +55,23 @@
           </h3>
         </div>
         <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard
-            v-for="appointment in getAppointmentsByStatus('scheduled')"
-            :key="appointment.id"
-            :appointment="appointment"
-            @status-changed="handleStatusChange"
-            class="mb-2"
-          />
-          <div v-if="getAppointmentsByStatus('scheduled').length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <AppointmentCard v-for="appointment in getAppointmentsByStatus('scheduled')" :key="appointment.id"
+            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
+          <div v-if="getAppointmentsByStatus('scheduled').length === 0"
+            class="text-center py-8 text-gray-500 text-sm">
             No appointments
           </div>
         </div>
       </div>
 
       <!-- Arrived Column -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-white shadow-sm border border-gray-200 overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
           <h3 class="text-sm font-semibold text-gray-900 flex items-center justify-between">
             <div class="flex items-center">
               <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Arrived
             </div>
@@ -162,26 +81,23 @@
           </h3>
         </div>
         <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard
-            v-for="appointment in getAppointmentsByStatus('confirmed')"
-            :key="appointment.id"
-            :appointment="appointment"
-            @status-changed="handleStatusChange"
-            class="mb-2"
-          />
-          <div v-if="getAppointmentsByStatus('confirmed').length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <AppointmentCard v-for="appointment in getAppointmentsByStatus('confirmed')" :key="appointment.id"
+            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
+          <div v-if="getAppointmentsByStatus('confirmed').length === 0"
+            class="text-center py-8 text-gray-500 text-sm">
             No appointments
           </div>
         </div>
       </div>
 
       <!-- Started Column -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-white shadow-sm border border-gray-200 overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
           <h3 class="text-sm font-semibold text-gray-900 flex items-center justify-between">
             <div class="flex items-center">
               <svg class="w-4 h-4 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               Started
             </div>
@@ -191,26 +107,23 @@
           </h3>
         </div>
         <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard
-            v-for="appointment in getAppointmentsByStatus('in_progress')"
-            :key="appointment.id"
-            :appointment="appointment"
-            @status-changed="handleStatusChange"
-            class="mb-2"
-          />
-          <div v-if="getAppointmentsByStatus('in_progress').length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <AppointmentCard v-for="appointment in getAppointmentsByStatus('in_progress')" :key="appointment.id"
+            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
+          <div v-if="getAppointmentsByStatus('in_progress').length === 0"
+            class="text-center py-8 text-gray-500 text-sm">
             No appointments
           </div>
         </div>
       </div>
 
       <!-- Finished Column -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-white shadow-sm border border-gray-200 overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
           <h3 class="text-sm font-semibold text-gray-900 flex items-center justify-between">
             <div class="flex items-center">
               <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Finished
             </div>
@@ -220,26 +133,22 @@
           </h3>
         </div>
         <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard
-            v-for="appointment in getAppointmentsByStatus('completed')"
-            :key="appointment.id"
-            :appointment="appointment"
-            @status-changed="handleStatusChange"
-            class="mb-2"
-          />
-          <div v-if="getAppointmentsByStatus('completed').length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <AppointmentCard v-for="appointment in getAppointmentsByStatus('completed')" :key="appointment.id"
+            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
+          <div v-if="getAppointmentsByStatus('completed').length === 0"
+            class="text-center py-8 text-gray-500 text-sm">
             No appointments
           </div>
         </div>
       </div>
 
       <!-- No Show Column -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-white shadow-sm border border-gray-200 overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
           <h3 class="text-sm font-semibold text-gray-900 flex items-center justify-between">
             <div class="flex items-center">
               <svg class="w-4 h-4 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               No Show
             </div>
@@ -249,14 +158,10 @@
           </h3>
         </div>
         <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard
-            v-for="appointment in getAppointmentsByStatus('cancelled')"
-            :key="appointment.id"
-            :appointment="appointment"
-            @status-changed="handleStatusChange"
-            class="mb-2"
-          />
-          <div v-if="getAppointmentsByStatus('cancelled').length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <AppointmentCard v-for="appointment in getAppointmentsByStatus('cancelled')" :key="appointment.id"
+            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
+          <div v-if="getAppointmentsByStatus('cancelled').length === 0"
+            class="text-center py-8 text-gray-500 text-sm">
             No appointments
           </div>
         </div>
@@ -265,10 +170,12 @@
 
     <!-- Empty State -->
     <BaseTransition name="fade">
-      <div v-if="!loading && appointments.length === 0" class="bg-white rounded-lg p-8 shadow-sm border border-gray-200 text-center">
+      <div v-if="!loading && appointments.length === 0"
+        class="bg-white rounded-lg p-8 shadow-sm border border-gray-200 text-center">
         <div class="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg mb-4">
           <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">No appointments for {{ formatDate(selectedDate) }}</h3>

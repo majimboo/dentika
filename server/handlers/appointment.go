@@ -18,12 +18,12 @@ type CreateAppointmentRequest struct {
 	EndTime             time.Time                `json:"end_time"`
 	Duration            int                      `json:"duration"`
 	Status              models.AppointmentStatus `json:"status"`
-	Type                models.AppointmentType   `json:"type"`
 	PatientID           uint                     `json:"patient_id"`
 	DoctorID            uint                     `json:"doctor_id"`
 	BranchID            uint                     `json:"branch_id"`
 	EstimatedCost       *float64                 `json:"estimated_cost,omitempty"`
 	PreAppointmentNotes string                   `json:"pre_appointment_notes"`
+	// Procedures will be added separately via /appointments/{id}/procedures endpoint
 }
 
 // Custom time parsing for JSON
@@ -284,7 +284,6 @@ func CreateAppointment(c *fiber.Ctx) error {
 		EndTime:             req.EndTime,
 		Duration:            req.Duration,
 		Status:              req.Status,
-		Type:                req.Type,
 		PatientID:           req.PatientID,
 		DoctorID:            req.DoctorID,
 		BranchID:            req.BranchID,
@@ -296,11 +295,6 @@ func CreateAppointment(c *fiber.Ctx) error {
 	// Set default status if not provided
 	if appointment.Status == "" {
 		appointment.Status = models.StatusScheduled
-	}
-
-	// Set default type if not provided
-	if appointment.Type == "" {
-		appointment.Type = models.TypeConsultation
 	}
 
 	if err := database.DB.Create(&appointment).Error; err != nil {
@@ -354,9 +348,7 @@ func UpdateAppointment(c *fiber.Ctx) error {
 	if req.Status != "" {
 		appointment.Status = req.Status
 	}
-	if req.Type != "" {
-		appointment.Type = req.Type
-	}
+
 	if req.EstimatedCost != nil {
 		appointment.EstimatedCost = *req.EstimatedCost
 	}

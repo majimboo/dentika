@@ -7,7 +7,6 @@ import (
 )
 
 type AppointmentStatus string
-type AppointmentType string
 
 const (
 	StatusScheduled   AppointmentStatus = "scheduled"
@@ -19,15 +18,6 @@ const (
 	StatusRescheduled AppointmentStatus = "rescheduled"
 )
 
-const (
-	TypeConsultation AppointmentType = "consultation"
-	TypeCheckup      AppointmentType = "checkup"
-	TypeCleaning     AppointmentType = "cleaning"
-	TypeTreatment    AppointmentType = "treatment"
-	TypeEmergency    AppointmentType = "emergency"
-	TypeFollowUp     AppointmentType = "follow_up"
-)
-
 type Appointment struct {
 	ID          uint              `json:"id" gorm:"primarykey"`
 	Title       string            `json:"title" gorm:"size:200"`
@@ -36,7 +26,6 @@ type Appointment struct {
 	EndTime     time.Time         `json:"end_time" gorm:"not null"`
 	Duration    int               `json:"duration"` // in minutes
 	Status      AppointmentStatus `json:"status" gorm:"type:varchar(20);default:'scheduled'"`
-	Type        AppointmentType   `json:"type" gorm:"type:varchar(20);default:'consultation'"`
 
 	// Patient arrival tracking
 	PatientArrived bool       `json:"patient_arrived" gorm:"default:false"`

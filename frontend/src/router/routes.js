@@ -11,7 +11,8 @@ import NewUser from '../views/NewUser.vue';
 import PatientList from '../views/PatientList.vue';
 import PatientForm from '../views/PatientForm.vue';
 import AppointmentCalendar from '../views/AppointmentCalendar.vue';
-import AppointmentForm from '../views/AppointmentForm.vue';
+import NewAppointment from '../views/NewAppointment.vue';
+import EditAppointment from '../views/EditAppointment.vue';
 import ProcedureManagement from '../views/ProcedureManagement.vue';
 import ProcedureForm from '../views/ProcedureForm.vue';
 import DiagnosisForm from '../views/DiagnosisForm.vue';
@@ -153,7 +154,7 @@ const routes = [
             {
                 path: '/appointments/new',
                 name: 'AppointmentCreate',
-                component: AppointmentForm,
+                component: NewAppointment,
                 meta: {
                     level: 2,
                     title: 'New Appointment',
@@ -163,7 +164,7 @@ const routes = [
             {
                 path: '/appointments/:id/edit',
                 name: 'AppointmentEdit',
-                component: AppointmentForm,
+                component: EditAppointment,
                 meta: {
                     level: 2,
                     title: 'Edit Appointment',

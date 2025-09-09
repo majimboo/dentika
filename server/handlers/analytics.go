@@ -161,16 +161,18 @@ func getWeeklyStats(user models.User, period string) ([]WeeklyStatsItem, error) 
 func getRevenueByType(user models.User, period string) ([]RevenueByTypeItem, error) {
 	startDate, endDate := getDateRange(period)
 
-	// Build query to get revenue by appointment type
-	query := database.DB.Model(&models.Appointment{}).
+	// Build query to get revenue by procedure type
+	query := database.DB.Model(&models.AppointmentProcedure{}).
 		Select(`
-			appointments.type as type,
-			COALESCE(SUM(appointments.actual_cost), 0) as amount
+			procedure_templates.name as type,
+			COALESCE(SUM(appointment_procedures.cost), 0) as amount
 		`).
+		Joins("LEFT JOIN procedure_templates ON appointment_procedures.procedure_template_id = procedure_templates.id").
+		Joins("LEFT JOIN appointments ON appointment_procedures.appointment_id = appointments.id").
 		Joins("LEFT JOIN branches ON appointments.branch_id = branches.id").
 		Where("appointments.start_time >= ? AND appointments.start_time <= ?", startDate, endDate).
 		Where("appointments.status = ?", models.StatusCompleted).
-		Group("appointments.type").
+		Group("procedure_templates.name").
 		Order("amount DESC")
 
 	// Apply clinic filtering
@@ -195,23 +197,7 @@ func getRevenueByType(user models.User, period string) ([]RevenueByTypeItem, err
 			continue
 		}
 
-		// Format appointment type
-		switch item.Type {
-		case string(models.TypeCheckup):
-			item.Type = "Checkups"
-		case string(models.TypeCleaning):
-			item.Type = "Cleanings"
-		case string(models.TypeConsultation):
-			item.Type = "Consultations"
-		case string(models.TypeTreatment):
-			item.Type = "Treatments"
-		case string(models.TypeEmergency):
-			item.Type = "Emergency"
-		case string(models.TypeFollowUp):
-			item.Type = "Follow-ups"
-		default:
-			item.Type = "Other"
-		}
+		// Appointment type name is already properly formatted from database
 
 		item.Color = colors[colorIndex%len(colors)]
 		colorIndex++

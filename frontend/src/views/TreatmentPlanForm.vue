@@ -2,15 +2,6 @@
   <div class="treatment-plan-form-page">
     <!-- Page Header -->
     <div class="page-header flex items-center mb-6">
-      <button
-        @click="$router.go(-1)"
-        class="mr-4 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-      >
-        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-      
       <div>
         <h1 class="text-2xl font-bold text-gray-900">
           {{ isEditing ? 'Edit Treatment Plan' : 'New Treatment Plan' }}

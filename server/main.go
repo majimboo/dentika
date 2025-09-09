@@ -364,13 +364,6 @@ func seedSampleData() {
 	now := time.Now()
 	todayStartTime := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.UTC)
 
-	appointmentTypes := []models.AppointmentType{
-		models.TypeCheckup,
-		models.TypeCleaning,
-		models.TypeConsultation,
-		models.TypeTreatment,
-	}
-
 	statuses := []models.AppointmentStatus{
 		models.StatusCompleted,
 		models.StatusScheduled,
@@ -384,13 +377,13 @@ func seedSampleData() {
 		// Create some appointments for today to ensure dashboard has data
 		for i := 0; i < 5; i++ {
 			todayAppointment := models.Appointment{
-				Title:         "Today's Appointment " + string(rune(i+65)),
-				Description:   "Sample appointment for today",
-				StartTime:     todayStartTime.Add(time.Duration(i) * time.Hour), // 9 AM, 10 AM, 11 AM, etc.
-				EndTime:       todayStartTime.Add(time.Duration(i+1) * time.Hour),
-				Duration:      60,
-				Status:        statuses[rand.Intn(len(statuses))],
-				Type:          appointmentTypes[rand.Intn(len(appointmentTypes))],
+				Title:       "Today's Appointment " + string(rune(i+65)),
+				Description: "Sample appointment for today",
+				StartTime:   todayStartTime.Add(time.Duration(i) * time.Hour), // 9 AM, 10 AM, 11 AM, etc.
+				EndTime:     todayStartTime.Add(time.Duration(i+1) * time.Hour),
+				Duration:    60,
+				Status:      statuses[rand.Intn(len(statuses))],
+
 				PatientID:     createdPatients[rand.Intn(len(createdPatients))].ID,
 				DoctorID:      adminUser.ID,
 				BranchID:      branch.ID,
@@ -413,13 +406,13 @@ func seedSampleData() {
 		appointmentDate := now.AddDate(0, 0, rand.Intn(30)-15) // Random date within ±15 days
 
 		appointment := models.Appointment{
-			Title:         "Sample Appointment " + string(rune(i+70)), // F, G, H...
-			Description:   "Sample appointment description",
-			StartTime:     appointmentDate,
-			EndTime:       appointmentDate.Add(time.Hour),
-			Duration:      60,
-			Status:        statuses[rand.Intn(len(statuses))],
-			Type:          appointmentTypes[rand.Intn(len(appointmentTypes))],
+			Title:       "Sample Appointment " + string(rune(i+70)), // F, G, H...
+			Description: "Sample appointment description",
+			StartTime:   appointmentDate,
+			EndTime:     appointmentDate.Add(time.Hour),
+			Duration:    60,
+			Status:      statuses[rand.Intn(len(statuses))],
+			// Procedures will be added separately via API after appointment creation
 			PatientID:     createdPatients[rand.Intn(len(createdPatients))].ID,
 			DoctorID:      adminUser.ID,
 			BranchID:      branch.ID,

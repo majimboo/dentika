@@ -84,9 +84,9 @@
             </div>
           </div>
 
-          <!-- Schedule -->
-          <div class="space-y-6">
-            <h3 class="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-2">Schedule</h3>
+           <!-- Schedule -->
+           <div class="space-y-6">
+             <h3 class="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-2">Schedule & Procedures</h3>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="space-y-2">
@@ -160,37 +160,6 @@
               <div class="space-y-2">
                 <label class="block text-sm font-semibold text-gray-700 flex items-center">
                   <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                  </svg>
-                  Appointment Type
-                  <span class="text-danger-500 ml-1">*</span>
-                </label>
-                <select
-                  v-model="formData.type"
-                  class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                  :class="{ 'border-red-500': errors.type }"
-                  required
-                >
-                  <option value="">Select type...</option>
-                  <option value="consultation">Consultation</option>
-                  <option value="cleaning">Cleaning</option>
-                  <option value="filling">Filling</option>
-                  <option value="extraction">Extraction</option>
-                  <option value="root_canal">Root Canal</option>
-                  <option value="crown">Crown</option>
-                  <option value="bridge">Bridge</option>
-                  <option value="implant">Implant</option>
-                  <option value="orthodontics">Orthodontics</option>
-                  <option value="emergency">Emergency</option>
-                  <option value="follow_up">Follow Up</option>
-                  <option value="other">Other</option>
-                </select>
-                <span v-if="errors.type" class="text-red-500 text-sm mt-1">{{ errors.type }}</span>
-              </div>
-
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700 flex items-center">
-                  <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                   </svg>
                   Doctor
@@ -227,15 +196,72 @@
                   {{ branch.name }}
                 </option>
               </select>
-            </div>
+             </div>
 
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-gray-700 flex items-center">
-                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                </svg>
-                Notes
-              </label>
+             <!-- Procedure Selection -->
+             <div class="space-y-4">
+               <div class="flex items-center justify-between">
+                 <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                   <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                   </svg>
+                   Procedures
+                 </label>
+                 <button
+                   type="button"
+                   @click="addProcedure"
+                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+                 >
+                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                   </svg>
+                   Add Procedure
+                 </button>
+               </div>
+
+               <!-- Selected Procedures -->
+               <div v-if="selectedProcedures.length > 0" class="space-y-3">
+                 <div
+                   v-for="(procedure, index) in selectedProcedures"
+                   :key="index"
+                   class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border border-neutral-200"
+                 >
+                   <div class="flex-1">
+                     <div class="font-medium text-neutral-900">{{ procedure.name }}</div>
+                     <div class="text-sm text-neutral-600">{{ procedure.description }}</div>
+                     <div class="text-xs text-neutral-500 mt-1">
+                       Duration: {{ procedure.estimated_duration }} min • Cost: ${{ procedure.default_cost }}
+                     </div>
+                   </div>
+                   <button
+                     type="button"
+                     @click="removeProcedure(index)"
+                     class="ml-3 text-red-500 hover:text-red-700 transition-colors duration-200"
+                   >
+                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                     </svg>
+                   </button>
+                 </div>
+               </div>
+
+               <!-- No procedures message -->
+               <div v-else class="text-center py-6 text-neutral-500">
+                 <svg class="w-12 h-12 mx-auto mb-3 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                 </svg>
+                 <p class="text-sm">No procedures selected</p>
+                 <p class="text-xs mt-1">Click "Add Procedure" to select dental procedures for this appointment</p>
+               </div>
+             </div>
+
+             <div class="space-y-2">
+               <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                 <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                 </svg>
+                 Notes
+               </label>
               <textarea
                 v-model="formData.notes"
                 rows="3"
@@ -343,6 +369,61 @@
       </div>
     </div>
   </div>
+
+  <!-- Procedure Selection Modal -->
+  <div v-if="showProcedureModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeProcedureModal"></div>
+
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                Select Procedure
+              </h3>
+
+              <!-- Procedure Search -->
+              <div class="mb-4">
+                <input
+                  v-model="procedureSearchQuery"
+                  type="text"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Search procedures..."
+                />
+              </div>
+
+              <!-- Procedure List -->
+              <div class="max-h-64 overflow-y-auto">
+                <div
+                  v-for="procedure in filteredProcedures"
+                  :key="procedure.id"
+                  @click="selectProcedure(procedure)"
+                  class="cursor-pointer p-3 border border-gray-200 rounded-md mb-2 hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <div class="font-medium text-gray-900">{{ procedure.name }}</div>
+                  <div class="text-sm text-gray-600">{{ procedure.description }}</div>
+                  <div class="text-xs text-gray-500 mt-1">
+                    Duration: {{ procedure.estimated_duration }} min • Cost: ${{ procedure.default_cost }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button
+            type="button"
+            @click="closeProcedureModal"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -370,12 +451,17 @@ const patientSearchQuery = ref('')
 const filteredPatients = ref([])
 const showPatientDropdown = ref(false)
 
+// Procedure selection
+const selectedProcedures = ref([])
+const availableProcedures = ref([])
+const showProcedureModal = ref(false)
+const procedureSearchQuery = ref('')
+
 const formData = ref({
   patient_id: '',
   date: '',
   time: '',
   duration: '30',
-  type: '',
   doctor_id: '',
   branch_id: '',
   notes: '',
@@ -389,13 +475,25 @@ const minDate = computed(() => {
   return new Date().toISOString().split('T')[0]
 })
 
+// Procedure filtering
+const filteredProcedures = computed(() => {
+  if (!procedureSearchQuery.value) {
+    return availableProcedures.value
+  }
+  const query = procedureSearchQuery.value.toLowerCase()
+  return availableProcedures.value.filter(procedure =>
+    procedure.name.toLowerCase().includes(query) ||
+    procedure.description.toLowerCase().includes(query) ||
+    procedure.category.toLowerCase().includes(query)
+  )
+})
+
 const isFormValid = computed(() => {
   const branchId = getSelectedBranchId()
   return formData.value.patient_id &&
          formData.value.date &&
          formData.value.time &&
          formData.value.duration &&
-         formData.value.type &&
          formData.value.doctor_id &&
          branchId > 0 &&
          branches.value.length > 0
@@ -500,6 +598,44 @@ const createNewPatient = () => {
   router.push('/patients/new')
 }
 
+// Procedure methods
+const loadProcedures = async () => {
+  try {
+    const result = await fetch('/api/procedure-templates')
+    if (result.ok) {
+      const data = await result.json()
+      availableProcedures.value = data
+    }
+  } catch (error) {
+    console.error('Error loading procedures:', error)
+  }
+}
+
+const addProcedure = () => {
+  showProcedureModal.value = true
+  if (availableProcedures.value.length === 0) {
+    loadProcedures()
+  }
+}
+
+const selectProcedure = (procedure) => {
+  // Check if procedure is already selected
+  const exists = selectedProcedures.value.find(p => p.id === procedure.id)
+  if (!exists) {
+    selectedProcedures.value.push(procedure)
+  }
+  closeProcedureModal()
+}
+
+const removeProcedure = (index) => {
+  selectedProcedures.value.splice(index, 1)
+}
+
+const closeProcedureModal = () => {
+  showProcedureModal.value = false
+  procedureSearchQuery.value = ''
+}
+
 const getSelectedBranchId = () => {
   // If branch is explicitly selected, use it
   if (formData.value.branch_id) {
@@ -567,20 +703,20 @@ const handleSubmit = async () => {
       return
     }
 
-    // Validate appointment type
-    const validTypes = ['consultation', 'cleaning', 'filling', 'extraction', 'root_canal', 'crown', 'bridge', 'implant', 'orthodontics', 'emergency', 'follow_up', 'other']
-    const appointmentType = formData.value.type && validTypes.includes(formData.value.type) ? formData.value.type : 'consultation'
+    // Generate title based on selected procedures or default
+    const appointmentTitle = selectedProcedures.value.length > 0
+      ? selectedProcedures.value[0].name
+      : 'Dental Appointment'
 
     const appointmentData = {
       patient_id: Number(patientId),
       doctor_id: Number(doctorId),
       branch_id: Number(branchId),
-      type: appointmentType,
       start_time: `${formData.value.date}T${formData.value.time}:00Z`,
       end_time: calculateEndTime(),
       duration: Number(formData.value.duration) || 30,
       pre_appointment_notes: formData.value.notes || '',
-      title: generateAppointmentTitle(),
+      title: appointmentTitle,
       description: formData.value.notes || '',
       status: 'scheduled'
     }
@@ -600,6 +736,33 @@ const handleSubmit = async () => {
     }
 
     if (result.success) {
+      const appointmentId = result.data.id
+
+      // Add selected procedures to the appointment
+      if (selectedProcedures.value.length > 0) {
+        for (const procedure of selectedProcedures.value) {
+          try {
+            const procedureResult = await fetch(`/api/appointments/${appointmentId}/procedures`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+              body: JSON.stringify({
+                procedure_template_id: procedure.id,
+                cost: procedure.default_cost
+              })
+            })
+
+            if (!procedureResult.ok) {
+              console.error('Failed to add procedure:', procedure.name)
+            }
+          } catch (error) {
+            console.error('Error adding procedure:', error)
+          }
+        }
+      }
+
       // Navigate back to calendar
       router.push('/appointments')
     } else {
@@ -621,23 +784,7 @@ const calculateEndTime = () => {
   return endDateTime.toISOString()
 }
 
-const generateAppointmentTitle = () => {
-  const typeLabels = {
-    consultation: 'Consultation',
-    cleaning: 'Cleaning',
-    filling: 'Filling',
-    extraction: 'Extraction',
-    root_canal: 'Root Canal',
-    crown: 'Crown',
-    bridge: 'Bridge',
-    implant: 'Implant',
-    orthodontics: 'Orthodontics',
-    emergency: 'Emergency',
-    follow_up: 'Follow Up',
-    other: 'Appointment'
-  }
-  return typeLabels[formData.value.type] || 'Appointment'
-}
+// Appointment title is now generated in handleSubmit based on selected procedures
 
 // Close dropdown when clicking outside
 const handleClickOutside = (event) => {

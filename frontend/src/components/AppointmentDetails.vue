@@ -90,14 +90,7 @@
             </div>
           </div>
           
-          <div class="info-row">
-            <label class="info-label text-xs font-medium text-gray-500 uppercase tracking-wide">Type</label>
-            <div class="info-value text-sm text-gray-900 mt-1">
-              {{ formatAppointmentType(appointment.type) }}
-            </div>
-          </div>
-          
-          <div class="info-row" v-if="appointment.doctor">
+           <div class="info-row" v-if="appointment.doctor">
             <label class="info-label text-xs font-medium text-gray-500 uppercase tracking-wide">Doctor</label>
             <div class="info-value text-sm text-gray-900 mt-1">
               Dr. {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}
@@ -332,10 +325,6 @@ const formatTime = (dateTime) => {
     hour: '2-digit',
     minute: '2-digit'
   })
-}
-
-const formatAppointmentType = (type) => {
-  return type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''
 }
 
 const calculateDuration = (startTime, endTime) => {

@@ -40,10 +40,10 @@
           <line x1="38" y1="30" x2="48" y2="30" stroke="#6B7280" stroke-width="1" />
         </g>
 
-        <!-- Surface areas (clickable) - divided like a pie -->
+        <!-- Surface areas (clickable) - divided like a pie with center cutout -->
         <!-- Top surface (occlusal) -->
         <path
-          d="M 30 12 A 18 18 0 0 1 48 30 L 30 30 Z"
+          d="M 30 12 A 18 18 0 0 1 48 30 L 38 30 A 8 8 0 0 0 30 22 Z"
           fill="transparent"
           class="surface-area surface-occlusal"
           :class="{ 'surface-selected': isSurfaceSelected('occlusal') }"
@@ -53,7 +53,7 @@
 
         <!-- Right surface (mesial/distal depending on quadrant) -->
         <path
-          d="M 48 30 A 18 18 0 0 1 30 48 L 30 30 Z"
+          d="M 48 30 A 18 18 0 0 1 30 48 L 30 38 A 8 8 0 0 0 38 30 Z"
           fill="transparent"
           class="surface-area surface-mesial"
           :class="{ 'surface-selected': isSurfaceSelected(getRightSurface()) }"
@@ -63,7 +63,7 @@
 
         <!-- Bottom surface (lingual/buccal depending on quadrant) -->
         <path
-          d="M 30 48 A 18 18 0 0 1 12 30 L 30 30 Z"
+          d="M 30 48 A 18 18 0 0 1 12 30 L 22 30 A 8 8 0 0 0 30 38 Z"
           fill="transparent"
           class="surface-area surface-lingual"
           :class="{ 'surface-selected': isSurfaceSelected(getBottomSurface()) }"
@@ -73,7 +73,7 @@
 
         <!-- Left surface (mesial/distal depending on quadrant) -->
         <path
-          d="M 12 30 A 18 18 0 0 1 30 12 L 30 30 Z"
+          d="M 12 30 A 18 18 0 0 1 30 12 L 30 22 A 8 8 0 0 0 22 30 Z"
           fill="transparent"
           class="surface-area surface-distal"
           :class="{ 'surface-selected': isSurfaceSelected(getLeftSurface()) }"

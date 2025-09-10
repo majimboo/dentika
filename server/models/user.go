@@ -15,29 +15,29 @@ import (
 type UserRole string
 
 const (
-	SuperAdmin UserRole = "super_admin"
+	SuperAdmin  UserRole = "super_admin"
 	ClinicOwner UserRole = "clinic_owner"
-	Doctor UserRole = "doctor"
-	Secretary UserRole = "secretary"
-	Assistant UserRole = "assistant"
+	Doctor      UserRole = "doctor"
+	Secretary   UserRole = "secretary"
+	Assistant   UserRole = "assistant"
 )
 
 type User struct {
-	ID        uint           `json:"id" gorm:"primarykey"`
-	Username  string         `json:"username" gorm:"uniqueIndex;not null"`
-	Email     string         `json:"email" gorm:"uniqueIndex"`
-	FirstName string         `json:"first_name" gorm:"size:100"`
-	LastName  string         `json:"last_name" gorm:"size:100"`
-	Gender    string         `json:"gender" gorm:"size:20"`
-	Avatar    string         `json:"avatar" gorm:"size:500"`
-	Password  string         `json:"-" gorm:"not null"`
-	Role      UserRole       `json:"role" gorm:"type:varchar(20);default:'secretary'"`
-	ClinicID  *uint          `json:"clinic_id" gorm:"index"`
-	Clinic    *Clinic        `json:"clinic,omitempty" gorm:"foreignKey:ClinicID"`
-	IsActive  bool           `json:"is_active" gorm:"default:true"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	ID         uint           `json:"id" gorm:"primarykey"`
+	Username   string         `json:"username" gorm:"uniqueIndex;not null"`
+	Email      string         `json:"email" gorm:"uniqueIndex"`
+	FirstName  string         `json:"first_name" gorm:"size:100"`
+	LastName   string         `json:"last_name" gorm:"size:100"`
+	Gender     string         `json:"gender" gorm:"size:20"`
+	AvatarPath string         `json:"avatar_path" gorm:"size:500"`
+	Password   string         `json:"-" gorm:"not null"`
+	Role       UserRole       `json:"role" gorm:"type:varchar(20);default:'secretary'"`
+	ClinicID   *uint          `json:"clinic_id" gorm:"index"`
+	Clinic     *Clinic        `json:"clinic,omitempty" gorm:"foreignKey:ClinicID"`
+	IsActive   bool           `json:"is_active" gorm:"default:true"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 func (u *User) HashPassword() error {

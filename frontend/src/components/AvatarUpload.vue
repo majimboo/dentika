@@ -122,12 +122,12 @@ const currentAvatarUrl = computed(() => {
   // Support both v-model pattern and user object pattern
   const avatarPath = props.user ? (props.user.avatar_path || props.user.avatar) : props.modelValue
   if (!avatarPath) return ''
-  
+
   // If it's already a full URL, return as is
   if (avatarPath.startsWith('http')) {
     return avatarPath
   }
-  
+
   // If it's a relative path, prepend the server URL
   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
   return `${baseUrl}/uploads/${avatarPath}`

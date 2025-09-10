@@ -181,8 +181,89 @@ body {
   .form-page {
     @apply p-0;
   }
-  
+
   .form-section {
     @apply mx-0;
+  }
+}
+
+/* Loading Screen Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 60%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+#loading {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+#loading .text-center {
+  animation: scaleIn 0.8s ease-out 0.2s both;
+}
+
+#loading .animate-bounce {
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+#loading .bg-gradient-to-r {
+  animation: progress 2s ease-in-out infinite;
+}
+
+/* Enhanced loading spinner */
+@keyframes spin-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-smooth {
+  animation: spin-smooth 1s linear infinite;
+}
+
+/* Bounce animation keyframes */
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -30px, 0);
+  }
+  70% {
+    transform: translate3d(0, -15px, 0);
+  }
+  90% {
+    transform: translate3d(0, -4px, 0);
   }
 }

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar Upload Test</title>
+</head>
+<body>
+    <h1>Avatar Upload Test</h1>
+
+    <h2>Test Patient Avatar Upload</h2>
+    <form id="patientForm" enctype="multipart/form-data">
+        <input type="file" id="patientAvatar" accept="image/*" required>
+        <button type="submit">Upload Patient Avatar</button>
+    </form>
+
+    <h2>Test User Avatar Upload</h2>
+    <form id="userForm" enctype="multipart/form-data">
+        <input type="file" id="userAvatar" accept="image/*" required>
+        <button type="submit">Upload User Avatar</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script>
+        // Test patient avatar upload
+        document.getElementById('patientForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('patientAvatar').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const response = await fetch('http://localhost:3000/api/upload/avatar', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': 'Bearer test-token' // This will fail auth but test the endpoint
+                    }
+                });
+
+                const result = await response.json();
+                document.getElementById('results').innerHTML += '<p>Patient Upload Result: ' + JSON.stringify(result) + '</p>';
+            } catch (error) {
+                document.getElementById('results').innerHTML += '<p>Patient Upload Error: ' + error.message + '</p>';
+            }
+        });
+
+        // Test user avatar upload
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('userAvatar').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const response = await fetch('http://localhost:3000/api/upload/avatar', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': 'Bearer test-token' // This will fail auth but test the endpoint
+                    }
+                });
+
+                const result = await response.json();
+                document.getElementById('results').innerHTML += '<p>User Upload Result: ' + JSON.stringify(result) + '</p>';
+            } catch (error) {
+                document.getElementById('results').innerHTML += '<p>User Upload Error: ' + error.message + '</p>';
+            }
+        });
+    </script>
+</body>
+</html>

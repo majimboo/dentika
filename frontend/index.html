@@ -16,8 +16,13 @@
     <div id="app">
         <div id="loading" class="flex items-center justify-center min-h-screen">
             <div class="text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p class="mt-4 text-gray-600">Loading Dentika...</p>
+                <!-- Bouncing Cubes -->
+                <div class="flex items-center justify-center space-x-2 mb-6">
+                    <div class="w-4 h-4 bg-blue-600 rounded animate-bounce" style="animation-delay: 0ms"></div>
+                    <div class="w-4 h-4 bg-blue-600 rounded animate-bounce" style="animation-delay: 150ms"></div>
+                    <div class="w-4 h-4 bg-blue-600 rounded animate-bounce" style="animation-delay: 300ms"></div>
+                </div>
+                <p class="text-gray-600 font-medium">Loading Dentika...</p>
             </div>
         </div>
     </div>

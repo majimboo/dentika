@@ -38,10 +38,17 @@
     </NavigationHeader>
 
     <!-- Mobile overlay for sidebar -->
-    <div 
-      v-if="isSidebarOpen" 
+    <div
+      v-if="isSidebarOpen"
       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
       @click="closeSidebar"
+      @touchstart="closeSidebar"
+      @touchend.prevent
+      @touchmove.prevent
+      @touchcancel.prevent
+      @contextmenu.prevent
+      @selectstart.prevent
+      style="pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; position: fixed; top: 0; left: 0; right: 0; bottom: 0;"
     ></div>
     
     <!-- Sidebar - Slides in from left on mobile, always visible on desktop -->

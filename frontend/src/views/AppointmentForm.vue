@@ -198,62 +198,151 @@
               </select>
              </div>
 
-             <!-- Procedure Selection -->
-             <div class="space-y-4">
-               <div class="flex items-center justify-between">
-                 <label class="block text-sm font-semibold text-gray-700 flex items-center">
-                   <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                   </svg>
-                   Procedures
-                 </label>
-                 <button
-                   type="button"
-                   @click="addProcedure"
-                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
-                 >
-                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                   </svg>
-                   Add Procedure
-                 </button>
-               </div>
+              <!-- Procedure Selection -->
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Procedures & Inventory
+                  </label>
+                  <button
+                    type="button"
+                    @click="addProcedure"
+                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+                  >
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Add Procedure
+                  </button>
+                </div>
 
-               <!-- Selected Procedures -->
-               <div v-if="selectedProcedures.length > 0" class="space-y-3">
-                 <div
-                   v-for="(procedure, index) in selectedProcedures"
-                   :key="index"
-                   class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border border-neutral-200"
-                 >
-                   <div class="flex-1">
-                     <div class="font-medium text-neutral-900">{{ procedure.name }}</div>
-                     <div class="text-sm text-neutral-600">{{ procedure.description }}</div>
-                     <div class="text-xs text-neutral-500 mt-1">
-                       Duration: {{ procedure.estimated_duration }} min • Cost: {{ procedure.default_cost }}
-                     </div>
-                   </div>
-                   <button
-                     type="button"
-                     @click="removeProcedure(index)"
-                     class="ml-3 text-red-500 hover:text-red-700 transition-colors duration-200"
-                   >
-                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                     </svg>
-                   </button>
-                 </div>
-               </div>
+                <!-- Selected Procedures with Inventory -->
+                <div v-if="selectedProcedures.length > 0" class="space-y-4">
+                  <div
+                    v-for="(procedure, index) in selectedProcedures"
+                    :key="index"
+                    class="border border-neutral-200 rounded-lg p-4 bg-neutral-50"
+                  >
+                    <!-- Procedure Header -->
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex-1">
+                        <div class="font-medium text-neutral-900">{{ procedure.name }}</div>
+                        <div class="text-sm text-neutral-600">{{ procedure.description }}</div>
+                        <div class="text-xs text-neutral-500 mt-1">
+                          Duration: {{ procedure.estimated_duration }} min • Cost: ${{ procedure.default_cost }}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        @click="removeProcedure(index)"
+                        class="ml-3 text-red-500 hover:text-red-700 transition-colors duration-200"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </div>
 
-               <!-- No procedures message -->
-               <div v-else class="text-center py-6 text-neutral-500">
-                 <svg class="w-12 h-12 mx-auto mb-3 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                 </svg>
-                 <p class="text-sm">No procedures selected</p>
-                 <p class="text-xs mt-1">Click "Add Procedure" to select dental procedures for this appointment</p>
-               </div>
-             </div>
+                    <!-- Inventory Items for this Procedure -->
+                    <div class="border-t border-neutral-200 pt-3">
+                      <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700">
+                          Required Inventory Items
+                        </label>
+                        <button
+                          type="button"
+                          @click="addInventoryToProcedure(index)"
+                          class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-primary-700 bg-primary-100 hover:bg-primary-200"
+                        >
+                          <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                          </svg>
+                          Add Item
+                        </button>
+                      </div>
+
+                      <!-- Selected Inventory Items -->
+                      <div v-if="procedure.inventory && procedure.inventory.length > 0" class="space-y-2">
+                        <div
+                          v-for="(inventoryItem, invIndex) in procedure.inventory"
+                          :key="invIndex"
+                          class="flex items-center justify-between p-2 bg-white rounded border border-neutral-300"
+                        >
+                          <div class="flex items-center flex-1">
+                            <img
+                              v-if="inventoryItem.item.image_path"
+                              :src="getInventoryImageUrl(inventoryItem.item.image_path)"
+                              :alt="inventoryItem.item.name"
+                              class="w-8 h-8 rounded object-cover mr-3"
+                            >
+                            <div v-else class="w-8 h-8 bg-gray-200 rounded flex items-center justify-center mr-3">
+                              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                              </svg>
+                            </div>
+                            <div class="flex-1">
+                              <div class="text-sm font-medium text-gray-900">{{ inventoryItem.item.name }}</div>
+                              <div class="text-xs text-gray-500">{{ inventoryItem.item.sku }}</div>
+                            </div>
+                          </div>
+
+                          <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-1">
+                              <label class="text-xs text-gray-600">Qty:</label>
+                              <input
+                                v-model.number="inventoryItem.quantity"
+                                type="number"
+                                min="1"
+                                :max="inventoryItem.item.current_stock"
+                                class="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                :class="{ 'border-red-300': inventoryItem.quantity > inventoryItem.item.current_stock }"
+                              >
+                            </div>
+                            <button
+                              type="button"
+                              @click="removeInventoryFromProcedure(index, invIndex)"
+                              class="text-red-500 hover:text-red-700 p-1"
+                            >
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Low Stock Warning -->
+                        <div
+                          v-if="procedure.inventory.some(inv => inv.quantity > inv.item.current_stock)"
+                          class="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700"
+                        >
+                          ⚠️ Some items have insufficient stock. Current stock levels will be checked before appointment completion.
+                        </div>
+                      </div>
+
+                      <!-- No inventory items message -->
+                      <div v-else class="text-center py-4 text-neutral-500 text-sm">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        <p>No inventory items selected</p>
+                        <p class="text-xs mt-1">Add items that will be used for this procedure</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- No procedures message -->
+                <div v-else class="text-center py-6 text-neutral-500">
+                  <svg class="w-12 h-12 mx-auto mb-3 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <p class="text-sm">No procedures selected</p>
+                  <p class="text-xs mt-1">Click "Add Procedure" to select dental procedures for this appointment</p>
+                </div>
+              </div>
 
              <div class="space-y-2">
                <label class="block text-sm font-semibold text-gray-700 flex items-center">
@@ -424,6 +513,74 @@
       </div>
     </div>
   </div>
+
+  <!-- Inventory Selection Modal -->
+  <div v-if="showInventoryModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="inventory-modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeInventoryModal"></div>
+
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="inventory-modal-title">
+                Select Inventory Items
+              </h3>
+
+              <!-- Inventory Search -->
+              <div class="mb-4">
+                <input
+                  v-model="inventorySearchQuery"
+                  type="text"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Search inventory items..."
+                />
+              </div>
+
+              <!-- Inventory List -->
+              <div class="max-h-64 overflow-y-auto">
+                <div
+                  v-for="item in filteredInventory"
+                  :key="item.id"
+                  @click="selectInventoryItem(item)"
+                  class="cursor-pointer p-3 border border-gray-200 rounded-md mb-2 hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <div class="flex items-center">
+                    <img
+                      v-if="item.image_path"
+                      :src="getInventoryImageUrl(item.image_path)"
+                      :alt="item.name"
+                      class="w-10 h-10 rounded object-cover mr-3"
+                    >
+                    <div v-else class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center mr-3">
+                      <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <div class="font-medium text-gray-900">{{ item.name }}</div>
+                      <div class="text-sm text-gray-600">{{ item.sku }}</div>
+                      <div class="text-xs text-gray-500">Stock: {{ item.current_stock }} {{ item.unit_of_measure }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button
+            type="button"
+            @click="closeInventoryModal"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -433,6 +590,7 @@ import { usePatientStore } from '../stores/patient'
 import { useClinicStore } from '../stores/clinic'
 import { useAppointmentStore } from '../stores/appointment'
 import { useAuthStore } from '../stores/auth'
+import { useInventoryStore } from '../stores/inventory'
 
 const route = useRoute()
 const router = useRouter()
@@ -441,6 +599,7 @@ const patientStore = usePatientStore()
 const clinicStore = useClinicStore()
 const appointmentStore = useAppointmentStore()
 const authStore = useAuthStore()
+const inventoryStore = useInventoryStore()
 
 const isEditing = ref(false)
 const isSubmitting = ref(false)
@@ -456,6 +615,12 @@ const selectedProcedures = ref([])
 const availableProcedures = ref([])
 const showProcedureModal = ref(false)
 const procedureSearchQuery = ref('')
+
+// Inventory selection
+const availableInventory = ref([])
+const showInventoryModal = ref(false)
+const inventorySearchQuery = ref('')
+const currentProcedureIndex = ref(-1)
 
 const formData = ref({
   patient_id: '',
@@ -485,6 +650,19 @@ const filteredProcedures = computed(() => {
     procedure.name.toLowerCase().includes(query) ||
     procedure.description.toLowerCase().includes(query) ||
     procedure.category.toLowerCase().includes(query)
+  )
+})
+
+// Inventory filtering
+const filteredInventory = computed(() => {
+  if (!inventorySearchQuery.value) {
+    return availableInventory.value
+  }
+  const query = inventorySearchQuery.value.toLowerCase()
+  return availableInventory.value.filter(item =>
+    item.name.toLowerCase().includes(query) ||
+    item.sku.toLowerCase().includes(query) ||
+    item.description.toLowerCase().includes(query)
   )
 })
 
@@ -671,6 +849,64 @@ const removeProcedure = (index) => {
 const closeProcedureModal = () => {
   showProcedureModal.value = false
   procedureSearchQuery.value = ''
+}
+
+// Inventory methods
+const loadInventory = async () => {
+  try {
+    const result = await inventoryStore.fetchItems({ limit: 100 })
+    if (result.success) {
+      availableInventory.value = result.data.items
+    }
+  } catch (error) {
+    console.error('Error loading inventory:', error)
+  }
+}
+
+const addInventoryToProcedure = (procedureIndex) => {
+  currentProcedureIndex.value = procedureIndex
+  showInventoryModal.value = true
+  if (availableInventory.value.length === 0) {
+    loadInventory()
+  }
+}
+
+const selectInventoryItem = (item) => {
+  if (currentProcedureIndex.value === -1) return
+
+  const procedure = selectedProcedures.value[currentProcedureIndex.value]
+  if (!procedure.inventory) {
+    procedure.inventory = []
+  }
+
+  // Check if item is already selected
+  const exists = procedure.inventory.find(inv => inv.item.id === item.id)
+  if (!exists) {
+    procedure.inventory.push({
+      item: item,
+      quantity: 1
+    })
+  }
+
+  closeInventoryModal()
+}
+
+const removeInventoryFromProcedure = (procedureIndex, inventoryIndex) => {
+  const procedure = selectedProcedures.value[procedureIndex]
+  if (procedure.inventory) {
+    procedure.inventory.splice(inventoryIndex, 1)
+  }
+}
+
+const closeInventoryModal = () => {
+  showInventoryModal.value = false
+  inventorySearchQuery.value = ''
+  currentProcedureIndex.value = -1
+}
+
+const getInventoryImageUrl = (imagePath) => {
+  if (!imagePath) return ''
+  return `${window.location.origin}/uploads/${imagePath}`
 }
 
 const getSelectedBranchId = () => {

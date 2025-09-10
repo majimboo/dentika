@@ -46,7 +46,8 @@ import {
   faShieldAlt,
   faExclamationCircle,
   faEnvelope,
-  faCheck
+  faCheck,
+  faBoxes
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -89,7 +90,8 @@ library.add(
   faShieldAlt,
   faExclamationCircle,
   faEnvelope,
-  faCheck
+  faCheck,
+  faBoxes
 )
 
 import App from './App.vue'
@@ -111,3 +113,16 @@ app.use(router)
 setupRouterGuards(router)
 
 app.mount('#app')
+
+// Hide loading screen when app is ready
+const loadingElement = document.getElementById('loading')
+if (loadingElement) {
+  // Add a small delay for smooth transition
+  setTimeout(() => {
+    loadingElement.style.opacity = '0'
+    loadingElement.style.transition = 'opacity 0.5s ease-out'
+    setTimeout(() => {
+      loadingElement.style.display = 'none'
+    }, 500)
+  }, 100)
+}

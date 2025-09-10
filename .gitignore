@@ -11,3 +11,5 @@ frontend/package-lock.json
 Thumbs.db
 
 uploads/
+
+*.exe

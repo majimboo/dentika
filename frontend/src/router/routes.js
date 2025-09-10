@@ -23,6 +23,11 @@ import PrescriptionForm from '../views/PrescriptionForm.vue';
 import PatientDentalChart from '../views/PatientDentalChart.vue';
 import ClinicManagement from '../views/ClinicManagement.vue';
 import ClinicForm from '../views/ClinicForm.vue';
+import PeerReviewList from '../views/PeerReviewList.vue';
+import PeerReviewCase from '../views/PeerReviewCase.vue';
+import PeerReviewCreate from '../views/PeerReviewCreate.vue';
+import InventoryList from '../views/InventoryList.vue';
+import InventoryForm from '../views/InventoryForm.vue';
 import AppLayout from '../layouts/AppLayout.vue';
 
 const routes = [
@@ -109,6 +114,22 @@ const routes = [
                 name: 'ClinicManagement',
                 component: ClinicManagement,
                 meta: { level: 1, title: 'Clinics', parent: 'Dashboard' },
+            },
+            {
+                path: '/peer-review',
+                name: 'PeerReviewList',
+                component: PeerReviewList,
+                meta: { level: 1, title: 'Peer Review', parent: 'Dashboard' },
+            },
+            {
+                path: '/peer-review/create',
+                name: 'PeerReviewCreate',
+                component: PeerReviewCreate,
+                meta: {
+                    level: 2,
+                    title: 'Create Peer Review Case',
+                    parent: 'PeerReviewList',
+                },
             },
 
             // Level 2 pages (show back button to level 1)
@@ -315,6 +336,46 @@ const routes = [
                     parent: 'ProcedureManagement',
                 },
             },
+
+            // Peer Review Routes
+             {
+                 path: '/peer-review/:id',
+                 name: 'PeerReviewCase',
+                 component: PeerReviewCase,
+                 meta: {
+                     level: 2,
+                     title: 'Peer Review Case',
+                     parent: 'PeerReviewList',
+                 },
+             },
+
+             // Inventory Management Routes
+             {
+                 path: '/inventory',
+                 name: 'InventoryList',
+                 component: InventoryList,
+                 meta: { level: 1, title: 'Inventory', parent: 'Dashboard' },
+             },
+             {
+                 path: '/inventory/new',
+                 name: 'InventoryCreate',
+                 component: InventoryForm,
+                 meta: {
+                     level: 2,
+                     title: 'Add Inventory Item',
+                     parent: 'InventoryList',
+                 },
+             },
+             {
+                 path: '/inventory/:id/edit',
+                 name: 'InventoryEdit',
+                 component: InventoryForm,
+                 meta: {
+                     level: 2,
+                     title: 'Edit Inventory Item',
+                     parent: 'InventoryList',
+                 },
+             },
         ],
     },
 ];

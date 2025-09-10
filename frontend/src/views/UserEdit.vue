@@ -335,7 +335,7 @@ export default {
       first_name: '',
       last_name: '',
       gender: '',
-      avatar: '',
+      avatar_path: '',
       password: '',
       role: '',
       clinic_id: null
@@ -355,7 +355,7 @@ export default {
         form.value.first_name !== (originalUser.value.first_name || '') ||
         form.value.last_name !== (originalUser.value.last_name || '') ||
         form.value.gender !== (originalUser.value.gender || '') ||
-        form.value.avatar !== (originalUser.value.avatar || '') ||
+        form.value.avatar_path !== (originalUser.value.avatar_path || '') ||
         form.value.password !== ''
       )
 
@@ -404,7 +404,7 @@ export default {
           first_name: originalUser.value.first_name || '',
           last_name: originalUser.value.last_name || '',
           gender: originalUser.value.gender || '',
-          avatar: originalUser.value.avatar || '',
+          avatar_path: originalUser.value.avatar_path || '',
           password: '',
           role: originalUser.value.role || '',
           clinic_id: originalUser.value.clinic_id || null
@@ -413,7 +413,7 @@ export default {
     }
     
     const handleAvatarUpdated = (avatarPath) => {
-      form.value.avatar = avatarPath || ''
+      form.value.avatar_path = avatarPath || ''
     }
 
     const loadClinics = async () => {
@@ -451,8 +451,8 @@ export default {
         if (form.value.gender !== (originalUser.value.gender || '')) {
           updateData.gender = form.value.gender
         }
-        if (form.value.avatar !== (originalUser.value.avatar || '')) {
-          updateData.avatar = form.value.avatar
+        if (form.value.avatar_path !== (originalUser.value.avatar_path || '')) {
+          updateData.avatar_path = form.value.avatar_path
         }
         if (form.value.password) {
           updateData.password = form.value.password

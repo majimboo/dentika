@@ -70,6 +70,11 @@ func main() {
 		&models.Inquiry{},
 		&models.DailySales{},
 		&models.PatientAnalytics{},
+		// Inventory models
+		&models.InventoryItem{},
+		&models.InventoryStock{},
+		&models.InventoryRestock{},
+		&models.InventoryAlert{},
 	); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
@@ -121,6 +126,8 @@ func main() {
 	// Upload routes
 	api.Post("/upload/avatar", handlers.UploadAvatar)
 	api.Delete("/upload/avatar", handlers.DeleteAvatar)
+	api.Post("/upload/inventory-item-image", handlers.UploadInventoryItemImage)
+	api.Delete("/upload/inventory-item-image", handlers.DeleteInventoryItemImage)
 
 	// Clinic management routes
 	api.Get("/clinics", handlers.GetClinics)
@@ -174,6 +181,27 @@ func main() {
 	api.Get("/appointments/:appointment_id/diagnoses", handlers.GetAppointmentDiagnoses)
 	api.Post("/appointments/:appointment_id/diagnoses", middleware.RoleMiddleware(models.Doctor), handlers.AddDiagnosisToAppointment)
 	api.Put("/appointment-diagnoses/:id", middleware.RoleMiddleware(models.Doctor), handlers.UpdateAppointmentDiagnosis)
+
+	// Inventory management routes
+	api.Get("/inventory/items", handlers.GetInventoryItems)
+	api.Get("/inventory/items/:id", handlers.GetInventoryItem)
+	api.Post("/inventory/items", handlers.CreateInventoryItem)
+	api.Put("/inventory/items/:id", handlers.UpdateInventoryItem)
+	api.Delete("/inventory/items/:id", handlers.DeleteInventoryItem)
+
+	// Inventory stock transactions
+	api.Post("/inventory/stock-transactions", handlers.CreateStockTransaction)
+	api.Get("/inventory/items/:itemId/stock-transactions", handlers.GetStockTransactions)
+
+	// Inventory alerts and notifications
+	api.Get("/inventory/alerts", handlers.GetInventoryAlerts)
+
+	// Inventory restock management
+	api.Post("/inventory/restock-orders", handlers.CreateRestockOrder)
+	api.Get("/inventory/restock-orders", handlers.GetRestockOrders)
+
+	// Inventory analytics
+	api.Get("/inventory/analytics", handlers.GetInventoryAnalytics)
 
 	// Basic route
 	app.Get("/", func(c *fiber.Ctx) error {

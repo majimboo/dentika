@@ -60,13 +60,14 @@ func GetUser(c *fiber.Ctx) error {
 }
 
 type CreateUserRequest struct {
-	Username  string          `json:"username"`
-	Email     string          `json:"email"`
-	Password  string          `json:"password"`
-	Role      models.UserRole `json:"role"`
-	ClinicID  *uint           `json:"clinic_id"`
-	FirstName string          `json:"first_name"`
-	LastName  string          `json:"last_name"`
+	Username   string          `json:"username"`
+	Email      string          `json:"email"`
+	Password   string          `json:"password"`
+	Role       models.UserRole `json:"role"`
+	ClinicID   *uint           `json:"clinic_id"`
+	FirstName  string          `json:"first_name"`
+	LastName   string          `json:"last_name"`
+	AvatarPath string          `json:"avatar_path"`
 }
 
 func CreateUser(c *fiber.Ctx) error {
@@ -119,14 +120,15 @@ func CreateUser(c *fiber.Ctx) error {
 
 	// Create user
 	user := models.User{
-		Username:  req.Username,
-		Email:     req.Email,
-		Password:  req.Password,
-		Role:      req.Role,
-		ClinicID:  req.ClinicID,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		IsActive:  true,
+		Username:   req.Username,
+		Email:      req.Email,
+		Password:   req.Password,
+		Role:       req.Role,
+		ClinicID:   req.ClinicID,
+		FirstName:  req.FirstName,
+		LastName:   req.LastName,
+		AvatarPath: req.AvatarPath,
+		IsActive:   true,
 	}
 
 	if err := user.HashPassword(); err != nil {
@@ -156,14 +158,14 @@ func UpdateUser(c *fiber.Ctx) error {
 	requestingUser := c.Locals("user").(models.User)
 
 	var req struct {
-		Username  string          `json:"username"`
-		Email     string          `json:"email"`
-		FirstName string          `json:"first_name"`
-		LastName  string          `json:"last_name"`
-		Gender    string          `json:"gender"`
-		Avatar    string          `json:"avatar"`
-		Password  string          `json:"password"`
-		Role      models.UserRole `json:"role"`
+		Username   string          `json:"username"`
+		Email      string          `json:"email"`
+		FirstName  string          `json:"first_name"`
+		LastName   string          `json:"last_name"`
+		Gender     string          `json:"gender"`
+		AvatarPath string          `json:"avatar_path"`
+		Password   string          `json:"password"`
+		Role       models.UserRole `json:"role"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -242,8 +244,8 @@ func UpdateUser(c *fiber.Ctx) error {
 	if req.Gender != "" {
 		user.Gender = req.Gender
 	}
-	if req.Avatar != "" {
-		user.Avatar = req.Avatar
+	if req.AvatarPath != "" {
+		user.AvatarPath = req.AvatarPath
 	}
 
 	if req.Password != "" {

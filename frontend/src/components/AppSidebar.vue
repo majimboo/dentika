@@ -96,24 +96,60 @@
                  </div>
                </router-link>
              </li>
-             <li role="listitem">
-               <router-link
-                 to="/procedures"
-                 @click="closeSidebarOnMobile"
-                 class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                 :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/procedures') || $route.path.startsWith('/diagnoses') || $route.path.startsWith('/treatments') || $route.path.startsWith('/consent') || $route.path.startsWith('/prescriptions') }"
-                 :aria-current="$route.path.startsWith('/procedures') ? 'page' : null"
-               >
-                 <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200"
-                      :class="{ 'bg-blue-200': $route.path.startsWith('/procedures') || $route.path.startsWith('/diagnoses') || $route.path.startsWith('/treatments') || $route.path.startsWith('/consent') || $route.path.startsWith('/prescriptions') }">
+              <li role="listitem">
+                <router-link
+                  to="/procedures"
+                  @click="closeSidebarOnMobile"
+                  class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/procedures') || $route.path.startsWith('/diagnoses') || $route.path.startsWith('/treatments') || $route.path.startsWith('/consent') || $route.path.startsWith('/prescriptions') }"
+                  :aria-current="$route.path.startsWith('/procedures') ? 'page' : null"
+                >
+                  <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200"
+                       :class="{ 'bg-blue-200': $route.path.startsWith('/procedures') || $route.path.startsWith('/diagnoses') || $route.path.startsWith('/treatments') || $route.path.startsWith('/consent') || $route.path.startsWith('/prescriptions') }">
                     <font-awesome-icon icon="fa-solid fa-stethoscope" class="w-5 h-5" />
-                 </div>
-                 <div>
-                   <div class="font-medium">Procedures</div>
-                   <div class="text-xs text-gray-400">Treatments & diagnoses</div>
-                 </div>
-               </router-link>
-             </li>
+                  </div>
+                  <div>
+                    <div class="font-medium">Procedures</div>
+                    <div class="text-xs text-gray-400">Treatments & diagnoses</div>
+                  </div>
+                </router-link>
+              </li>
+               <li role="listitem" v-if="isDoctor">
+                 <router-link
+                   to="/peer-review"
+                   @click="closeSidebarOnMobile"
+                   class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                   :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/peer-review') }"
+                   :aria-current="$route.path.startsWith('/peer-review') ? 'page' : null"
+                 >
+                   <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200"
+                        :class="{ 'bg-blue-200': $route.path.startsWith('/peer-review') }">
+                     <font-awesome-icon icon="fa-solid fa-users-cog" class="w-5 h-5" />
+                   </div>
+                   <div>
+                     <div class="font-medium">Peer Review</div>
+                     <div class="text-xs text-gray-400">Collaborate on cases</div>
+                   </div>
+                 </router-link>
+               </li>
+               <li role="listitem">
+                 <router-link
+                   to="/inventory"
+                   @click="closeSidebarOnMobile"
+                   class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                   :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/inventory') }"
+                   :aria-current="$route.path.startsWith('/inventory') ? 'page' : null"
+                 >
+                   <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200"
+                        :class="{ 'bg-blue-200': $route.path.startsWith('/inventory') }">
+                     <font-awesome-icon icon="fa-solid fa-boxes" class="w-5 h-5" />
+                   </div>
+                   <div>
+                     <div class="font-medium">Inventory</div>
+                     <div class="text-xs text-gray-400">Manage supplies</div>
+                   </div>
+                 </router-link>
+               </li>
              <li role="listitem" v-if="isClinicOwner">
                <router-link
                  to="/staff"
@@ -188,7 +224,7 @@ export default {
     BaseTooltip
   },
   computed: {
-    ...mapState(useAuthStore, ['userClinicId', 'isSuperAdmin', 'isClinicOwner'])
+    ...mapState(useAuthStore, ['userClinicId', 'isSuperAdmin', 'isClinicOwner', 'isDoctor'])
   },
   setup() {
     const { isSidebarOpen, closeSidebar } = useSidebar()

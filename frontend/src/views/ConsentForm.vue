@@ -85,51 +85,51 @@
                      <div v-html="consentContent" class="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed"></div>
 
                      <!-- Signature Section -->
-                     <div class="signature-section" style="margin-top: 20px; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-                       <h3 style="margin-bottom: 20px; color: #1f2937; font-size: 18px; font-weight: 600; text-align: center; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">Signatures Required</h3>
+                     <div class="signature-section mt-5 p-5 bg-slate-50 rounded-lg border border-slate-300">
+                       <h3 class="mb-5 text-gray-800 text-lg font-semibold text-center border-b-2 border-blue-500 pb-2.5">Signatures Required</h3>
 
-                       <div style="display: flex; gap: 30px; margin-bottom: 15px;">
-                         <div style="flex: 1; background: white; padding: 15px; border-radius: 6px; border: 1px solid #d1d5db; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                           <div style="margin-bottom: 12px; font-weight: 600; color: #374151; font-size: 14px;">
+                       <div class="flex flex-col md:flex-row gap-8 mb-4">
+                         <div class="flex-1 bg-white p-4 rounded border border-gray-300 shadow-sm">
+                           <div class="mb-3 font-semibold text-gray-700 text-sm">
                              Patient Signature:
                            </div>
-                           <div class="signature-pad-container" style="margin-bottom: 8px;">
+                           <div class="signature-pad-container mb-2">
                              <canvas
                                ref="patientCanvasRef"
                                width="400"
                                height="150"
-                               style="width: 100%; height: 150px; border: 2px solid #374151; border-radius: 4px; background: #fefefe; cursor: crosshair;"
+                               class="w-full h-36 border-2 border-gray-700 rounded bg-gray-50 cursor-crosshair"
                              ></canvas>
-                             <div style="display: flex; gap: 8px; margin-top: 8px;">
-                               <button type="button" @click="clearPatientSignature" style="font-size: 11px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">Clear</button>
-                               <span style="font-size: 11px; color: #6b7280;">Draw your signature above</span>
+                             <div class="flex gap-2 mt-2">
+                               <button type="button" @click="clearPatientSignature" class="text-xs px-2 py-1 bg-red-500 text-white border-0 rounded cursor-pointer hover:bg-red-600">Clear</button>
+                               <span class="text-xs text-gray-500">Draw your signature above</span>
                              </div>
                            </div>
-                           <div style="font-size: 12px; color: #6b7280; text-align: center;">
+                           <div class="text-xs text-gray-500 text-center">
                              Date: {{ formData.signature_date || new Date().toISOString().split('T')[0] }}
                            </div>
                          </div>
 
-                         <div style="flex: 1; background: white; padding: 15px; border-radius: 6px; border: 1px solid #d1d5db; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                           <div style="margin-bottom: 12px; font-weight: 600; color: #374151; font-size: 14px;">
+                         <div class="flex-1 bg-white p-4 rounded border border-gray-300 shadow-sm">
+                           <div class="mb-3 font-semibold text-gray-700 text-sm">
                              Witness Signature:
                            </div>
-                           <div class="signature-pad-container" style="margin-bottom: 8px;">
+                           <div class="signature-pad-container mb-2">
                              <canvas
                                ref="witnessCanvasRef"
                                width="400"
                                height="150"
-                               style="width: 100%; height: 150px; border: 2px solid #374151; border-radius: 4px; background: #fefefe; cursor: crosshair;"
+                               class="w-full h-36 border-2 border-gray-700 rounded bg-gray-50 cursor-crosshair"
                              ></canvas>
-                             <div style="display: flex; gap: 8px; margin-top: 8px;">
-                               <button type="button" @click="clearWitnessSignature" style="font-size: 11px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">Clear</button>
-                               <span style="font-size: 11px; color: #6b7280;">Draw witness signature above</span>
+                             <div class="flex gap-2 mt-2">
+                               <button type="button" @click="clearWitnessSignature" class="text-xs px-2 py-1 bg-red-500 text-white border-0 rounded cursor-pointer hover:bg-red-600">Clear</button>
+                               <span class="text-xs text-gray-500">Draw witness signature above</span>
                              </div>
                            </div>
-                           <div style="font-size: 12px; color: #6b7280; text-align: center;">
+                           <div class="text-xs text-gray-500 text-center">
                              Date: {{ formData.signature_date || new Date().toISOString().split('T')[0] }}
                            </div>
-                           <div v-if="formData.witness_name" style="margin-top: 8px; font-size: 12px; color: #6b7280; text-align: center; font-style: italic;">
+                           <div v-if="formData.witness_name" class="mt-2 text-xs text-gray-500 text-center italic">
                              Witness: {{ formData.witness_name }}
                            </div>
                          </div>
@@ -137,9 +137,9 @@
                      </div>
 
                      <!-- Footer -->
-                     <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #6b7280; padding-top: 10px; font-weight: normal;">
-                       <p style="margin: 0 0 5px 0;">This consent form has been electronically generated and is legally binding.</p>
-                       <p style="margin: 0;">Please retain a copy for your records.</p>
+                     <div class="mt-5 text-center text-xs text-gray-500 pt-2.5 font-normal">
+                       <p class="m-0 mb-1">This consent form has been electronically generated and is legally binding.</p>
+                       <p class="m-0">Please retain a copy for your records.</p>
                      </div>
                   </div>
                 </div>

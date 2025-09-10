@@ -20,7 +20,7 @@
     </div>
 
     <!-- Filters and Search -->
-    <div class="filters-section bg-white rounded-lg shadow-sm border p-4 mb-6">
+    <div class="filters-section bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <!-- Search and Filters -->
         <div class="search-and-filters flex flex-col md:flex-row gap-4 items-start md:items-center flex-1">
@@ -91,22 +91,22 @@
 
     <!-- Patient Stats -->
     <div class="patient-stats grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border">
+      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div class="stat-value text-2xl font-bold text-blue-600">{{ totalPatients }}</div>
         <div class="stat-label text-sm text-gray-600">Total Patients</div>
       </div>
       
-      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border">
+      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div class="stat-value text-2xl font-bold text-green-600">{{ activePatients }}</div>
         <div class="stat-label text-sm text-gray-600">Active Patients</div>
       </div>
       
-      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border">
+      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div class="stat-value text-2xl font-bold text-purple-600">{{ newPatientsThisMonth }}</div>
         <div class="stat-label text-sm text-gray-600">New This Month</div>
       </div>
       
-      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border">
+      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div class="stat-value text-2xl font-bold text-orange-600">{{ upcomingAppointments }}</div>
         <div class="stat-label text-sm text-gray-600">Upcoming Appointments</div>
       </div>
@@ -114,13 +114,13 @@
 
     <!-- Patient Grid/List View -->
     <!-- Loading State -->
-    <div v-if="loading" class="loading-state flex items-center justify-center py-12 bg-white rounded-lg shadow-sm border">
+    <div v-if="loading" class="loading-state flex items-center justify-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       <span class="ml-3 text-gray-600">Loading patients...</span>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="patients.length === 0" class="empty-state text-center py-12 bg-white rounded-lg shadow-sm border">
+    <div v-else-if="patients.length === 0" class="empty-state text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
       <div class="empty-icon text-gray-300 mb-4">
         <font-awesome-icon icon="fa-solid fa-users" class="w-16 h-16 mx-auto" />
       </div>
@@ -292,7 +292,7 @@
     </div>
 
     <!-- Patient List View -->
-    <div v-else class="patients-list bg-white rounded-lg shadow-sm border overflow-hidden">
+    <div v-else class="patients-list bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div class="patients-table">
         <table class="w-full">
           <thead class="bg-gray-50 border-b">

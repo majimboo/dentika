@@ -21,7 +21,7 @@ The system is built around a multi-tenant architecture where:
 
 ### Backend Structure
 
-**Handler Organization** (8 main handlers):
+**Handler Organization** (9 main handlers):
 - `auth.go`: Authentication, registration, user sessions
 - `clinic.go`: Clinic and branch management (SuperAdmin features)
 - `patient.go`: Patient CRUD, search, medical records, auto-generates dental records
@@ -30,6 +30,7 @@ The system is built around a multi-tenant architecture where:
 - `procedure.go`: Procedure/diagnosis templates and appointment associations
 - `users.go`: User management and avatar uploads
 - `upload.go`: File upload handling
+- `analytics.go`: Lead tracking, sales metrics, and patient behavior analytics
 
 **Model Structure** (8 core model files):
 - `user.go`: Extended user model with 5 role types and permission methods
@@ -49,12 +50,14 @@ The system is built around a multi-tenant architecture where:
 - `AppointmentCountdown.vue`: Real-time countdown sidebar for upcoming appointments (30-minute window)
 - `ToothDetailsPanel.vue` & `ToothEditModal.vue`: Dental record editing with condition history
 
-**State Management** (5 specialized stores):
+**State Management** (7 specialized stores):
 - `auth.js`: Extended with role-based getters and clinic context
 - `clinic.js`: Multi-clinic and branch management for SuperAdmin
 - `patient.js`: Patient search, pagination, dental record integration
 - `appointment.js`: Calendar filtering, status management, real-time countdown data
 - `dentalRecord.js`: Tooth-level CRUD operations, condition tracking, bulk updates
+- `notification.js`: Toast notifications and user feedback system
+- `connection.js`: API connection status and error handling
 
 ## Development Commands
 

@@ -63,7 +63,7 @@
     </div>
 
     <!-- Calendar Navigation -->
-    <div class="calendar-navigation flex items-center justify-between mb-6 bg-white rounded-lg shadow-sm border p-4">
+    <div class="calendar-navigation flex items-center justify-between mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
       <div class="nav-controls flex items-center space-x-4">
         <button
           @click="navigateCalendar(-1)"
@@ -138,7 +138,7 @@
     </div>
 
     <!-- Calendar Views -->
-    <div class="calendar-container bg-white rounded-lg shadow-sm border">
+    <div class="calendar-container bg-white rounded-lg shadow-sm border border-gray-200">
       <!-- Loading State -->
       <div v-if="loading" class="loading-state flex items-center justify-center py-12">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

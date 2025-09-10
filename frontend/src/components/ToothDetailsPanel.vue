@@ -1,5 +1,5 @@
 <template>
-  <div class="tooth-details-panel bg-white border rounded-lg shadow-lg p-4 mt-4">
+  <div class="tooth-details-panel bg-white border border-gray-300 rounded-lg shadow-lg p-4 mt-4">
     <div class="panel-header flex justify-between items-start mb-4">
       <div>
         <h4 class="text-lg font-semibold text-gray-900">
@@ -26,7 +26,7 @@
         
         <div class="condition-display flex items-center mb-3">
           <div 
-            class="condition-color w-6 h-6 rounded border mr-3"
+            class="condition-color w-6 h-6 rounded border border-gray-300 mr-3"
             :style="{ backgroundColor: getToothColor() }"
           ></div>
           <span class="condition-text text-lg font-medium">

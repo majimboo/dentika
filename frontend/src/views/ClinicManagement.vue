@@ -190,7 +190,7 @@
         <h3 class="text-lg font-semibold">Delete Clinic</h3>
         <p class="mt-2 text-neutral-600">Are you sure you want to delete <strong>{{ clinicToDelete.name }}</strong>? This will also deactivate all associated users and branches. This action cannot be undone.</p>
         <div class="mt-6 flex justify-end space-x-3">
-          <button @click="clinicToDelete = null" class="px-4 py-2 border rounded-lg">Cancel</button>
+          <button @click="clinicToDelete = null" class="px-4 py-2 border border-gray-300 rounded-lg">Cancel</button>
           <button @click="deleteClinic(clinicToDelete.id)" :disabled="deleting" class="px-4 py-2 border border-transparent rounded-lg text-white bg-danger-600 hover:bg-danger-700 disabled:opacity-50">
             {{ deleting ? 'Deleting...' : 'Delete' }}
           </button>

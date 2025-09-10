@@ -60,7 +60,7 @@
     </div>
 
     <!-- Filters and Search -->
-    <div class="filters-section bg-white rounded-lg shadow-sm border p-4 mb-6">
+    <div class="filters-section bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Search -->
         <div class="search-group">
@@ -132,7 +132,7 @@
     <!-- Appointments Grid View -->
     <div v-if="viewMode === 'grid'" class="appointments-grid">
       <!-- Loading State -->
-      <div v-if="loading" class="loading-state flex items-center justify-center py-12 bg-white rounded-lg shadow-sm border">
+      <div v-if="loading" class="loading-state flex items-center justify-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <span class="ml-3 text-gray-600">Loading appointments...</span>
       </div>
@@ -298,7 +298,7 @@
       </div>
 
       <!-- Empty State for Grid -->
-      <div v-if="!loading && filteredAppointments.length === 0" class="empty-state text-center py-12 bg-white rounded-lg shadow-sm border">
+      <div v-if="!loading && filteredAppointments.length === 0" class="empty-state text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="empty-icon text-gray-300 mb-4">
           <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -319,7 +319,7 @@
     </div>
 
     <!-- Appointments Table View -->
-    <div v-else class="table-container bg-white rounded-lg shadow-sm border overflow-hidden">
+    <div v-else class="table-container bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-12">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

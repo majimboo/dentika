@@ -92,7 +92,7 @@
         <div class="p-6 sm:p-8">
           <h3 class="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-2 mb-4">Branches</h3>
           <ul class="space-y-2">
-            <li v-for="branch in clinic.branches" :key="branch.id" class="p-4 border rounded-md flex justify-between items-center">
+            <li v-for="branch in clinic.branches" :key="branch.id" class="p-4 border border-gray-200 rounded-md flex justify-between items-center">
               <div>
                 <p class="font-semibold">{{ branch.name }} <span v-if="branch.is_main_branch" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Main</span></p>
                 <p class="text-sm text-neutral-600">{{ branch.address }}</p>
@@ -117,7 +117,7 @@
             <button @click="addUserToClinic" class="inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">Add Staff</button>
           </div>
           <ul class="space-y-2">
-            <li v-for="user in clinic.staff" :key="user.id" class="p-4 border rounded-md flex justify-between items-center">
+            <li v-for="user in clinic.staff" :key="user.id" class="p-4 border border-gray-200 rounded-md flex justify-between items-center">
               <div>
                 <p class="font-semibold">{{ user.username }} <span class="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded-full">{{ user.role }}</span></p>
                 <p class="text-sm text-neutral-600">{{ user.email }}</p>

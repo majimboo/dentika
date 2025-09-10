@@ -273,7 +273,7 @@
                       v-for="procedure in filteredProcedures.slice(0, 12)"
                       :key="procedure.id"
                       @click="selectProcedure(procedure)"
-                      class="cursor-pointer p-3 border rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200"
+                      class="cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200"
                       :class="[
                         'bg-white',
                         isSelected(procedure.id) ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50' : 'border-neutral-200'

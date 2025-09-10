@@ -13,7 +13,7 @@
     </div>
 
     <!-- Form -->
-    <div class="form-container bg-white rounded-lg shadow-sm border">
+    <div class="form-container bg-white rounded-lg shadow-sm border border-gray-200">
       <form @submit.prevent="handleSubmit" class="p-6 space-y-6">
         <!-- Patient Selection -->
         <div class="form-section">

@@ -1,5 +1,5 @@
 <template>
-  <div class="appointment-countdown bg-white rounded-lg shadow-sm border p-4">
+  <div class="appointment-countdown bg-white rounded-lg shadow-sm border border-gray-200 p-4">
     <!-- Header -->
     <div class="countdown-header flex items-center justify-between mb-4">
       <div class="flex items-center">
@@ -340,7 +340,7 @@ onUnmounted(() => {
 }
 
 .appointment-card {
-  @apply p-3 border rounded-lg transition-all duration-200;
+  @apply p-3 border border-gray-200 rounded-lg transition-all duration-200;
 }
 
 .normal-appointment {

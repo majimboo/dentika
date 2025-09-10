@@ -31,7 +31,7 @@
           <div class="current-condition p-3 bg-gray-50 rounded-lg">
             <div class="flex items-center">
               <div 
-                class="w-4 h-4 rounded mr-2 border"
+                class="w-4 h-4 rounded mr-2 border border-gray-300"
                 :style="{ backgroundColor: getCurrentColor() }"
               ></div>
               <span class="text-sm font-medium">
@@ -67,7 +67,7 @@
               <label 
                 v-for="surface in availableSurfaces" 
                 :key="surface.value"
-                class="flex items-center p-2 border rounded cursor-pointer hover:bg-gray-50"
+                class="flex items-center p-2 border border-gray-300 rounded cursor-pointer hover:bg-gray-50"
                 :class="{ 'bg-blue-50 border-blue-300': editData.surfaces.includes(surface.value) }"
               >
                 <input

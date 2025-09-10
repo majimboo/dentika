@@ -119,7 +119,7 @@
       <div class="legend-items grid grid-cols-3 md:grid-cols-5 gap-2 text-xs">
         <div v-for="(color, condition) in legendItems" :key="condition" class="legend-item flex items-center">
           <div 
-            class="legend-color w-4 h-4 rounded border mr-2" 
+            class="legend-color w-4 h-4 rounded border border-gray-300 mr-2" 
             :style="{ backgroundColor: color }"
           ></div>
           <span class="legend-text">{{ formatCondition(condition) }}</span>
@@ -313,7 +313,7 @@ watch(() => props.readonly, (newValue) => {
 
 <style scoped>
 .dental-chart {
-  @apply bg-white rounded-lg shadow-sm border p-6;
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
 }
 
 .dental-chart-container {

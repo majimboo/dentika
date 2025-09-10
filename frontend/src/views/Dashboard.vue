@@ -52,7 +52,7 @@
       <!-- Key Metrics Cards -->
       <div class="metrics-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Total Appointments -->
-        <div class="metric-card bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+        <div class="metric-card bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center">
             <div class="metric-icon w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
               <font-awesome-icon icon="fa-solid fa-calendar-alt" class="w-6 h-6 text-blue-600" />
@@ -70,7 +70,7 @@
         </div>
 
         <!-- Revenue -->
-        <div class="metric-card bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+        <div class="metric-card bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center">
             <div class="metric-icon w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
               <font-awesome-icon icon="fa-solid fa-dollar-sign" class="w-6 h-6 text-green-600" />
@@ -88,7 +88,7 @@
         </div>
 
         <!-- New Patients -->
-        <div class="metric-card bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+        <div class="metric-card bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center">
             <div class="metric-icon w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
               <font-awesome-icon icon="fa-solid fa-user-plus" class="w-6 h-6 text-purple-600" />
@@ -106,7 +106,7 @@
         </div>
 
         <!-- Completion Rate -->
-        <div class="metric-card bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+        <div class="metric-card bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center">
             <div class="metric-icon w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
               <font-awesome-icon icon="fa-solid fa-check-circle" class="w-6 h-6 text-yellow-600" />
@@ -127,7 +127,7 @@
       <!-- Charts Row -->
       <div class="charts-grid grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Appointments Chart -->
-        <div class="chart-card bg-white rounded-lg shadow-sm border p-6">
+        <div class="chart-card bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div class="chart-header flex items-center justify-between mb-6">
             <div>
               <h3 class="text-lg font-semibold text-gray-900">Appointments Overview</h3>
@@ -170,7 +170,7 @@
         </div>
 
         <!-- Revenue Chart -->
-        <div class="chart-card bg-white rounded-lg shadow-sm border p-6">
+        <div class="chart-card bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div class="chart-header flex items-center justify-between mb-6">
             <div>
               <h3 class="text-lg font-semibold text-gray-900">Revenue Breakdown</h3>
@@ -204,8 +204,8 @@
       <!-- Tables Row -->
       <div class="tables-grid grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Today's Appointments -->
-        <div class="appointments-card bg-white rounded-lg shadow-sm border">
-          <div class="card-header flex items-center justify-between p-6 border-b">
+        <div class="appointments-card bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="card-header flex items-center justify-between p-6 border-b border-gray-200">
             <div>
               <h3 class="text-lg font-semibold text-gray-900">Today's Appointments</h3>
               <p class="text-sm text-gray-600">{{ todayAppointments.length }} appointments scheduled</p>
@@ -257,8 +257,8 @@
         </div>
 
         <!-- Recent Patients -->
-        <div class="patients-card bg-white rounded-lg shadow-sm border">
-          <div class="card-header flex items-center justify-between p-6 border-b">
+        <div class="patients-card bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="card-header flex items-center justify-between p-6 border-b border-gray-200">
             <div>
               <h3 class="text-lg font-semibold text-gray-900">Recent Patients</h3>
               <p class="text-sm text-gray-600">Latest patient registrations</p>

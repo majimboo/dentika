@@ -95,7 +95,7 @@ const manualRetry = async () => {
 }
 
 .message-content {
-  @apply bg-white rounded-lg shadow-xl border p-6 max-w-md mx-4 text-center;
+  @apply bg-white rounded-lg shadow-xl border border-gray-200 p-6 max-w-md mx-4 text-center;
 }
 
 .warning-icon {

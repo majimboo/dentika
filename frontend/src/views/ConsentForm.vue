@@ -97,8 +97,8 @@
                              <canvas
                                ref="patientCanvasRef"
                                width="400"
-                               height="100"
-                               style="width: 100%; height: 100px; border: 2px solid #374151; border-radius: 4px; background: #fefefe; cursor: crosshair;"
+                               height="150"
+                               style="width: 100%; height: 150px; border: 2px solid #374151; border-radius: 4px; background: #fefefe; cursor: crosshair;"
                              ></canvas>
                              <div style="display: flex; gap: 8px; margin-top: 8px;">
                                <button type="button" @click="clearPatientSignature" style="font-size: 11px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">Clear</button>
@@ -118,8 +118,8 @@
                              <canvas
                                ref="witnessCanvasRef"
                                width="400"
-                               height="100"
-                               style="width: 100%; height: 100px; border: 2px solid #374151; border-radius: 4px; background: #fefefe; cursor: crosshair;"
+                               height="150"
+                               style="width: 100%; height: 150px; border: 2px solid #374151; border-radius: 4px; background: #fefefe; cursor: crosshair;"
                              ></canvas>
                              <div style="display: flex; gap: 8px; margin-top: 8px;">
                                <button type="button" @click="clearWitnessSignature" style="font-size: 11px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">Clear</button>
@@ -333,7 +333,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePatientStore } from '../stores/patient'
 import { useAppointmentStore } from '../stores/appointment'
@@ -507,54 +507,79 @@ const initSignaturePads = () => {
   // Initialize patient signature canvas
   patientCanvas = patientCanvasRef.value
   if (patientCanvas) {
-    // Set canvas internal dimensions to match CSS dimensions
-    const rect = patientCanvas.getBoundingClientRect()
-    patientCanvas.width = rect.width
-    patientCanvas.height = rect.height
-
-    patientCtx = patientCanvas.getContext('2d')
-    patientCtx.strokeStyle = '#374151'
-    patientCtx.lineWidth = 2
-    patientCtx.lineCap = 'round'
-    patientCtx.lineJoin = 'round'
-
-    // Mouse events
-    patientCanvas.addEventListener('mousedown', startDrawing.bind(null, 'patient'))
-    patientCanvas.addEventListener('mousemove', draw.bind(null, 'patient'))
-    patientCanvas.addEventListener('mouseup', stopDrawing)
-    patientCanvas.addEventListener('mouseout', stopDrawing)
-
-    // Touch events
-    patientCanvas.addEventListener('touchstart', handleTouchStart.bind(null, 'patient'))
-    patientCanvas.addEventListener('touchmove', handleTouchMove.bind(null, 'patient'))
-    patientCanvas.addEventListener('touchend', stopDrawing)
+    setupCanvas(patientCanvas, 'patient')
   }
 
   // Initialize witness signature canvas
   witnessCanvas = witnessCanvasRef.value
   if (witnessCanvas) {
-    // Set canvas internal dimensions to match CSS dimensions
-    const rect = witnessCanvas.getBoundingClientRect()
-    witnessCanvas.width = rect.width
-    witnessCanvas.height = rect.height
-
-    witnessCtx = witnessCanvas.getContext('2d')
-    witnessCtx.strokeStyle = '#374151'
-    witnessCtx.lineWidth = 2
-    witnessCtx.lineCap = 'round'
-    witnessCtx.lineJoin = 'round'
-
-    // Mouse events
-    witnessCanvas.addEventListener('mousedown', startDrawing.bind(null, 'witness'))
-    witnessCanvas.addEventListener('mousemove', draw.bind(null, 'witness'))
-    witnessCanvas.addEventListener('mouseup', stopDrawing)
-    witnessCanvas.addEventListener('mouseout', stopDrawing)
-
-    // Touch events
-    witnessCanvas.addEventListener('touchstart', handleTouchStart.bind(null, 'witness'))
-    witnessCanvas.addEventListener('touchmove', handleTouchMove.bind(null, 'witness'))
-    witnessCanvas.addEventListener('touchend', stopDrawing)
+    setupCanvas(witnessCanvas, 'witness')
   }
+}
+
+const setupCanvas = (canvas, type) => {
+  if (!canvas) {
+    console.error(`Canvas element for ${type} not found`)
+    return
+  }
+
+  const rect = canvas.getBoundingClientRect()
+  
+  if (rect.width === 0 || rect.height === 0) {
+    console.warn(`Canvas ${type} has zero dimensions: ${rect.width}x${rect.height}`)
+    return
+  }
+  
+  // Set canvas dimensions to match display size
+  canvas.width = rect.width
+  canvas.height = rect.height
+
+  const ctx = canvas.getContext('2d')
+  
+  // Set drawing styles
+  ctx.strokeStyle = '#374151'
+  ctx.lineWidth = 2
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+
+  // Store context reference
+  if (type === 'patient') {
+    patientCtx = ctx
+  } else {
+    witnessCtx = ctx
+  }
+
+
+  // Remove existing event listeners to prevent duplicates
+  if (canvas._mousedownHandler) {
+    canvas.removeEventListener('mousedown', canvas._mousedownHandler)
+    canvas.removeEventListener('mousemove', canvas._mousemoveHandler)
+    canvas.removeEventListener('mouseup', canvas._mouseupHandler)
+    canvas.removeEventListener('mouseout', canvas._mouseoutHandler)
+    canvas.removeEventListener('touchstart', canvas._touchstartHandler)
+    canvas.removeEventListener('touchmove', canvas._touchmoveHandler)
+    canvas.removeEventListener('touchend', canvas._touchendHandler)
+  }
+
+  // Create bound handlers and store references for removal
+  canvas._mousedownHandler = (e) => startDrawing(type, e)
+  canvas._mousemoveHandler = (e) => draw(type, e)
+  canvas._mouseupHandler = stopDrawing
+  canvas._mouseoutHandler = stopDrawing
+  canvas._touchstartHandler = (e) => handleTouchStart(type, e)
+  canvas._touchmoveHandler = (e) => handleTouchMove(type, e)
+  canvas._touchendHandler = stopDrawing
+
+  // Mouse events
+  canvas.addEventListener('mousedown', canvas._mousedownHandler)
+  canvas.addEventListener('mousemove', canvas._mousemoveHandler)
+  canvas.addEventListener('mouseup', canvas._mouseupHandler)
+  canvas.addEventListener('mouseout', canvas._mouseoutHandler)
+
+  // Touch events
+  canvas.addEventListener('touchstart', canvas._touchstartHandler, { passive: false })
+  canvas.addEventListener('touchmove', canvas._touchmoveHandler, { passive: false })
+  canvas.addEventListener('touchend', canvas._touchendHandler)
 }
 
 const startDrawing = (type, e) => {
@@ -568,6 +593,7 @@ const startDrawing = (type, e) => {
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
 
+  
   ctx.beginPath()
   ctx.moveTo(x, y)
 }
@@ -584,11 +610,14 @@ const draw = (type, e) => {
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
 
+
   ctx.lineTo(x, y)
   ctx.stroke()
 }
 
 const stopDrawing = () => {
+  if (!isDrawing) return
+  
   isDrawing = false
 
   // Save signature data
@@ -872,6 +901,39 @@ const handleSubmit = async () => {
   }
 }
 
+// Handle window resize to reinitialize canvases
+const handleResize = () => {
+  // Debounce resize events
+  clearTimeout(window.canvasResizeTimeout)
+  window.canvasResizeTimeout = setTimeout(() => {
+    if (patientCanvasRef.value || witnessCanvasRef.value) {
+      // Store current signatures before reinitializing
+      const patientData = formData.patient_signature_data
+      const witnessData = formData.witness_signature_data
+      
+      // Reinitialize canvases
+      initSignaturePads()
+      
+      // Restore signatures if they existed
+      if (patientData && patientCanvas && patientCtx) {
+        const img = new Image()
+        img.onload = () => {
+          patientCtx.drawImage(img, 0, 0)
+        }
+        img.src = patientData
+      }
+      
+      if (witnessData && witnessCanvas && witnessCtx) {
+        const img = new Image()
+        img.onload = () => {
+          witnessCtx.drawImage(img, 0, 0)
+        }
+        img.src = witnessData
+      }
+    }
+  }, 250)
+}
+
 // Load data on mount
 onMounted(async () => {
   try {
@@ -892,9 +954,13 @@ onMounted(async () => {
     }
 
     // Initialize signature pads after DOM is ready
-    nextTick(() => {
+    await nextTick()
+    setTimeout(() => {
       initSignaturePads()
-    })
+    }, 500)
+    
+    // Add resize listener
+    window.addEventListener('resize', handleResize)
   } catch (error) {
     console.error('Error loading data:', error)
     // Don't show error notification for now to avoid blocking the component
@@ -903,15 +969,26 @@ onMounted(async () => {
 })
 
 // Watch consent template changes
-watch(() => formData.consent_template_id, () => {
+watch(() => formData.consent_template_id, async () => {
   if (formData.consent_template_id) {
     loadConsentTemplate()
+    // Initialize signature pads after template loads and DOM updates
+    await nextTick()
+    setTimeout(() => {
+      initSignaturePads()
+    }, 200)
   }
 })
 
 // Watch route params changes
 watch(() => route.params.patientId, () => {
   loadPatientInfo()
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  clearTimeout(window.canvasResizeTimeout)
 })
 </script>
 

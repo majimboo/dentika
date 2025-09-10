@@ -38,6 +38,8 @@
               <h3 class="text-lg font-semibold text-neutral-900 mb-4">Profile Picture</h3>
               <AvatarUpload 
                 :user="form" 
+                entity-type="user"
+                :entity-id="form.id || 0"
                 @avatar-updated="handleAvatarUpdated"
               />
             </div>

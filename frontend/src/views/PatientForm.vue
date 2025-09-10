@@ -63,6 +63,8 @@
               <div v-if="!isViewMode" class="flex justify-center">
                 <AvatarUpload
                   :user="form"
+                  entity-type="patient"
+                  :entity-id="form.id || 0"
                   @avatar-updated="handleAvatarUpdated"
                 />
               </div>
@@ -464,32 +466,36 @@
               :key="consentForm.id"
               class="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:bg-gray-100 transition-colors"
             >
-              <div class="flex items-center justify-between">
-                <div class="flex-1">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex-1 mb-3 sm:mb-0">
                   <h4 class="font-medium text-gray-900">{{ consentForm.title }}</h4>
                   <p class="text-sm text-gray-600 mt-1">{{ consentForm.description }}</p>
-                  <div class="flex items-center mt-2 text-xs text-gray-500">
-                    <font-awesome-icon icon="fa-solid fa-calendar" class="w-3 h-3 mr-1" />
-                    Created: {{ formatDate(consentForm.created_at) }}
-                    <span class="mx-2">•</span>
-                    <font-awesome-icon icon="fa-solid fa-user" class="w-3 h-3 mr-1" />
-                    {{ consentForm.patient_signed_at ? `Signed: ${formatDate(consentForm.patient_signed_at)}` : 'Not signed' }}
+                  <div class="flex flex-col sm:flex-row sm:items-center mt-2 text-xs text-gray-500">
+                    <div class="flex items-center">
+                      <font-awesome-icon icon="fa-solid fa-calendar" class="w-3 h-3 mr-1" />
+                      Created: {{ formatDate(consentForm.created_at) }}
+                    </div>
+                    <span class="hidden sm:inline mx-2">•</span>
+                    <div class="flex items-center mt-1 sm:mt-0">
+                      <font-awesome-icon icon="fa-solid fa-user" class="w-3 h-3 mr-1" />
+                      {{ consentForm.patient_signed_at ? `Signed: ${formatDate(consentForm.patient_signed_at)}` : 'Not signed' }}
+                    </div>
                   </div>
                 </div>
-                <div class="flex items-center space-x-2 ml-4">
+                <div class="flex items-center space-x-2 sm:ml-4">
                   <button
                     @click="viewConsentForm(consentForm)"
-                    class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                   >
-                    <font-awesome-icon icon="fa-solid fa-eye" class="w-4 h-4 mr-2" />
-                    View
+                    <font-awesome-icon icon="fa-solid fa-eye" class="w-4 h-4 sm:mr-2" />
+                    <span class="ml-2 sm:ml-0">View</span>
                   </button>
                   <button
                     @click="downloadConsentFormPDF(consentForm)"
-                    class="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
                   >
-                    <font-awesome-icon icon="fa-solid fa-download" class="w-4 h-4 mr-2" />
-                    PDF
+                    <font-awesome-icon icon="fa-solid fa-download" class="w-4 h-4 sm:mr-2" />
+                    <span class="ml-2 sm:ml-0">PDF</span>
                   </button>
                 </div>
               </div>
@@ -668,6 +674,7 @@ const loadPatient = async (patientId) => {
       originalPatient.value = { ...patient }
 
       // Populate form with patient data
+      form.id = patient.id
       form.first_name = patient.first_name || ''
       form.last_name = patient.last_name || ''
       form.email = patient.email || ''

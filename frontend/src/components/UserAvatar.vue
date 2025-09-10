@@ -104,19 +104,18 @@ export default {
     },
     getAvatarUrl(avatarPath) {
       if (!avatarPath) return ''
-      
+
       // If it's already a full URL, return as is
       if (avatarPath.startsWith('http')) {
         return avatarPath
       }
-      
-      // If it starts with /uploads, return as is
-      if (avatarPath.startsWith('/uploads')) {
-        return avatarPath
-      }
-      
-      // Otherwise, prepend /uploads/
-      return `/uploads/${avatarPath}`
+
+      // Build the full backend URL for uploads
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:9483'
+
+      // Remove leading slash if present to avoid double slashes
+      const cleanPath = avatarPath.startsWith('/') ? avatarPath.substring(1) : avatarPath
+      return `${baseUrl}/uploads/${cleanPath}`
     },
     handleImageError(event) {
       // Hide the image and show initials when image fails to load

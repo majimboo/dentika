@@ -501,7 +501,13 @@ export default {
 
     const getImageUrl = (imagePath) => {
       if (!imagePath) return ''
-      return `${window.location.origin}/uploads/${imagePath}`
+
+      // Build the full backend URL for uploads
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:9483'
+
+      // Remove leading slash if present to avoid double slashes
+      const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath
+      return `${baseUrl}/uploads/${cleanPath}`
     }
 
     const quickStockUpdate = (item) => {

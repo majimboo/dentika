@@ -172,7 +172,7 @@ func GetConsentForms(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 	var forms []models.ConsentForm
 
-	query := database.DB.Preload("Patient").Preload("ConsentTemplate")
+	query := database.DB.Preload("Patient").Preload("ConsentTemplate").Preload("Doctor")
 
 	// Filter by clinic for non-super-admin users
 	if !user.IsSuperAdmin() {
@@ -258,6 +258,18 @@ func CreateConsentForm(c *fiber.Ctx) error {
 			content = strings.ReplaceAll(content, "[PATIENT_EMAIL]", patient.Email)
 		}
 
+		// Handle doctor placeholder if doctor is specified
+		if req.DoctorID != nil {
+			var doctor models.User
+			if err := database.DB.First(&doctor, *req.DoctorID).Error; err == nil {
+				doctorName := doctor.FirstName + " " + doctor.LastName
+				content = strings.ReplaceAll(content, "[DOCTOR_NAME]", doctorName)
+			}
+		} else {
+			// Use default if no doctor specified
+			content = strings.ReplaceAll(content, "[DOCTOR_NAME]", "Doctor")
+		}
+
 		// Set the populated content
 		req.Content = content
 	}
@@ -267,7 +279,7 @@ func CreateConsentForm(c *fiber.Ctx) error {
 	}
 
 	// Load the created form with relations
-	if err := database.DB.Preload("Patient").Preload("ConsentTemplate").First(&req, req.ID).Error; err != nil {
+	if err := database.DB.Preload("Patient").Preload("ConsentTemplate").Preload("Doctor").First(&req, req.ID).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to load created consent form"})
 	}
 
@@ -279,7 +291,7 @@ func GetConsentForm(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var form models.ConsentForm
-	query := database.DB.Preload("Patient").Preload("ConsentTemplate").Preload("Witness")
+	query := database.DB.Preload("Patient").Preload("ConsentTemplate").Preload("Doctor").Preload("Witness")
 
 	// Filter by clinic for non-super-admin users
 	if !user.IsSuperAdmin() {

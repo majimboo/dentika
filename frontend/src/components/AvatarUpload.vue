@@ -107,6 +107,15 @@ const props = defineProps({
     type: String,
     default: 'large', // 'small', 'medium', 'large'
     validator: (value) => ['small', 'medium', 'large'].includes(value)
+  },
+  entityType: {
+    type: String,
+    required: true,
+    validator: (value) => ['user', 'patient'].includes(value)
+  },
+  entityId: {
+    type: [String, Number],
+    required: true
   }
 })
 
@@ -128,9 +137,12 @@ const currentAvatarUrl = computed(() => {
     return avatarPath
   }
 
-  // If it's a relative path, prepend the server URL
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-  return `${baseUrl}/uploads/${avatarPath}`
+  // Build the full server URL using current host
+  const baseUrl = window.location.origin
+  
+  // Remove leading slash if present to avoid double slashes
+  const cleanPath = avatarPath.startsWith('/') ? avatarPath.substring(1) : avatarPath
+  return `${baseUrl}/uploads/${cleanPath}`
 })
 
 const initials = computed(() => {
@@ -195,9 +207,18 @@ const uploadFile = async (file) => {
   uploading.value = true
   error.value = ''
   
+  // Check if we have a valid entity ID
+  if (!props.entityId || props.entityId === 0 || props.entityId === '0') {
+    error.value = 'Cannot upload avatar: entity must be saved first'
+    uploading.value = false
+    return
+  }
+  
   try {
     const formData = new FormData()
     formData.append('avatar', file)
+    formData.append('type', props.entityType)
+    formData.append('id', props.entityId.toString())
     
     const response = await fetch('/api/upload/avatar', {
       method: 'POST',

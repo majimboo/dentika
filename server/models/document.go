@@ -63,6 +63,10 @@ type ConsentForm struct {
 	Patient       Patient      `json:"patient" gorm:"foreignKey:PatientID"`
 	AppointmentID *uint        `json:"appointment_id" gorm:"index"`
 	Appointment   *Appointment `json:"appointment,omitempty" gorm:"foreignKey:AppointmentID"`
+	
+	// Treating doctor
+	DoctorID *uint `json:"doctor_id" gorm:"index"`
+	Doctor   *User `json:"doctor,omitempty" gorm:"foreignKey:DoctorID"`
 
 	// Procedure details
 	ProcedureDescription string `json:"procedure_description" gorm:"type:text"`

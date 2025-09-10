@@ -920,7 +920,7 @@ const generateConsentDocument = () => {
     .replace(/\[CURRENT_DATE\]/g, currentDate)
     .replace(/\[TODAY\]/g, currentDate)
     .replace(/\[DATE\]/g, currentDate)
-    .replace(/\[DOCTOR_NAME\]/g, authStore.user?.first_name ? `${authStore.user.first_name} ${authStore.user.last_name}` : 'Doctor')
+    .replace(/\[DOCTOR_NAME\]/g, formData.doctor?.first_name ? `Dr. ${formData.doctor.first_name} ${formData.doctor.last_name}` : 'Dr. [DOCTOR_NAME]')
     .replace(/\[CLINIC_NAME\]/g, authStore.userClinic?.name || 'Clinic')
 
   // Replace patient-specific placeholders if available
@@ -1066,6 +1066,7 @@ const handleSubmit = async () => {
       title,
       description,
       patient_id: parseInt(route.params.patientId),
+      doctor_id: formData.doctor?.id || null,
       created_at: new Date().toISOString(),
       clinic_id: authStore.userClinicId,
       // Map signature data to backend field names - use cleaned versions

@@ -6,11 +6,15 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+
+	"dentika/server/database"
+	"dentika/server/models"
 )
 
 const (
@@ -95,6 +99,16 @@ func saveFile(file *multipart.FileHeader, directory string) (string, error) {
 }
 
 func UploadAvatar(c *fiber.Ctx) error {
+	// Get form parameters
+	entityType := c.FormValue("type") // "user" or "patient"
+	entityID := c.FormValue("id")
+
+	if entityType == "" || entityID == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Both 'type' (user/patient) and 'id' parameters are required",
+		})
+	}
+
 	// Get the file from form
 	file, err := c.FormFile("avatar")
 	if err != nil {
@@ -141,6 +155,15 @@ func UploadAvatar(c *fiber.Ctx) error {
 	relativePath := filepath.Join(AvatarDir, yearMonth, filename)
 	// Convert to forward slashes for URLs
 	relativePath = strings.ReplaceAll(relativePath, "\\", "/")
+
+	// Update the database with the new avatar path
+	if err := updateAvatarPath(entityType, entityID, relativePath); err != nil {
+		// File was uploaded but database update failed - should we delete the file?
+		// For now, just return an error
+		return c.Status(500).JSON(fiber.Map{
+			"error": "File uploaded but failed to update database: " + err.Error(),
+		})
+	}
 
 	return c.JSON(fiber.Map{
 		"success":  true,
@@ -274,4 +297,28 @@ func DeleteInventoryItemImage(c *fiber.Ctx) error {
 		"success": true,
 		"message": "File deleted successfully",
 	})
+}
+
+// updateAvatarPath updates the avatar_path field for either a user or patient
+func updateAvatarPath(entityType, entityIDStr, avatarPath string) error {
+	entityID, err := strconv.ParseUint(entityIDStr, 10, 32)
+	if err != nil {
+		return fmt.Errorf("invalid entity ID: %v", err)
+	}
+
+	// Check if entity ID is valid (not 0)
+	if entityID == 0 {
+		return fmt.Errorf("invalid entity ID: cannot update avatar for unsaved %s", entityType)
+	}
+
+	fmt.Println(entityID, avatarPath)
+
+	switch entityType {
+	case "user":
+		return database.DB.Model(&models.User{}).Where("id = ?", entityID).Update("avatar_path", avatarPath).Error
+	case "patient":
+		return database.DB.Model(&models.Patient{}).Where("id = ?", entityID).Update("avatar_path", avatarPath).Error
+	default:
+		return fmt.Errorf("invalid entity type: %s (must be 'user' or 'patient')", entityType)
+	}
 }

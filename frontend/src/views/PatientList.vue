@@ -447,15 +447,18 @@ const getPatientInitials = (patient) => {
 
 const getPatientAvatarUrl = (patient) => {
   if (!patient.avatar_path) return ''
-  
+
   // If it's already a full URL, return as is
   if (patient.avatar_path.startsWith('http')) {
     return patient.avatar_path
   }
-  
-  // If it's a relative path, prepend the server URL
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-  return `${baseUrl}/uploads/${patient.avatar_path}`
+
+  // Build the full backend URL for uploads
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:9483'
+
+  // Remove leading slash if present to avoid double slashes
+  const cleanPath = patient.avatar_path.startsWith('/') ? patient.avatar_path.substring(1) : patient.avatar_path
+  return `${baseUrl}/uploads/${cleanPath}`
 }
 
 const handleAvatarError = (patient) => {

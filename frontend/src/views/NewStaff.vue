@@ -29,8 +29,14 @@
             <h3 class="text-lg font-semibold text-neutral-900 mb-4">Profile Picture</h3>
             <AvatarUpload
               :user="form"
+              entity-type="user"
+              :entity-id="form.id || 0"
+              :disabled="!form.id"
               @avatar-updated="handleAvatarUpdated"
             />
+            <div v-if="!form.id" class="mt-2 text-sm text-gray-500 text-center">
+              Save staff member first to upload avatar
+            </div>
           </div>
 
            <!-- Basic Information -->

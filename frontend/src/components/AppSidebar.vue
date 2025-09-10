@@ -176,54 +176,52 @@
           <h3 class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">Quick Actions</h3>
           <div class="space-y-2">
              <BaseTooltip text="Quickly add a new patient to the system" position="right">
-               <button class="w-full flex items-center px-4 py-2 text-sm text-neutral-600 rounded-lg hover:bg-neutral-50 transition-colors duration-200">
+               <button 
+                 @click="handleAddPatient"
+                 class="w-full flex items-center px-4 py-2 text-sm text-neutral-600 rounded-lg hover:bg-neutral-50 transition-colors duration-200"
+               >
                   <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-3" />
                  Add Patient
                </button>
              </BaseTooltip>
             <BaseTooltip text="Export patient and appointment data" position="right">
-              <button class="w-full flex items-center px-4 py-2 text-sm text-neutral-600 rounded-lg hover:bg-neutral-50 transition-colors duration-200">
+              <button 
+                @click="handleExportData"
+                class="w-full flex items-center px-4 py-2 text-sm text-neutral-600 rounded-lg hover:bg-neutral-50 transition-colors duration-200"
+              >
                  <font-awesome-icon icon="fa-solid fa-chart-bar" class="w-4 h-4 mr-3" />
                 Export Data
               </button>
             </BaseTooltip>
           </div>
         </div>
+
+        <!-- Help Section -->
+        <div class="mb-6">
+          <h3 class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">Support</h3>
+          <BaseTooltip text="Access documentation and get help" position="right">
+            <button 
+              @click="handleGetSupport"
+              class="w-full flex items-center px-4 py-2 text-sm text-neutral-600 rounded-lg hover:bg-neutral-50 transition-colors duration-200"
+            >
+              <font-awesome-icon icon="fa-solid fa-question-circle" class="w-4 h-4 mr-3" />
+              Get Support
+            </button>
+          </BaseTooltip>
+        </div>
       </nav>
 
       <!-- User Actions -->
-      <div class="p-4 border-t border-gray-200/50">
+      <div class="p-2 border-t border-gray-200/50">
         <button 
           @click="handleLogout"
-          class="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+          class="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
         >
-          <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors duration-200">
-            <font-awesome-icon icon="fa-solid fa-sign-out-alt" class="w-5 h-5" />
-          </div>
-          <div class="text-left">
-            <div class="font-medium">Logout</div>
-            <div class="text-xs text-gray-400">Sign out of account</div>
-          </div>
+          <font-awesome-icon icon="fa-solid fa-sign-out-alt" class="w-4 h-4 mr-2" />
+          <span class="font-medium">Logout</span>
         </button>
       </div>
 
-      <!-- Help Section -->
-      <div class="p-6 border-t border-gray-200/50">
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
-          <div class="flex items-center space-x-3">
-            <div class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
-               <font-awesome-icon icon="fa-solid fa-question-circle" class="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <h4 class="text-sm font-semibold text-gray-900">Need Help?</h4>
-              <p class="text-xs text-gray-600">Access documentation</p>
-            </div>
-          </div>
-          <button class="w-full mt-3 px-3 py-2 bg-white rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200">
-            Get Support
-          </button>
-        </div>
-      </div>
     </div>
   </aside>
 </template>
@@ -256,6 +254,10 @@ export default {
     }
 
     const handleLogout = async () => {
+      if (!confirm('Are you sure you want to logout?')) {
+        return
+      }
+      
       try {
         await authStore.logout()
         router.push('/login')
@@ -265,11 +267,31 @@ export default {
         router.push('/login')
       }
     }
+
+    const handleAddPatient = () => {
+      closeSidebarOnMobile()
+      router.push('/patients/new')
+    }
+
+    const handleExportData = () => {
+      closeSidebarOnMobile()
+      // TODO: Implement export functionality
+      alert('Export functionality will be implemented soon')
+    }
+
+    const handleGetSupport = () => {
+      closeSidebarOnMobile()
+      // TODO: Implement support functionality
+      alert('Support functionality will be implemented soon')
+    }
     
     return {
       isSidebarOpen,
       closeSidebarOnMobile,
-      handleLogout
+      handleLogout,
+      handleAddPatient,
+      handleExportData,
+      handleGetSupport
     }
   }
 }

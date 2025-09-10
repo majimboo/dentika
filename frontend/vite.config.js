@@ -23,6 +23,10 @@ export default defineConfig({
                 target: 'http://localhost:9483',
                 changeOrigin: true,
             },
+            '/upload': {
+                target: 'http://localhost:9483',
+                changeOrigin: true,
+            },
         },
         allowedHosts: ['localhost', 'app.majidarif.com'],
     },

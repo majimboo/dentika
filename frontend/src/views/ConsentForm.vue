@@ -124,6 +124,12 @@
                                <button type="button" @click="clearPatientSignature" class="text-xs px-2 py-1 bg-red-500 text-white border-0 rounded cursor-pointer hover:bg-red-600">Clear</button>
                                <span class="text-xs text-gray-500">Draw your signature above</span>
                              </div>
+                             <div v-if="errors.patient_signature_data" class="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                               <div class="flex items-center">
+                                 <font-awesome-icon icon="fa-solid fa-exclamation-triangle" class="w-4 h-4 text-red-500 mr-2" />
+                                 <p class="text-sm text-red-700 mb-0">{{ errors.patient_signature_data }}</p>
+                               </div>
+                             </div>
                            </div>
                            <div class="text-xs text-gray-500 text-center">
                              Date: {{ formData.signature_date || new Date().toISOString().split('T')[0] }}
@@ -610,6 +616,11 @@ const draw = (type, e) => {
 
   if (!canvas || !ctx) return
 
+  // Clear signature validation errors when user starts drawing
+  if (type === 'patient' && errors.value.patient_signature_data) {
+    delete errors.value.patient_signature_data
+  }
+
   const rect = canvas.getBoundingClientRect()
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
@@ -686,6 +697,10 @@ const clearPatientSignature = () => {
     formData.patient_signature_data = ''
     lastPoint = null
     lastTime = null
+    // Clear signature validation errors
+    if (errors.value.patient_signature_data) {
+      delete errors.value.patient_signature_data
+    }
   }
 }
 
@@ -758,13 +773,12 @@ const validateForm = () => {
 
   // Validate that signature pads have been signed (not empty canvas)
   if (!formData.patient_signature_data || formData.patient_signature_data === '') {
-    errors.value.patient_signature_data = 'Patient signature is required'
+    errors.value.patient_signature_data = 'Patient signature is required - please draw your signature in the signature area'
   } else {
-    // Check if it's just an empty canvas by looking at the base64 length and content
-    // Empty canvas will have a very short base64 or contain only transparent pixels
-    const isEmptySignature = isCanvasEmpty(formData.patient_signature_data)
+    // Check if it's just an empty/transparent canvas
+    const isEmptySignature = isCanvasEmptySync(formData.patient_signature_data)
     if (isEmptySignature) {
-      errors.value.patient_signature_data = 'Please draw your signature in the patient signature area'
+      errors.value.patient_signature_data = 'Please draw your signature in the patient signature area - the canvas appears to be empty'
     }
   }
 
@@ -782,9 +796,63 @@ const isCanvasEmpty = (signatureData) => {
   const base64Data = signatureData.split(',')[1]
   if (!base64Data || base64Data.length < 100) return true // Very short means likely empty
   
-  // For more thorough checking, we could decode and check pixel data
-  // But for now, this basic check should suffice
-  return false
+  // More thorough check: create a temporary canvas to analyze pixel data
+  try {
+    // Create a temporary image and canvas to check pixel data
+    const img = new Image()
+    const tempCanvas = document.createElement('canvas')
+    const tempCtx = tempCanvas.getContext('2d')
+    
+    return new Promise((resolve) => {
+      img.onload = () => {
+        tempCanvas.width = img.width
+        tempCanvas.height = img.height
+        tempCtx.drawImage(img, 0, 0)
+        
+        // Get image data
+        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height)
+        const data = imageData.data
+        
+        // Check if any pixel has opacity > 0 (non-transparent)
+        for (let i = 3; i < data.length; i += 4) { // Check alpha channel (every 4th value)
+          if (data[i] > 0) {
+            resolve(false) // Found non-transparent pixel, signature exists
+            return
+          }
+        }
+        resolve(true) // All pixels are transparent, signature is empty
+      }
+      
+      img.onerror = () => resolve(true) // If image fails to load, consider it empty
+      img.src = signatureData
+    })
+  } catch (error) {
+    console.error('Error checking canvas signature:', error)
+    return false // If error occurs, assume signature exists to be safe
+  }
+}
+
+// Synchronous fallback for immediate validation
+const isCanvasEmptySync = (signatureData) => {
+  if (!signatureData || signatureData === '') return true
+  if (!signatureData.startsWith('data:image/png;base64,')) return true
+  
+  const base64Data = signatureData.split(',')[1]
+  if (!base64Data || base64Data.length < 100) return true
+  
+  // Quick check: compare with known empty canvas signature
+  // This is the base64 of a typical empty transparent canvas
+  const emptyCanvasPatterns = [
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', // 1x1 transparent
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' // Another common empty pattern
+  ]
+  
+  // If it matches known empty patterns, it's empty
+  for (const pattern of emptyCanvasPatterns) {
+    if (base64Data === pattern) return true
+  }
+  
+  return false // Assume it has content if it doesn't match empty patterns
 }
 
 // Doctor search methods
@@ -983,6 +1051,15 @@ const handleSubmit = async () => {
     const title = template ? `${template.name} - ${patient.first_name} ${patient.last_name}` : 'Consent Form'
     const description = `Consent form for ${patient.first_name} ${patient.last_name} created on ${new Date().toLocaleDateString()}`
 
+    // Clean up signature data - set to null if empty/transparent
+    const patientSignatureClean = (formData.patient_signature_data && !isCanvasEmptySync(formData.patient_signature_data)) 
+      ? formData.patient_signature_data 
+      : null
+      
+    const witnessSignatureClean = (formData.witness_signature_data && !isCanvasEmptySync(formData.witness_signature_data)) 
+      ? formData.witness_signature_data 
+      : null
+
     // Prepare consent form data - map frontend field names to backend field names
     const consentData = {
       ...formData,
@@ -991,12 +1068,12 @@ const handleSubmit = async () => {
       patient_id: parseInt(route.params.patientId),
       created_at: new Date().toISOString(),
       clinic_id: authStore.userClinicId,
-      // Map signature data to backend field names
-      patient_signature: formData.patient_signature_data,
-      witness_signature: formData.witness_signature_data,
-      // Set signature timestamps if signatures exist
-      patient_signed_at: formData.patient_signature_data ? new Date().toISOString() : null,
-      witness_signed_at: formData.witness_signature_data ? new Date().toISOString() : null,
+      // Map signature data to backend field names - use cleaned versions
+      patient_signature: patientSignatureClean,
+      witness_signature: witnessSignatureClean,
+      // Set signature timestamps only if signatures exist and are not empty
+      patient_signed_at: patientSignatureClean ? new Date().toISOString() : null,
+      witness_signed_at: witnessSignatureClean ? new Date().toISOString() : null,
       // Set created by user
       created_by_id: authStore.user?.id
     }

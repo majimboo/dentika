@@ -140,6 +140,22 @@
         </div>
       </nav>
 
+      <!-- User Actions -->
+      <div class="p-4 border-t border-gray-200/50">
+        <button 
+          @click="handleLogout"
+          class="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+          <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors duration-200">
+            <font-awesome-icon icon="fa-solid fa-sign-out-alt" class="w-5 h-5" />
+          </div>
+          <div class="text-left">
+            <div class="font-medium">Logout</div>
+            <div class="text-xs text-gray-400">Sign out of system</div>
+          </div>
+        </button>
+      </div>
+
       <!-- Help Section -->
       <div class="p-6 border-t border-gray-200/50">
         <div class="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-4">
@@ -166,6 +182,8 @@
 <script>
 import BaseTooltip from './BaseTooltip.vue'
 import { useSidebar } from '../composables/useSidebar'
+import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'SuperAdminSidebar',
@@ -174,6 +192,8 @@ export default {
   },
   setup() {
     const { isSidebarOpen, closeSidebar } = useSidebar()
+    const authStore = useAuthStore()
+    const router = useRouter()
 
     const closeSidebarOnMobile = () => {
       // Only close on mobile screens
@@ -182,9 +202,21 @@ export default {
       }
     }
 
+    const handleLogout = async () => {
+      try {
+        await authStore.logout()
+        router.push('/login')
+      } catch (error) {
+        console.error('Logout error:', error)
+        // Even if logout fails, redirect to login
+        router.push('/login')
+      }
+    }
+
     return {
       isSidebarOpen,
-      closeSidebarOnMobile
+      closeSidebarOnMobile,
+      handleLogout
     }
   }
 }

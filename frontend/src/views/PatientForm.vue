@@ -985,9 +985,9 @@ const generateConsentPreview = (consentForm) => {
               <div style="margin-bottom: 8px; font-weight: 500; color: #374151;">
                 Patient Signature:
               </div>
-              <div style="border-bottom: 2px solid #374151; height: 60px; margin-top: 8px; display: flex; align-items: center; justify-content: center; position: relative; background: white;">
+              <div style="border-bottom: 2px solid #374151; height: 120px; margin-top: 8px; display: flex; align-items: center; justify-content: center; position: relative; background: white;">
                 ${consentForm.patient_signature 
-                  ? `<img src="${consentForm.patient_signature}" alt="Patient Signature" style="max-width: 100%; max-height: 50px; object-fit: contain;" />`
+                  ? `<img src="${consentForm.patient_signature}" alt="Patient Signature" style="max-width: 100%; max-height: 110px; object-fit: contain;" />`
                   : '<span style="font-size: 12px; color: #9ca3af;">Not signed</span>'
                 }
               </div>
@@ -1000,9 +1000,9 @@ const generateConsentPreview = (consentForm) => {
               <div style="margin-bottom: 8px; font-weight: 500; color: #374151;">
                 Witness Signature:
               </div>
-              <div style="border-bottom: 2px solid #374151; height: 60px; margin-top: 8px; display: flex; align-items: center; justify-content: center; position: relative; background: white;">
+              <div style="border-bottom: 2px solid #374151; height: 120px; margin-top: 8px; display: flex; align-items: center; justify-content: center; position: relative; background: white;">
                 ${consentForm.witness_signature
-                  ? `<img src="${consentForm.witness_signature}" alt="Witness Signature" style="max-width: 100%; max-height: 50px; object-fit: contain;" />`
+                  ? `<img src="${consentForm.witness_signature}" alt="Witness Signature" style="max-width: 100%; max-height: 110px; object-fit: contain;" />`
                   : '<span style="font-size: 12px; color: #9ca3af;">No witness signature</span>'
                 }
               </div>

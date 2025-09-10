@@ -36,7 +36,7 @@
               </div>
               <p class="text-xs text-neutral-500 flex items-center">
                 <font-awesome-icon icon="fa-solid fa-info-circle" class="w-3 h-3 mr-1 text-neutral-400" />
-                Use the username you created during registration
+                Use the username provided by your admin
               </p>
             </div>
 

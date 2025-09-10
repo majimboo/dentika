@@ -1,5 +1,4 @@
 import Login from '../views/Login.vue';
-import Register from '../views/Register.vue';
 import Dashboard from '../views/Dashboard.vue';
 import UserManagementWrapper from '../views/UserManagementWrapper.vue';
 import UserList from '../views/UserList.vue'; // Keep for backward compatibility
@@ -35,12 +34,6 @@ const routes = [
         path: '/login',
         name: 'Login',
         component: Login,
-        meta: { hideLayout: true },
-    },
-    {
-        path: '/register',
-        name: 'Register',
-        component: Register,
         meta: { hideLayout: true },
     },
     {

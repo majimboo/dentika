@@ -49,7 +49,7 @@
               class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
             >
               <font-awesome-icon icon="fa-solid fa-file-signature" class="w-4 h-4 mr-2" />
-              Consent Form
+              New Consent Form
             </router-link>
           </div>
         </div>
@@ -449,6 +449,67 @@
               </button>
             </div>
         </form>
+
+        <!-- Consent Forms Section (View Mode Only) -->
+        <div v-if="isViewMode" class="">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-neutral-900">Consent Forms</h3>
+
+          </div>
+
+          <!-- Consent Forms List -->
+          <div v-if="consentForms && consentForms.length > 0" class="space-y-3">
+            <div
+              v-for="consentForm in consentForms"
+              :key="consentForm.id"
+              class="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:bg-gray-100 transition-colors"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="font-medium text-gray-900">{{ consentForm.title }}</h4>
+                  <p class="text-sm text-gray-600 mt-1">{{ consentForm.description }}</p>
+                  <div class="flex items-center mt-2 text-xs text-gray-500">
+                    <font-awesome-icon icon="fa-solid fa-calendar" class="w-3 h-3 mr-1" />
+                    Created: {{ formatDate(consentForm.created_at) }}
+                    <span class="mx-2">•</span>
+                    <font-awesome-icon icon="fa-solid fa-user" class="w-3 h-3 mr-1" />
+                    {{ consentForm.signature_date ? `Signed: ${formatDate(consentForm.signature_date)}` : 'Not signed' }}
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2 ml-4">
+                  <button
+                    @click="viewConsentForm(consentForm)"
+                    class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-eye" class="w-4 h-4 mr-2" />
+                    View
+                  </button>
+                  <button
+                    @click="downloadConsentFormPDF(consentForm)"
+                    class="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-download" class="w-4 h-4 mr-2" />
+                    PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+            <font-awesome-icon icon="fa-solid fa-file-signature" class="w-12 h-12 text-gray-400 mb-4" />
+            <h4 class="text-lg font-medium text-gray-900 mb-2">No Consent Forms</h4>
+            <p class="text-gray-600 mb-4">This patient doesn't have any consent forms yet.</p>
+            <router-link
+              :to="`/patients/${route.params.id}/consent/new`"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+            >
+              <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
+              Create First Consent Form
+            </router-link>
+          </div>
+        </div>
       </div>
     </div>
   </BaseTransition>
@@ -459,6 +520,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePatientStore } from '../stores/patient'
 import { useNotificationStore } from '../stores/notification'
+import { useConsentStore } from '../stores/consent'
 import BaseLoading from '../components/BaseLoading.vue'
 import BaseTransition from '../components/BaseTransition.vue'
 import TagInput from '../components/TagInput.vue'
@@ -468,6 +530,7 @@ const route = useRoute()
 const router = useRouter()
 const patientStore = usePatientStore()
 const notificationStore = useNotificationStore()
+const consentStore = useConsentStore()
 
 // Component state
 const loading = ref(false)
@@ -476,6 +539,7 @@ const submitError = ref('')
 const submitSuccess = ref(false)
 const errors = ref({})
 const originalPatient = ref(null)
+const consentForms = ref([])
 
 // Form data
 const form = reactive({
@@ -631,6 +695,11 @@ const loadPatient = async (patientId) => {
       } else {
         form.date_of_birth = ''
       }
+
+      // Load consent forms if in view mode
+      if (isViewMode.value) {
+        await loadConsentForms(patientId)
+      }
     } else {
       const errorMessage = result?.error || 'Patient not found'
       error.value = errorMessage
@@ -729,6 +798,323 @@ const handleSubmit = async () => {
     notificationStore.showError(submitError.value)
   } finally {
     loading.value = false
+  }
+}
+
+// Consent form methods
+const loadConsentForms = async (patientId) => {
+  try {
+    // Load consent forms for this patient
+    await consentStore.fetchConsentForms({ patient_id: patientId })
+    consentForms.value = consentStore.getPatientConsentForms(patientId)
+    
+    // Also make sure consent templates are loaded for preview generation
+    if (!consentStore.consentTemplates || consentStore.consentTemplates.length === 0) {
+      await consentStore.fetchConsentTemplates()
+    }
+  } catch (error) {
+    console.error('Error loading consent forms:', error)
+  }
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+const viewConsentForm = (consentForm) => {
+  // Open consent form in new window for viewing
+  const previewContent = generateConsentPreview(consentForm)
+  const previewWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes')
+  previewWindow.document.write(previewContent)
+  previewWindow.document.close()
+}
+
+const generateConsentPreview = (consentForm) => {
+  // Get the patient data
+  const patient = form
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+
+  // Get the template content (we need to load it or store it when saving)
+  const template = consentStore.getConsentTemplateById(parseInt(consentForm.consent_template_id))
+  let consentContent = ''
+  
+  if (template) {
+    // Apply the same placeholder replacement logic as in the create form
+    consentContent = template.content
+      .replace(/\[PATIENT_NAME\]/g, `${patient.first_name} ${patient.last_name}`)
+      .replace(/\[PATIENT_FIRST_NAME\]/g, patient.first_name)
+      .replace(/\[PATIENT_LAST_NAME\]/g, patient.last_name)
+      .replace(/\[CURRENT_DATE\]/g, currentDate)
+      .replace(/\[TODAY\]/g, currentDate)
+      .replace(/\[DATE\]/g, currentDate)
+  }
+
+  // Format the consent content with the same styling as the create form
+  const formattedContent = formatConsentContent(consentContent)
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${consentForm.title}</title>
+      <meta charset="utf-8">
+      <style>
+        body { 
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          line-height: 1.6; 
+          max-width: 900px; 
+          margin: 0 auto; 
+          padding: 20px;
+          background: white;
+          color: #374151;
+        }
+        .print-btn {
+          margin-bottom: 20px; 
+          padding: 10px 20px; 
+          background: #3b82f6; 
+          color: white; 
+          border: none; 
+          border-radius: 8px; 
+          cursor: pointer;
+          font-size: 14px;
+        }
+        .print-btn:hover { background: #2563eb; }
+        
+        .consent-content {
+          background: #f8fafc;
+          padding: 24px;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          margin-bottom: 20px;
+        }
+        
+        .consent-content h2 {
+          color: #1f2937;
+          font-size: 20px;
+          font-weight: 700;
+          margin-top: 24px;
+          margin-bottom: 12px;
+          border-bottom: 2px solid #3b82f6;
+          padding-bottom: 8px;
+        }
+        
+        .consent-content h3 {
+          color: #374151;
+          font-size: 18px;
+          font-weight: 600;
+          margin-top: 16px;
+          margin-bottom: 8px;
+        }
+        
+        .consent-content p {
+          color: #4b5563;
+          margin-bottom: 12px;
+          line-height: 1.7;
+        }
+        
+        .consent-content li {
+          margin-left: 16px;
+          margin-bottom: 4px;
+          color: #4b5563;
+        }
+        
+        .consent-content div {
+          margin-bottom: 8px;
+        }
+        
+        .consent-content strong {
+          color: #374151;
+        }
+
+        /* Signature Section Styling - Match the create form exactly */
+        .signature-section {
+          margin-top: 20px;
+          padding: 20px;
+          background: #f1f5f9;
+          border-radius: 8px;
+          border: 1px solid #cbd5e1;
+        }
+        
+        .signature-section h3 {
+          margin-bottom: 20px;
+          color: #374151;
+          font-size: 18px;
+          font-weight: 600;
+          text-align: center;
+          border-bottom: 2px solid #3b82f6;
+          padding-bottom: 10px;
+        }
+        
+        .signature-container {
+          display: flex;
+          gap: 32px;
+          margin-bottom: 16px;
+        }
+        
+        .signature-box {
+          flex: 1;
+          background: white;
+          padding: 16px;
+          border-radius: 6px;
+          border: 1px solid #d1d5db;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .signature-label {
+          margin-bottom: 12px;
+          font-weight: 600;
+          color: #374151;
+          font-size: 14px;
+        }
+        
+        .signature-display {
+          width: 100%;
+          height: 144px;
+          border: 2px solid #374151;
+          border-radius: 4px;
+          background: #f9fafb;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        
+        .signature-display img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+        }
+        
+        .signature-info {
+          font-size: 12px;
+          color: #6b7280;
+          text-align: center;
+        }
+        
+        .footer-text {
+          margin-top: 20px;
+          text-align: center;
+          font-size: 12px;
+          color: #6b7280;
+        }
+        
+        @media print { 
+          body { margin: 0; padding: 15px; }
+          .print-btn { display: none; }
+          .signature-container { display: flex !important; }
+        }
+      </style>
+    </head>
+    <body>
+      <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      
+      <div class="consent-content">
+        <div>${formattedContent}</div>
+
+        <!-- Signature Section - Matching the create form exactly -->
+        <div class="signature-section">
+          <h3>Signatures Required</h3>
+          
+          <div class="signature-container">
+            <div class="signature-box">
+              <div class="signature-label">Patient Signature:</div>
+              <div class="signature-display">
+                ${consentForm.patient_signature 
+                  ? `<img src="${consentForm.patient_signature}" alt="Patient Signature" />`
+                  : '<span style="color: #9ca3af;">No signature</span>'
+                }
+              </div>
+              <div class="signature-info">
+                Date: ${formatDate(consentForm.patient_signed_at || consentForm.created_at)}
+              </div>
+            </div>
+            
+            <div class="signature-box">
+              <div class="signature-label">Witness Signature:</div>
+              <div class="signature-display">
+                ${consentForm.witness_signature 
+                  ? `<img src="${consentForm.witness_signature}" alt="Witness Signature" />`
+                  : '<span style="color: #9ca3af;">No witness signature</span>'
+                }
+              </div>
+              <div class="signature-info">
+                Date: ${formatDate(consentForm.witness_signed_at || consentForm.created_at)}
+                ${consentForm.witness_name ? `<br>Witness: ${consentForm.witness_name}` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-text">
+          <p>This consent form has been electronically generated and is legally binding.</p>
+          <p>Please retain a copy for your records.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Helper function to format consent content - same as in create form
+const formatConsentContent = (content) => {
+  if (!content) return ''
+
+  // Split content into lines and format each section
+  const lines = content.split('\n')
+  const formattedLines = lines.map(line => {
+    // Format main headings (all caps)
+    if (line.match(/^[A-Z\s]+$/)) {
+      return `<h2>${line}</h2>`
+    }
+
+    // Format section headings (UPPERCASE)
+    if (line.match(/^[A-Z\s]+:$/)) {
+      return `<h3>${line.replace(':', '')}</h3>`
+    }
+
+    // Format bullet points
+    if (line.trim().startsWith('- ')) {
+      return `<li>${line.trim().substring(2)}</li>`
+    }
+
+    // Format patient info lines (contain colons)
+    if (line.includes(':') && !line.includes('http') && line.split(':').length === 2) {
+      const [label, value] = line.split(':')
+      return `<div><strong>${label.trim()}:</strong> ${value.trim()}</div>`
+    }
+
+    // Regular paragraphs
+    if (line.trim()) {
+      return `<p>${line.trim()}</p>`
+    }
+
+    // Empty lines
+    return '<br>'
+  })
+
+  return formattedLines.join('')
+}
+
+const downloadConsentFormPDF = async (consentForm) => {
+  try {
+    // For now, open the preview window - in a real app you'd generate a PDF
+    // You could use libraries like jsPDF or html2pdf, or call a backend endpoint
+    viewConsentForm(consentForm)
+    notificationStore.showInfo('PDF generation would be implemented here. For now, use the print function in the preview window.')
+  } catch (error) {
+    console.error('Error downloading PDF:', error)
+    notificationStore.showError('Failed to generate PDF')
   }
 }
 

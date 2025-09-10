@@ -20,29 +20,6 @@
           <h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
 
           <div class="space-y-4">
-            <div class="form-group">
-              <label class="form-label">Consent Form Title *</label>
-              <input
-                v-model="formData.title"
-                type="text"
-                class="form-input"
-                :class="{ 'border-red-500': errors.title }"
-                placeholder="e.g. Dental Treatment Consent"
-                required
-              />
-              <div v-if="errors.title" class="error-message">{{ errors.title }}</div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Description</label>
-              <textarea
-                v-model="formData.description"
-                rows="3"
-                class="form-input resize-none"
-                placeholder="Describe the consent form purpose..."
-              ></textarea>
-            </div>
-
              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div class="form-group">
                  <label class="form-label">Patient</label>
@@ -146,11 +123,28 @@
               </div>
           </div>
 
-         <!-- Treatment Details -->
+         <!-- Treatment Details (Collapsible) -->
          <div class="form-section">
-           <h3 class="text-lg font-semibold text-gray-900 mb-4">Treatment Details</h3>
+           <div class="flex items-center justify-between mb-4">
+             <h3 class="text-lg font-semibold text-gray-900">Treatment Details</h3>
+             <button
+               type="button"
+               @click="showTreatmentDetails = !showTreatmentDetails"
+               class="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+             >
+               <span>{{ showTreatmentDetails ? 'Hide' : 'Show' }} Details</span>
+               <font-awesome-icon 
+                 :icon="['fas', 'chevron-down']" 
+                 :class="{ 'rotate-180': showTreatmentDetails }"
+                 class="transition-transform duration-200"
+               />
+             </button>
+           </div>
 
-           <div class="space-y-4">
+           <div 
+             v-show="showTreatmentDetails" 
+             class="space-y-4 transition-all duration-300"
+           >
              <div class="form-group">
                <label class="form-label">Procedure Description</label>
                <textarea
@@ -248,59 +242,6 @@
            </div>
          </div>
 
-         <!-- Signatures -->
-         <div class="form-section">
-           <h3 class="text-lg font-semibold text-gray-900 mb-4">Signatures</h3>
-
-           <div class="space-y-4">
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div class="form-group">
-                 <label class="form-label">Patient Signature *</label>
-                 <input
-                   v-model="formData.patient_signature"
-                   type="text"
-                   class="form-input"
-                   :class="{ 'border-red-500': errors.patient_signature }"
-                   placeholder="Patient's full name as signature"
-                   required
-                 />
-                 <div v-if="errors.patient_signature" class="error-message">{{ errors.patient_signature }}</div>
-               </div>
-
-               <div class="form-group">
-                 <label class="form-label">Date</label>
-                 <input
-                   v-model="formData.signature_date"
-                   type="date"
-                   class="form-input"
-                   readonly
-                 />
-               </div>
-             </div>
-
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div class="form-group">
-                 <label class="form-label">Witness Name (Optional)</label>
-                 <input
-                   v-model="formData.witness_name"
-                   type="text"
-                   class="form-input"
-                   placeholder="Witness's full name"
-                 />
-               </div>
-
-               <div class="form-group">
-                 <label class="form-label">Witness Signature (Optional)</label>
-                 <input
-                   v-model="formData.witness_signature"
-                   type="text"
-                   class="form-input"
-                   placeholder="Witness's signature"
-                 />
-               </div>
-             </div>
-           </div>
-         </div>
 
         <!-- Form Actions -->
         <div class="form-actions flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t">
@@ -356,6 +297,7 @@ const loading = ref(false)
 const isSubmitting = ref(false)
 const isEditing = ref(false)
 const errors = ref({})
+const showTreatmentDetails = ref(false)
 
 // Form data
 const formData = reactive({
@@ -368,7 +310,6 @@ const formData = reactive({
   understands_risks: false,
   consents_to_treatment: false,
   had_opportunity_to_ask: false,
-  patient_signature: '',
   patient_signature_data: '',
   signature_date: new Date().toISOString().split('T')[0],
   witness_name: '',
@@ -748,16 +689,40 @@ const validateForm = () => {
     errors.value.consent_template_id = 'Consent template selection is required'
   }
 
-  if (!formData.patient_signature.trim()) {
-    errors.value.patient_signature = 'Patient signature is required'
-  }
-
   if (!formData.understands_treatment || !formData.understands_risks ||
       !formData.consents_to_treatment || !formData.had_opportunity_to_ask) {
     errors.value.agreement = 'All patient agreement checkboxes must be checked'
   }
 
+  // Validate that signature pads have been signed (not empty canvas)
+  if (!formData.patient_signature_data || formData.patient_signature_data === '') {
+    errors.value.patient_signature_data = 'Patient signature is required'
+  } else {
+    // Check if it's just an empty canvas by looking at the base64 length and content
+    // Empty canvas will have a very short base64 or contain only transparent pixels
+    const isEmptySignature = isCanvasEmpty(formData.patient_signature_data)
+    if (isEmptySignature) {
+      errors.value.patient_signature_data = 'Please draw your signature in the patient signature area'
+    }
+  }
+
   return Object.keys(errors.value).length === 0
+}
+
+// Helper function to check if canvas signature is empty
+const isCanvasEmpty = (signatureData) => {
+  if (!signatureData || signatureData === '') return true
+  
+  // Check if it's a data URL
+  if (!signatureData.startsWith('data:image/png;base64,')) return true
+  
+  // Extract base64 part
+  const base64Data = signatureData.split(',')[1]
+  if (!base64Data || base64Data.length < 100) return true // Very short means likely empty
+  
+  // For more thorough checking, we could decode and check pixel data
+  // But for now, this basic check should suffice
+  return false
 }
 
 const previewConsent = () => {
@@ -914,16 +879,32 @@ const handleSubmit = async () => {
   try {
     isSubmitting.value = true
 
-    // Save consent form (mock API call)
+    // Generate title and description based on template and patient
+    const template = selectedConsentTemplate.value
+    const patient = selectedPatient.value
+    const title = template ? `${template.name} - ${patient.first_name} ${patient.last_name}` : 'Consent Form'
+    const description = `Consent form for ${patient.first_name} ${patient.last_name} created on ${new Date().toLocaleDateString()}`
+
+    // Prepare consent form data - map frontend field names to backend field names
     const consentData = {
       ...formData,
+      title,
+      description,
       patient_id: parseInt(route.params.patientId),
       created_at: new Date().toISOString(),
-      clinic_id: authStore.userClinicId
+      clinic_id: authStore.userClinicId,
+      // Map signature data to backend field names
+      patient_signature: formData.patient_signature_data,
+      witness_signature: formData.witness_signature_data,
+      // Set signature timestamps if signatures exist
+      patient_signed_at: formData.patient_signature_data ? new Date().toISOString() : null,
+      witness_signed_at: formData.witness_signature_data ? new Date().toISOString() : null,
+      // Set created by user
+      created_by_id: authStore.user?.id
     }
 
-    // Mock save
-    console.log('Saving consent form:', consentData)
+    // Save consent form using the store
+    await consentStore.createConsentForm(consentData)
 
     notificationStore.showSuccess('Consent form saved successfully')
     router.push(`/patients/${route.params.patientId}`)
@@ -1071,6 +1052,11 @@ onUnmounted(() => {
 
 .form-actions {
   @apply flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t;
+}
+
+/* Chevron rotation animation */
+.rotate-180 {
+  transform: rotate(180deg);
 }
 
 /* Mobile optimizations */

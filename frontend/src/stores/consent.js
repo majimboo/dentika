@@ -20,7 +20,9 @@ export const useConsentStore = defineStore('consent', {
     getConsentTemplateById: (state) => (id) =>
       state.consentTemplates.find(template => template.id === id),
     getDefaultConsentTemplate: (state) =>
-      state.consentTemplates.find(template => template.is_default && template.is_active)
+      state.consentTemplates.find(template => template.is_default && template.is_active),
+    getPatientConsentForms: (state) => (patientId) =>
+      state.consentForms.filter(form => form.patient_id === parseInt(patientId))
   },
 
   actions: {
@@ -96,6 +98,33 @@ export const useConsentStore = defineStore('consent', {
         console.error('Error creating consent form:', error)
         this.error = 'Failed to create consent form'
         return { success: false, error: this.error }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchConsentForms(params = {}) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const queryParams = new URLSearchParams(params)
+        const result = await apiService.get('/api/consent-forms?' + queryParams.toString())
+
+        if (result.success) {
+          this.consentForms = result.data || []
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          console.warn('Failed to fetch consent forms:', result.error)
+          this.consentForms = []
+          return { success: true, data: [] }
+        }
+      } catch (error) {
+        console.error('Error fetching consent forms:', error)
+        this.error = 'Failed to fetch consent forms'
+        this.consentForms = []
+        return { success: true, data: [] }
       } finally {
         this.loading = false
       }

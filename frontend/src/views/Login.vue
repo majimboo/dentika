@@ -99,15 +99,6 @@
                 {{ loading ? 'Signing In...' : 'Sign In' }}
               </button>
               
-              <!-- Register Link -->
-              <div class="text-center">
-                <p class="text-sm text-gray-600">
-                  Don't have an account? 
-                  <router-link to="/register" class="font-semibold text-primary-600 hover:text-primary-700 transition-colors duration-200">
-                    Create one here
-                  </router-link>
-                </p>
-              </div>
             </div>
           </form>
         </div>

@@ -70,7 +70,7 @@ export const useAppointmentStore = defineStore('appointment', {
       })
       
       try {
-        const result = await apiService.get(`/appointments?${queryParams}`)
+        const result = await apiService.get(`/api/appointments?${queryParams}`)
         if (result.success) {
           this.appointments = result.data.appointments || result.data
         } else {
@@ -93,7 +93,7 @@ export const useAppointmentStore = defineStore('appointment', {
       this.error = null
       
       try {
-        const result = await apiService.get('/appointments/upcoming')
+        const result = await apiService.get('/api/appointments/upcoming')
         if (result.success) {
           this.upcomingAppointments = result.data
         } else {
@@ -113,7 +113,7 @@ export const useAppointmentStore = defineStore('appointment', {
 
       try {
         console.log('Fetching appointment with ID:', appointmentId)
-        const result = await apiService.get(`/appointments/${appointmentId}`)
+        const result = await apiService.get(`/api/appointments/${appointmentId}`)
         console.log('API result:', result)
 
         if (result && result.success) {
@@ -139,7 +139,7 @@ export const useAppointmentStore = defineStore('appointment', {
       this.error = null
       
       try {
-        const result = await apiService.post('/appointments', appointmentData)
+        const result = await apiService.post('/api/appointments', appointmentData)
         if (result.success) {
           this.appointments.unshift(result.data)
           return { success: true, data: result.data }
@@ -161,7 +161,7 @@ export const useAppointmentStore = defineStore('appointment', {
       this.error = null
       
       try {
-        const result = await apiService.put(`/appointments/${appointmentId}`, appointmentData)
+        const result = await apiService.put(`/api/appointments/${appointmentId}`, appointmentData)
         if (result.success) {
           const index = this.appointments.findIndex(apt => apt.id === appointmentId)
           if (index !== -1) {
@@ -189,7 +189,7 @@ export const useAppointmentStore = defineStore('appointment', {
       this.error = null
       
       try {
-        const result = await apiService.put(`/appointments/${appointmentId}/status`, statusData)
+        const result = await apiService.put(`/api/appointments/${appointmentId}/status`, statusData)
         if (result.success) {
           const index = this.appointments.findIndex(apt => apt.id === appointmentId)
           if (index !== -1) {
@@ -217,7 +217,7 @@ export const useAppointmentStore = defineStore('appointment', {
       this.error = null
       
       try {
-        const result = await apiService.post(`/appointments/${appointmentId}/arrived`)
+        const result = await apiService.post(`/api/appointments/${appointmentId}/arrived`)
         if (result.success) {
           const index = this.appointments.findIndex(apt => apt.id === appointmentId)
           if (index !== -1) {

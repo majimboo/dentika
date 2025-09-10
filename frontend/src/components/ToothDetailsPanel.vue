@@ -49,39 +49,61 @@
           </select>
         </div>
 
-        <!-- Affected Surfaces -->
+        <!-- Surface Conditions -->
         <div class="surfaces-section">
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Affected Surfaces:
+            Surface Conditions:
           </label>
           <div v-if="!editable" class="surfaces-display">
-            <div v-if="tooth.surfaces && tooth.surfaces.length > 0" class="flex flex-wrap gap-2">
-              <span 
-                v-for="surface in tooth.surfaces" 
-                :key="surface"
-                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+            <div v-if="tooth.surface_conditions && tooth.surface_conditions.length > 0" class="space-y-2">
+              <div
+                v-for="surfaceCondition in tooth.surface_conditions"
+                :key="surfaceCondition.surface"
+                class="flex items-center justify-between p-2 bg-gray-50 rounded"
               >
-                {{ formatSurface(surface) }}
-              </span>
+                <span class="text-sm font-medium text-gray-700">
+                  {{ formatSurface(surfaceCondition.surface) }}
+                </span>
+                <div class="flex items-center">
+                  <div
+                    class="w-4 h-4 rounded mr-2"
+                    :style="{ backgroundColor: getConditionColor(surfaceCondition.condition) }"
+                  ></div>
+                  <span class="text-sm text-gray-600">
+                    {{ formatCondition(surfaceCondition.condition) }}
+                  </span>
+                </div>
+              </div>
             </div>
-            <span v-else class="text-gray-500 text-sm">No specific surfaces affected</span>
+            <span v-else class="text-gray-500 text-sm">All surfaces healthy</span>
           </div>
-          
+
           <div v-else class="surfaces-edit">
-            <div class="flex flex-wrap gap-2">
-              <label 
-                v-for="surface in availableSurfaces" 
+            <div class="space-y-3">
+              <div
+                v-for="surface in availableSurfaces"
                 :key="surface.value"
-                class="inline-flex items-center"
+                class="surface-condition-item p-3 border border-gray-200 rounded-lg"
               >
-                <input
-                  type="checkbox"
-                  :value="surface.value"
-                  v-model="editData.surfaces"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-gray-700">{{ surface.label }}</span>
+                  <div
+                    class="w-4 h-4 rounded"
+                    :style="{ backgroundColor: getCurrentSurfaceConditionColor(surface.value) }"
+                  ></div>
+                </div>
+                <select
+                  :value="getCurrentSurfaceCondition(surface.value)"
+                  @input="updateSurfaceCondition(surface.value, $event.target.value)"
+                  class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                <span class="ml-1 text-sm text-gray-700">{{ surface.label }}</span>
-              </label>
+                  <option value="healthy">Healthy</option>
+                  <option value="decay">Decay</option>
+                  <option value="filled">Filled</option>
+                  <option value="crowned">Crowned</option>
+                  <option value="root_canal">Root Canal</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -187,6 +209,7 @@ const emit = defineEmits(['update', 'close', 'viewHistory'])
 const editData = reactive({
   condition: props.tooth.condition,
   surfaces: [...(props.tooth.surfaces || [])],
+  surfaceConditions: [...(props.tooth.surface_conditions || [])],
   notes: props.tooth.notes || '',
   reason: ''
 })
@@ -245,6 +268,8 @@ const primaryToothNames = {
 const hasChanges = computed(() => {
   return editData.condition !== props.tooth.condition ||
          JSON.stringify(editData.surfaces.sort()) !== JSON.stringify((props.tooth.surfaces || []).sort()) ||
+         JSON.stringify(editData.surfaceConditions.sort((a, b) => a.surface.localeCompare(b.surface))) !==
+         JSON.stringify((props.tooth.surface_conditions || []).sort((a, b) => a.surface.localeCompare(b.surface))) ||
          editData.notes !== (props.tooth.notes || '')
 })
 
@@ -261,7 +286,7 @@ const getToothName = () => {
 
 const getToothColor = () => {
   const colors = {
-    healthy: '#90EE90',
+    healthy: '#FFFFFF',
     decay: '#FFB6C1',
     filled: '#87CEEB',
     crowned: '#DDA0DD',
@@ -272,6 +297,51 @@ const getToothColor = () => {
     missing: '#D3D3D3'
   }
   return colors[props.tooth.condition] || '#ffffff'
+}
+
+const getConditionColor = (condition) => {
+  const colors = {
+    healthy: '#FFFFFF',
+    decay: '#FFB6C1',
+    filled: '#87CEEB',
+    crowned: '#DDA0DD',
+    root_canal: '#F0E68C',
+    extracted: '#FF6347',
+    implant: '#20B2AA',
+    bridge: '#DEB887',
+    missing: '#D3D3D3'
+  }
+  return colors[condition] || '#ffffff'
+}
+
+const getCurrentSurfaceCondition = (surface) => {
+  const condition = editData.surfaceConditions.find(sc => sc.surface === surface)
+  return condition ? condition.condition : 'healthy'
+}
+
+const getCurrentSurfaceConditionColor = (surface) => {
+  const condition = getCurrentSurfaceCondition(surface)
+  return getConditionColor(condition)
+}
+
+const updateSurfaceCondition = (surface, condition) => {
+  // Remove existing condition for this surface
+  editData.surfaceConditions = editData.surfaceConditions.filter(sc => sc.surface !== surface)
+
+  // Add new condition if not healthy
+  if (condition !== 'healthy') {
+    editData.surfaceConditions.push({
+      surface: surface,
+      condition: condition
+    })
+  }
+
+  // Update surfaces array for backward compatibility
+  if (condition !== 'healthy' && !editData.surfaces.includes(surface)) {
+    editData.surfaces.push(surface)
+  } else if (condition === 'healthy') {
+    editData.surfaces = editData.surfaces.filter(s => s !== surface)
+  }
 }
 
 const formatCondition = (condition) => {
@@ -305,6 +375,7 @@ const saveChanges = () => {
     tooth_number: props.tooth.tooth_number,
     condition: editData.condition,
     surfaces: editData.surfaces,
+    surface_conditions: editData.surfaceConditions,
     notes: editData.notes,
     reason: editData.reason
   })
@@ -314,9 +385,10 @@ const cancelEdit = () => {
   // Reset edit data
   editData.condition = props.tooth.condition
   editData.surfaces = [...(props.tooth.surfaces || [])]
+  editData.surfaceConditions = [...(props.tooth.surface_conditions || [])]
   editData.notes = props.tooth.notes || ''
   editData.reason = ''
-  
+
   emit('close')
 }
 
@@ -328,6 +400,7 @@ const viewHistory = () => {
 watch(() => props.tooth, (newTooth) => {
   editData.condition = newTooth.condition
   editData.surfaces = [...(newTooth.surfaces || [])]
+  editData.surfaceConditions = [...(newTooth.surface_conditions || [])]
   editData.notes = newTooth.notes || ''
   editData.reason = ''
 }, { immediate: true })

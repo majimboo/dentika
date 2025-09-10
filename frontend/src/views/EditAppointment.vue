@@ -592,7 +592,7 @@ const loadAppointment = async (appointmentId) => {
 const loadAppointmentProcedures = async (appointmentId) => {
   try {
     // Use apiService instead of raw fetch for proper authentication
-    const result = await apiService.get(`/appointments/${appointmentId}/procedures`)
+    const result = await apiService.get(`/api/appointments/${appointmentId}/procedures`)
 
     if (result.success) {
       selectedProcedures.value = result.data || []
@@ -647,7 +647,7 @@ const loadProcedures = async () => {
   loadingProcedures.value = true
   try {
     // Use apiService instead of raw fetch for proper authentication
-    const result = await apiService.get('/procedure-templates')
+    const result = await apiService.get('/api/procedure-templates')
 
     if (result.success) {
       availableProcedures.value = result.data || []
@@ -821,14 +821,14 @@ const handleSubmit = async () => {
 const updateAppointmentProcedures = async (appointmentId) => {
   try {
     // First, get existing procedures
-    const existingResult = await apiService.get(`/appointments/${appointmentId}/procedures`)
+    const existingResult = await apiService.get(`/api/appointments/${appointmentId}/procedures`)
     const existingProcedures = existingResult.success ? existingResult.data : []
 
     // Remove procedures that are no longer selected
     for (const existingProc of existingProcedures) {
       const stillSelected = selectedProcedures.value.find(p => p.id === existingProc.procedure_template_id)
       if (!stillSelected) {
-        await apiService.delete(`/appointment-procedures/${existingProc.id}`)
+        await apiService.delete(`/api/appointment-procedures/${existingProc.id}`)
       }
     }
 
@@ -836,7 +836,7 @@ const updateAppointmentProcedures = async (appointmentId) => {
     for (const procedure of selectedProcedures.value) {
       const alreadyExists = existingProcedures.find(p => p.procedure_template_id === procedure.id)
       if (!alreadyExists) {
-        const procedureResult = await apiService.post(`/appointments/${appointmentId}/procedures`, {
+        const procedureResult = await apiService.post(`/api/appointments/${appointmentId}/procedures`, {
           procedure_template_id: procedure.id,
           cost: procedure.default_cost
         })

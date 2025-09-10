@@ -48,14 +48,20 @@ type DentalRecord struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
+type SurfaceCondition struct {
+	Surface   string         `json:"surface"`   // mesial, distal, occlusal, buccal, lingual, incisal
+	Condition ToothCondition `json:"condition"` // specific condition for this surface
+}
+
 type ToothData struct {
-	ToothNumber string         `json:"tooth_number"` // e.g., "1", "2", ..., "32" for permanent, "A", "B", ... for primary
-	Position    string         `json:"position"`     // quadrant and position info
-	Condition   ToothCondition `json:"condition"`
-	Surfaces    []string       `json:"surfaces"` // affected surfaces: mesial, distal, occlusal, buccal, lingual
-	Notes       string         `json:"notes"`
-	LastUpdated time.Time      `json:"last_updated"`
-	UpdatedBy   uint           `json:"updated_by"` // user ID who made the update
+	ToothNumber       string             `json:"tooth_number"`       // e.g., "1", "2", ..., "32" for permanent, "A", "B", ... for primary
+	Position          string             `json:"position"`           // quadrant and position info
+	Condition         ToothCondition     `json:"condition"`          // overall tooth condition
+	Surfaces          []string           `json:"surfaces"`           // affected surfaces (for backward compatibility)
+	SurfaceConditions []SurfaceCondition `json:"surface_conditions"` // detailed conditions per surface
+	Notes             string             `json:"notes"`
+	LastUpdated       time.Time          `json:"last_updated"`
+	UpdatedBy         uint               `json:"updated_by"` // user ID who made the update
 }
 
 type DentalRecordHistory struct {
@@ -105,29 +111,45 @@ func (dr *DentalRecord) initializeTeethData() []ToothData {
 	var teethData []ToothData
 
 	if dr.RecordType == ToothTypePermanent {
-		// Initialize 32 permanent teeth
-		for i := 1; i <= 32; i++ {
-			tooth := ToothData{
-				ToothNumber: fmt.Sprintf("%d", i),
-				Position:    dr.getToothPosition(i),
-				Condition:   ConditionHealthy,
-				Surfaces:    []string{},
-				Notes:       "",
-				LastUpdated: time.Now(),
+		// Initialize 32 permanent teeth using FDI notation
+		quadrants := []struct {
+			quadrantNum int
+			startPos    int
+			endPos      int
+		}{
+			{1, 1, 8}, // Upper right (11-18)
+			{2, 1, 8}, // Upper left (21-28)
+			{3, 1, 8}, // Lower left (31-38)
+			{4, 1, 8}, // Lower right (41-48)
+		}
+
+		for _, quad := range quadrants {
+			for pos := quad.startPos; pos <= quad.endPos; pos++ {
+				toothNum := quad.quadrantNum*10 + pos
+				tooth := ToothData{
+					ToothNumber:       fmt.Sprintf("%d", toothNum),
+					Position:          dr.getToothPosition(toothNum),
+					Condition:         ConditionHealthy,
+					Surfaces:          []string{},
+					SurfaceConditions: []SurfaceCondition{},
+					Notes:             "",
+					LastUpdated:       time.Now(),
+				}
+				teethData = append(teethData, tooth)
 			}
-			teethData = append(teethData, tooth)
 		}
 	} else {
 		// Initialize 20 primary teeth (A-T)
 		letters := "ABCDEFGHIJKLMNOPQRST"
 		for i, letter := range letters {
 			tooth := ToothData{
-				ToothNumber: string(letter),
-				Position:    dr.getPrimaryToothPosition(i + 1),
-				Condition:   ConditionHealthy,
-				Surfaces:    []string{},
-				Notes:       "",
-				LastUpdated: time.Now(),
+				ToothNumber:       string(letter),
+				Position:          dr.getPrimaryToothPosition(i + 1),
+				Condition:         ConditionHealthy,
+				Surfaces:          []string{},
+				SurfaceConditions: []SurfaceCondition{},
+				Notes:             "",
+				LastUpdated:       time.Now(),
 			}
 			teethData = append(teethData, tooth)
 		}
@@ -142,8 +164,9 @@ func (dr *DentalRecord) getToothPosition(toothNumber int) string {
 		3: "Lower Left", 4: "Lower Right",
 	}
 
-	quadrant := ((toothNumber - 1) / 8) + 1
-	position := ((toothNumber - 1) % 8) + 1
+	// For FDI notation, extract quadrant from first digit
+	quadrant := toothNumber / 10
+	position := toothNumber % 10
 
 	return fmt.Sprintf("%s - %d", quadrants[quadrant], position)
 }
@@ -160,7 +183,7 @@ func (dr *DentalRecord) getPrimaryToothPosition(toothNumber int) string {
 	return fmt.Sprintf("%s - %d", quadrants[quadrant], position)
 }
 
-func (dr *DentalRecord) UpdateToothCondition(toothNumber string, newCondition ToothCondition, surfaces []string, notes string, updatedBy uint) error {
+func (dr *DentalRecord) UpdateToothCondition(toothNumber string, newCondition ToothCondition, surfaces []string, surfaceConditions []SurfaceCondition, notes string, updatedBy uint) error {
 	teethData, err := dr.GetTeethData()
 	if err != nil {
 		return err
@@ -170,6 +193,7 @@ func (dr *DentalRecord) UpdateToothCondition(toothNumber string, newCondition To
 		if teethData[i].ToothNumber == toothNumber {
 			teethData[i].Condition = newCondition
 			teethData[i].Surfaces = surfaces
+			teethData[i].SurfaceConditions = surfaceConditions
 			teethData[i].Notes = notes
 			teethData[i].LastUpdated = time.Now()
 			teethData[i].UpdatedBy = updatedBy
@@ -178,4 +202,33 @@ func (dr *DentalRecord) UpdateToothCondition(toothNumber string, newCondition To
 	}
 
 	return dr.SetTeethData(teethData)
+}
+
+// Helper method to get surface condition
+func (td *ToothData) GetSurfaceCondition(surface string) ToothCondition {
+	for _, sc := range td.SurfaceConditions {
+		if sc.Surface == surface {
+			return sc.Condition
+		}
+	}
+	return ConditionHealthy
+}
+
+// Helper method to set surface condition
+func (td *ToothData) SetSurfaceCondition(surface string, condition ToothCondition) {
+	// Remove existing condition for this surface
+	for i, sc := range td.SurfaceConditions {
+		if sc.Surface == surface {
+			td.SurfaceConditions = append(td.SurfaceConditions[:i], td.SurfaceConditions[i+1:]...)
+			break
+		}
+	}
+
+	// Add new condition if not healthy
+	if condition != ConditionHealthy {
+		td.SurfaceConditions = append(td.SurfaceConditions, SurfaceCondition{
+			Surface:   surface,
+			Condition: condition,
+		})
+	}
 }

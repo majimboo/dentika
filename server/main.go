@@ -387,14 +387,7 @@ func seedSampleData() {
 			}
 			createdPatients = append(createdPatients, patients[i])
 
-			// Create dental record for each patient
-			dentalRecord := models.DentalRecord{
-				PatientID: patients[i].ID,
-				ClinicID:  patients[i].ClinicID,
-			}
-			if err := database.DB.Create(&dentalRecord).Error; err != nil {
-				log.Printf("Failed to create dental record for patient %s: %v", patients[i].FirstName, err)
-			}
+			// Dental records will be created automatically when first accessed
 		}
 	} else {
 		// Get existing patients

@@ -137,12 +137,10 @@ const currentAvatarUrl = computed(() => {
     return avatarPath
   }
 
-  // Build the full server URL using current host
-  const baseUrl = window.location.origin
-  
-  // Remove leading slash if present to avoid double slashes
-  const cleanPath = avatarPath.startsWith('/') ? avatarPath.substring(1) : avatarPath
-  return `${baseUrl}/uploads/${cleanPath}`
+  // Simply use current host
+  const baseUrl = window.location.host
+
+  return `/uploads/${avatarPath}`
 })
 
 const initials = computed(() => {
@@ -220,7 +218,10 @@ const uploadFile = async (file) => {
     formData.append('type', props.entityType)
     formData.append('id', props.entityId.toString())
     
-    const response = await fetch('/api/upload/avatar', {
+    // Simply use current host
+    const baseUrl = window.location.host
+
+    const response = await fetch(`${baseUrl}/api/upload/avatar`, {
       method: 'POST',
       body: formData,
       headers: {
@@ -265,7 +266,10 @@ const removeAvatar = async () => {
   error.value = ''
   
   try {
-    const response = await fetch(`/api/upload/avatar?path=${encodeURIComponent(props.modelValue)}`, {
+    // Simply use current host
+    const baseUrl = window.location.host
+
+    const response = await fetch(`${baseUrl}/api/upload/avatar?path=${encodeURIComponent(props.modelValue)}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`

@@ -2,8 +2,13 @@ import axios from 'axios'
 
 class ApiService {
   constructor() {
-    this.baseURL = '/api'
+    this.baseURL = this.getApiBaseUrl()
     this.setupInterceptors()
+  }
+
+  getApiBaseUrl() {
+    // Simply use the current host
+    return `${window.location.protocol}//${window.location.host}`
   }
 
   setupInterceptors() {
@@ -61,9 +66,12 @@ class ApiService {
 
   async request(method, url, data = null, config = {}) {
     try {
+      // Check if URL is already a full URL (for uploads)
+      const fullUrl = `${this.baseURL}${url}`
+
       const response = await axios({
         method,
-        url: `${this.baseURL}${url}`,
+        url: fullUrl,
         data,
         ...config
       })
@@ -74,7 +82,7 @@ class ApiService {
       }
     } catch (error) {
       console.error(`API ${method.toUpperCase()} ${url} error:`, error)
-      
+
       return {
         success: false,
         error: this.getErrorMessage(error),
@@ -85,26 +93,19 @@ class ApiService {
   }
 
   get(url, config) {
-    const correctedUrl = url.startsWith('/api') ? url.slice(4) : url
-    console.log('API Service GET:', `${this.baseURL}${correctedUrl}`)
-    const result = this.request('get', correctedUrl, null, config)
-    console.log('API Service GET result:', result)
-    return result
+    return this.request('get', url, null, config)
   }
 
   post(url, data, config) {
-    const correctedUrl = url.startsWith('/api') ? url.slice(4) : url
-    return this.request('post', correctedUrl, data, config)
+    return this.request('post', url, data, config)
   }
 
   put(url, data, config) {
-    const correctedUrl = url.startsWith('/api') ? url.slice(4) : url
-    return this.request('put', correctedUrl, data, config)
+    return this.request('put', url, data, config)
   }
 
   delete(url, config) {
-    const correctedUrl = url.startsWith('/api') ? url.slice(4) : url
-    return this.request('delete', correctedUrl, null, config)
+    return this.request('delete', url, null, config)
   }
 
   getErrorMessage(error) {
@@ -136,11 +137,11 @@ class ApiService {
 
   // Authentication methods
   async login(credentials) {
-    return this.request('post', '/auth/login', credentials)
+    return this.request('post', '/api/auth/login', credentials)
   }
 
   async register(userData) {
-    return this.request('post', '/auth/register', userData)
+    return this.request('post', '/api/auth/register', userData)
   }
 
   async logout() {
@@ -149,7 +150,7 @@ class ApiService {
     
     const token = localStorage.getItem('token')
     if (token) {
-      result = await this.request('post', '/auth/logout')
+      result = await this.request('post', '/api/auth/logout')
     }
     
     // Clear local storage regardless of API call result
@@ -164,52 +165,52 @@ class ApiService {
 
   // User management methods
   async getUsers() {
-    return this.request('get', '/users')
+    return this.request('get', '/api/users')
   }
 
   async getClinics() {
-    return this.request('get', '/clinics')
+    return this.request('get', '/api/clinics')
   }
 
   // Appointment methods
   async getAppointments(params = {}) {
-    return this.request('get', '/appointments', null, { params })
+    return this.request('get', '/api/appointments', null, { params })
   }
 
   async getAppointment(id) {
-    return this.request('get', `/appointments/${id}`)
+    return this.request('get', `/api/appointments/${id}`)
   }
 
   async createAppointment(appointmentData) {
-    return this.request('post', '/appointments', appointmentData)
+    return this.request('post', '/api/appointments', appointmentData)
   }
 
   async updateAppointment(id, appointmentData) {
-    return this.request('put', `/appointments/${id}`, appointmentData)
+    return this.request('put', `/api/appointments/${id}`, appointmentData)
   }
 
   async updateAppointmentStatus(id, statusData) {
-    return this.request('put', `/appointments/${id}/status`, statusData)
+    return this.request('put', `/api/appointments/${id}/status`, statusData)
   }
 
   async getUser(id) {
-    return this.request('get', `/users/${id}`)
+    return this.request('get', `/api/users/${id}`)
   }
 
   async getCurrentUser() {
-    return this.request('get', '/auth/me')
+    return this.request('get', '/api/auth/me')
   }
 
   async createUser(userData) {
-    return this.request('post', '/users', userData)
+    return this.request('post', '/api/users', userData)
   }
 
   async updateUser(id, userData) {
-    return this.request('put', `/users/${id}`, userData)
+    return this.request('put', `/api/users/${id}`, userData)
   }
 
   async deleteUser(id) {
-    return this.request('delete', `/users/${id}`)
+    return this.request('delete', `/api/users/${id}`)
   }
 
   // Utility methods
@@ -227,31 +228,32 @@ class ApiService {
 
   // Analytics methods
   async getDashboardMetrics(period = 'today') {
-    return this.request('get', `/analytics/dashboard?period=${period}`)
+    return this.request('get', `/api/analytics/dashboard?period=${period}`)
   }
 
   // Procedure and diagnosis template methods
   async getProcedureTemplates(params = {}) {
     const queryParams = new URLSearchParams(params)
-    return this.request('get', `/procedure-templates?${queryParams}`)
+    return this.request('get', `/api/procedure-templates?${queryParams}`)
   }
 
   async createProcedureTemplate(templateData) {
-    return this.request('post', '/procedure-templates', templateData)
+    return this.request('post', '/api/procedure-templates', templateData)
   }
 
   async getDiagnosisTemplates(params = {}) {
     const queryParams = new URLSearchParams(params)
-    return this.request('get', `/diagnosis-templates?${queryParams}`)
+    return this.request('get', `/api/diagnosis-templates?${queryParams}`)
   }
 
   async createDiagnosisTemplate(templateData) {
-    return this.request('post', '/diagnosis-templates', templateData)
+    return this.request('post', '/api/diagnosis-templates', templateData)
   }
 
   // Avatar upload methods
   async uploadAvatar(formData) {
-    return this.request('post', '/upload/avatar', formData, {
+    const uploadUrl = this.getUploadUrl('/api/upload/avatar')
+    return this.request('post', uploadUrl, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -259,9 +261,19 @@ class ApiService {
   }
 
   async deleteAvatar(avatarPath) {
-    return this.request('delete', '/upload/avatar', null, {
+    const uploadUrl = this.getUploadUrl('/api/upload/avatar')
+    return this.request('delete', uploadUrl, null, {
       params: { path: avatarPath }
     })
+  }
+
+  getBackendUrl(endpoint = '') {
+    // Simply use the current host
+    return `${window.location.protocol}//${window.location.host}${endpoint}`
+  }
+
+  getUploadUrl(endpoint) {
+    return this.getBackendUrl(endpoint)
   }
 }
 

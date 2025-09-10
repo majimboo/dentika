@@ -1047,7 +1047,7 @@ const loadProcedures = async () => {
   loadingProcedures.value = true
   try {
     // Use apiService instead of raw fetch for proper authentication
-    const result = await apiService.get('/procedure-templates')
+    const result = await apiService.get('/api/procedure-templates')
 
     if (result.success) {
       availableProcedures.value = result.data || []
@@ -1273,7 +1273,7 @@ const handleSubmit = async () => {
         for (const procedure of selectedProcedures.value) {
           try {
             // Use apiService instead of raw fetch for proper authentication
-            const procedureResult = await apiService.post(`/appointments/${appointmentId}/procedures`, {
+            const procedureResult = await apiService.post(`/api/appointments/${appointmentId}/procedures`, {
               procedure_template_id: procedure.id,
               cost: procedure.default_cost
             })

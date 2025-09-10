@@ -10,11 +10,12 @@ import (
 )
 
 type UpdateToothRequest struct {
-	ToothNumber string                `json:"tooth_number"`
-	Condition   models.ToothCondition `json:"condition"`
-	Surfaces    []string              `json:"surfaces"`
-	Notes       string                `json:"notes"`
-	Reason      string                `json:"reason"` // Reason for the change
+	ToothNumber       string                    `json:"tooth_number"`
+	Condition         models.ToothCondition     `json:"condition"`
+	Surfaces          []string                  `json:"surfaces"`
+	SurfaceConditions []models.SurfaceCondition `json:"surface_conditions"`
+	Notes             string                    `json:"notes"`
+	Reason            string                    `json:"reason"` // Reason for the change
 }
 
 func GetPatientDentalRecords(c *fiber.Ctx) error {
@@ -39,12 +40,88 @@ func GetPatientDentalRecords(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch dental records"})
 	}
 
-	// Parse teeth data for each record
-	var recordsWithTeeth []fiber.Map
+	// Check for missing dental records and create them
+	permanentExists := false
+	primaryExists := false
 	for _, record := range dentalRecords {
-		teethData, err := record.GetTeethData()
+		if record.RecordType == models.ToothTypePermanent {
+			permanentExists = true
+		}
+		if record.RecordType == models.ToothTypePrimary {
+			primaryExists = true
+		}
+	}
+
+	// Create missing permanent teeth record
+	if !permanentExists {
+		permanentRecord := models.DentalRecord{
+			PatientID:  uint(patientID),
+			ClinicID:   patient.ClinicID,
+			RecordType: models.ToothTypePermanent,
+			IsActive:   true,
+		}
+
+		// Initialize with complete FDI tooth data
+		_, err := permanentRecord.GetTeethData()
 		if err != nil {
-			continue // Skip malformed records
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to initialize permanent teeth data"})
+		}
+
+		if err := database.DB.Create(&permanentRecord).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to create permanent teeth record"})
+		}
+
+		dentalRecords = append(dentalRecords, permanentRecord)
+	}
+
+	// Create missing primary teeth record
+	if !primaryExists {
+		primaryRecord := models.DentalRecord{
+			PatientID:  uint(patientID),
+			ClinicID:   patient.ClinicID,
+			RecordType: models.ToothTypePrimary,
+			IsActive:   false, // Primary teeth start as inactive
+		}
+
+		// Initialize with complete primary tooth data
+		_, err := primaryRecord.GetTeethData()
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to initialize primary teeth data"})
+		}
+
+		if err := database.DB.Create(&primaryRecord).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to create primary teeth record"})
+		}
+
+		dentalRecords = append(dentalRecords, primaryRecord)
+	}
+
+	// Parse teeth data for each record and check for completeness
+	var recordsWithTeeth []fiber.Map
+	for i := range dentalRecords {
+		record := &dentalRecords[i] // Use pointer to modify if needed
+
+		teethData, err := record.GetTeethData()
+
+		// Check if all expected teeth are present
+		expectedCount := 32
+		if record.RecordType == models.ToothTypePrimary {
+			expectedCount = 20
+		}
+
+		needsReinit := err != nil || len(teethData) != expectedCount
+
+		if needsReinit {
+			// Reinitialize with complete tooth data by clearing TeethData and getting fresh data
+			record.TeethData = ""
+			_, initErr := record.GetTeethData()
+			if initErr != nil {
+				continue // Skip this record
+			}
+			// Save the reinitialized data
+			if err := database.DB.Save(record).Error; err != nil {
+				continue // Skip this record
+			}
 		}
 
 		recordsWithTeeth = append(recordsWithTeeth, fiber.Map{
@@ -141,7 +218,7 @@ func UpdateToothCondition(c *fiber.Ctx) error {
 	}
 
 	// Update tooth condition
-	if err := dentalRecord.UpdateToothCondition(req.ToothNumber, req.Condition, req.Surfaces, req.Notes, user.ID); err != nil {
+	if err := dentalRecord.UpdateToothCondition(req.ToothNumber, req.Condition, req.Surfaces, req.SurfaceConditions, req.Notes, user.ID); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to update tooth condition"})
 	}
 
@@ -324,7 +401,7 @@ func BulkUpdateTeeth(c *fiber.Ctx) error {
 		}
 
 		// Update tooth condition
-		if err := dentalRecord.UpdateToothCondition(update.ToothNumber, update.Condition, update.Surfaces, update.Notes, user.ID); err != nil {
+		if err := dentalRecord.UpdateToothCondition(update.ToothNumber, update.Condition, update.Surfaces, update.SurfaceConditions, update.Notes, user.ID); err != nil {
 			continue // Log error but continue with other updates
 		}
 

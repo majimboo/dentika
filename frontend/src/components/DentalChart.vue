@@ -5,14 +5,14 @@
       <div class="flex items-center space-x-4">
         <div class="flex items-center space-x-2">
           <label class="text-sm font-medium text-gray-700">Chart Type:</label>
-          <select 
-            v-model="chartType" 
-            @change="switchChartType"
-            class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="permanent">Adult Teeth (32)</option>
-            <option value="primary">Primary Teeth (20)</option>
-          </select>
+           <select
+             v-model="chartType"
+             @change="switchChartType"
+             class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+           >
+             <option value="permanent">Adult Teeth (FDI)</option>
+             <option value="primary">Primary Teeth (A-T)</option>
+           </select>
         </div>
         
         <div v-if="isDoctor" class="flex items-center space-x-2">
@@ -34,18 +34,19 @@
 
     <!-- Chart Container -->
     <div v-else class="dental-chart-container">
+      <!-- Upper Jaw Label -->
+      <div class="jaw-label-container upper-jaw-label">
+        <span class="text-sm font-medium text-gray-600">Upper Jaw</span>
+      </div>
+
       <!-- Upper Jaw -->
       <div class="jaw-section upper-jaw mb-8">
-        <div class="jaw-label text-center mb-2">
-          <span class="text-sm font-medium text-gray-600">Upper Jaw</span>
-        </div>
-        
-        <!-- Upper Right Quadrant -->
-        <div class="quadrant upper-right">
-          <div class="quadrant-label">Upper Right</div>
+        <!-- Upper Left Quadrant (FDI Quadrant 2) -->
+        <div class="quadrant upper-left">
+          <div class="quadrant-label">Quadrant 2</div>
           <div class="teeth-row">
             <ToothComponent
-              v-for="tooth in getQuadrantTeeth('upper-right')"
+              v-for="tooth in getQuadrantTeeth('upper-left')"
               :key="tooth.tooth_number"
               :tooth="tooth"
               :selected="selectedTooth === tooth.tooth_number"
@@ -56,12 +57,12 @@
           </div>
         </div>
 
-        <!-- Upper Left Quadrant -->
-        <div class="quadrant upper-left">
-          <div class="quadrant-label">Upper Left</div>
+        <!-- Upper Right Quadrant (FDI Quadrant 1) -->
+        <div class="quadrant upper-right">
+          <div class="quadrant-label">Quadrant 1</div>
           <div class="teeth-row">
             <ToothComponent
-              v-for="tooth in getQuadrantTeeth('upper-left')"
+              v-for="tooth in getQuadrantTeeth('upper-right')"
               :key="tooth.tooth_number"
               :tooth="tooth"
               :selected="selectedTooth === tooth.tooth_number"
@@ -75,13 +76,9 @@
 
       <!-- Lower Jaw -->
       <div class="jaw-section lower-jaw">
-        <div class="jaw-label text-center mb-2">
-          <span class="text-sm font-medium text-gray-600">Lower Jaw</span>
-        </div>
-        
-        <!-- Lower Left Quadrant -->
+        <!-- Lower Left Quadrant (FDI Quadrant 3) -->
         <div class="quadrant lower-left">
-          <div class="quadrant-label">Lower Left</div>
+          <div class="quadrant-label">Quadrant 3</div>
           <div class="teeth-row">
             <ToothComponent
               v-for="tooth in getQuadrantTeeth('lower-left')"
@@ -95,9 +92,9 @@
           </div>
         </div>
 
-        <!-- Lower Right Quadrant -->
+        <!-- Lower Right Quadrant (FDI Quadrant 4) -->
         <div class="quadrant lower-right">
-          <div class="quadrant-label">Lower Right</div>
+          <div class="quadrant-label">Quadrant 4</div>
           <div class="teeth-row">
             <ToothComponent
               v-for="tooth in getQuadrantTeeth('lower-right')"
@@ -111,6 +108,11 @@
           </div>
         </div>
       </div>
+
+      <!-- Lower Jaw Label -->
+      <div class="jaw-label-container lower-jaw-label">
+        <span class="text-sm font-medium text-gray-600">Lower Jaw</span>
+      </div>
     </div>
 
     <!-- Legend -->
@@ -118,13 +120,17 @@
       <div class="legend-title text-sm font-medium text-gray-700 mb-2">Legend:</div>
       <div class="legend-items grid grid-cols-3 md:grid-cols-5 gap-2 text-xs">
         <div v-for="(color, condition) in legendItems" :key="condition" class="legend-item flex items-center">
-          <div 
-            class="legend-color w-4 h-4 rounded border border-gray-300 mr-2" 
+          <div
+            class="legend-color w-4 h-4 rounded border border-gray-300 mr-2"
             :style="{ backgroundColor: color }"
+            :class="{ 'border-gray-400': condition === 'healthy' }"
           ></div>
           <span class="legend-text">{{ formatCondition(condition) }}</span>
         </div>
       </div>
+       <div class="legend-note text-xs text-gray-500 mt-2">
+         <em>White = Healthy, Colored = Requires attention | FDI Notation (ISO 3950)</em>
+       </div>
     </div>
 
     <!-- Selected Tooth Details -->
@@ -185,7 +191,7 @@ const selectedToothData = computed(() => {
 })
 
 const legendItems = {
-  healthy: '#90EE90',
+  healthy: '#FFFFFF',
   decay: '#FFB6C1',
   filled: '#87CEEB',
   crowned: '#DDA0DD',
@@ -196,12 +202,15 @@ const legendItems = {
   missing: '#D3D3D3'
 }
 
-// Permanent teeth numbering (1-32)
+// Permanent teeth numbering - FDI World Dental Federation notation (ISO 3950)
+// Two-digit system: First digit = quadrant, Second digit = tooth position
+// Quadrant 1: Upper right (11-18), Quadrant 2: Upper left (21-28)
+// Quadrant 3: Lower left (31-38), Quadrant 4: Lower right (41-48)
 const permanentTeethQuadrants = {
-  'upper-right': [1, 2, 3, 4, 5, 6, 7, 8],
-  'upper-left': [9, 10, 11, 12, 13, 14, 15, 16],
-  'lower-left': [17, 18, 19, 20, 21, 22, 23, 24],
-  'lower-right': [25, 26, 27, 28, 29, 30, 31, 32]
+  'upper-right': [11, 12, 13, 14, 15, 16, 17, 18],
+  'upper-left': [21, 22, 23, 24, 25, 26, 27, 28],
+  'lower-left': [31, 32, 33, 34, 35, 36, 37, 38],
+  'lower-right': [41, 42, 43, 44, 45, 46, 47, 48]
 }
 
 // Primary teeth lettering (A-T)
@@ -322,6 +331,29 @@ watch(() => props.readonly, (newValue) => {
   @apply bg-gray-50 rounded-lg p-6;
 }
 
+.jaw-label-container {
+  @apply text-center mb-4;
+}
+
+.upper-jaw-label {
+  @apply mb-6;
+}
+
+.lower-jaw-label {
+  @apply mt-6;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  .upper-jaw-label {
+    @apply mb-4;
+  }
+
+  .lower-jaw-label {
+    @apply mt-4;
+  }
+}
+
 .jaw-section {
   @apply flex flex-col items-center;
 }
@@ -374,7 +406,7 @@ watch(() => props.readonly, (newValue) => {
 }
 
 .lower-jaw .teeth-row {
-  @apply flex-row-reverse;
+  @apply flex-row;
 }
 
 .dental-chart-legend {

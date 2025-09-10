@@ -110,12 +110,10 @@ export default {
         return avatarPath
       }
 
-      // Build the full backend URL for uploads
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:9483'
+      // Simply use current host
+      const baseUrl = window.location.host
 
-      // Remove leading slash if present to avoid double slashes
-      const cleanPath = avatarPath.startsWith('/') ? avatarPath.substring(1) : avatarPath
-      return `${baseUrl}/uploads/${cleanPath}`
+      return `/uploads/${avatarPath}`
     },
     handleImageError(event) {
       // Hide the image and show initials when image fails to load

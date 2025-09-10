@@ -60,15 +60,6 @@ Key entities include: User, AuthToken, Clinic, Branch, Patient, PatientDocument,
 
 ## Configuration
 
-### Environment Variables
-- **Backend (.env)**: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, PORT, TIMEZONE
-- **Frontend (.env)**: VITE_API_URL (defaults to http://localhost:3000)
-
-### Development Setup
-- Backend runs on port specified in .env (default likely 9483 based on Vite proxy config)
-- Frontend dev server runs on port 5173 with proxy to backend API
-- Database: MySQL with auto-migration on server startup
-
 ### API Communication
 - Frontend uses Axios with base URL configuration
 - API routes prefixed with `/api`

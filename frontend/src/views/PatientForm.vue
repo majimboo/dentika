@@ -45,7 +45,7 @@
               Edit Patient
             </router-link>
             <router-link
-              :to="`/consent/new?patientId=${route.params.id}`"
+              :to="`/patients/${route.params.id}/consent/new`"
               class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
             >
               <font-awesome-icon icon="fa-solid fa-file-signature" class="w-4 h-4 mr-2" />

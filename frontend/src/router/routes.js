@@ -316,13 +316,13 @@ const routes = [
 
 
             {
-                path: '/consent/new',
+                path: '/patients/:patientId/consent/new',
                 name: 'ConsentCreate',
                 component: ConsentForm,
                 meta: {
-                    level: 2,
+                    level: 3,
                     title: 'New Consent Form',
-                    parent: 'ProcedureManagement',
+                    parent: 'PatientView',
                 },
             },
 

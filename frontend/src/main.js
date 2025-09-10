@@ -58,7 +58,16 @@ import {
   faBox,
   faUpload,
   faTimesCircle,
-  faPesoSign
+  faPesoSign,
+  faBoxOpen,
+  faArrowUp,
+  faClipboard,
+  faSort,
+  faCheckDouble,
+  faCalendarCheck,
+  faPhone,
+  faPlayCircle,
+  faClipboardList
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -114,6 +123,15 @@ library.add(
   faUpload,
   faTimesCircle,
   faPesoSign,
+  faBoxOpen,
+  faArrowUp,
+  faClipboard,
+  faSort,
+  faCheckDouble,
+  faCalendarCheck,
+  faPhone,
+  faPlayCircle,
+  faClipboardList,
   faTimes
 )
 

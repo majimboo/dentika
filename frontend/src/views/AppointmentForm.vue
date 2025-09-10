@@ -523,6 +523,11 @@ const initializeForm = () => {
     }
   }
 
+  // Pre-select patient if coming from patient list
+  if (route.query.patient) {
+    preSelectPatient(route.query.patient)
+  }
+
   // Auto-select main branch if available
   const mainBranch = clinicStore.getMainBranch
   if (mainBranch && !formData.value.branch_id) {
@@ -591,6 +596,38 @@ const selectPatient = (patient) => {
   formData.value.patient_id = patient.id.toString()
   patientSearchQuery.value = `${patient.first_name} ${patient.last_name}`
   showPatientDropdown.value = false
+}
+
+const preSelectPatient = async (patientId) => {
+  try {
+    // First try to get patient from store
+    const patient = patientStore.patients.find(p => p.id.toString() === patientId.toString())
+    
+    if (patient) {
+      selectPatient(patient)
+      return
+    }
+    
+    // If not found in store, try to fetch patient data
+    const result = await patientStore.fetchPatient(patientId)
+    if (result) {
+      selectPatient(result)
+      return
+    }
+    
+    // Fallback: search patients to find this specific patient
+    patientSearchQuery.value = '' // Start with empty search to load all patients
+    await searchPatients()
+    const foundPatient = filteredPatients.value.find(p => p.id.toString() === patientId.toString())
+    
+    if (foundPatient) {
+      selectPatient(foundPatient)
+    } else {
+      console.warn(`Patient with ID ${patientId} not found`)
+    }
+  } catch (error) {
+    console.warn('Could not pre-select patient:', error)
+  }
 }
 
 const createNewPatient = () => {

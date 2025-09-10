@@ -1,5 +1,5 @@
 <template>
-  <div class="consent-form-page min-h-screen bg-gray-50 lg:bg-white">
+  <div class="form-page min-h-screen bg-gray-50 lg:bg-white">
     <!-- Mobile: Full screen form -->
     <div class="lg:max-w-4xl lg:mx-auto lg:py-8">
       <div class="bg-white lg:rounded-lg lg:shadow-sm lg:border min-h-screen lg:min-h-0">
@@ -677,14 +677,6 @@ watch(() => form.treatment_type, () => {
 <style scoped>
 @import "../styles/main.css";
 
-.form-section {
-  @apply bg-gray-50 lg:bg-white p-4 lg:p-0 rounded-lg lg:rounded-none mb-6;
-}
-
-.form-section h2 {
-  @apply border-b border-gray-200 pb-2 mb-4 lg:border-b-0 lg:pb-0;
-}
-
 .prose {
   color: #374151;
 }
@@ -695,16 +687,5 @@ watch(() => form.treatment_type, () => {
 
 .prose p {
   @apply mb-3;
-}
-
-/* Mobile optimizations */
-@media (max-width: 1024px) {
-  .consent-form-page {
-    @apply p-0;
-  }
-  
-  .form-section {
-    @apply mx-0;
-  }
 }
 </style>

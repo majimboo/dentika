@@ -450,9 +450,7 @@ onUnmounted(() => {
 }
 
 /* Grid layout adjustments for mobile */
-
-
-
+@media (max-width: 640px) {
   .time-label {
     @apply text-xs px-1 h-10;
   }

@@ -138,111 +138,159 @@
       </div>
 
       <!-- Grid -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <div
           v-for="appointment in paginatedAppointments"
           :key="appointment.id"
-          class="appointment-card bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer"
+          class="appointment-card group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
           @click="$router.push(`/appointments/${appointment.id}`)"
         >
-          <div class="p-6">
-            <div class="flex items-start justify-between mb-4">
-              <div class="patient-avatar w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center mr-4">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-              </div>
-              <div class="appointment-actions">
-                <div class="relative" @click.stop>
-                  <button
-                    @click="toggleStatusMenu(appointment.id)"
-                    class="text-gray-400 hover:text-gray-600 transition-colors p-1"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-                    </svg>
-                  </button>
-
-                  <!-- Status Menu -->
-                  <div
-                    v-if="activeStatusMenu === appointment.id"
-                    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border"
-                  >
-                    <div class="py-1">
-                      <button
-                        v-if="appointment.status === 'scheduled'"
-                        @click="updateAppointmentStatus(appointment.id, 'confirmed')"
-                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Mark as Confirmed
-                      </button>
-                      <button
-                        v-if="appointment.status === 'confirmed'"
-                        @click="updateAppointmentStatus(appointment.id, 'in_progress')"
-                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Start Appointment
-                      </button>
-                      <button
-                        v-if="appointment.status === 'in_progress'"
-                        @click="updateAppointmentStatus(appointment.id, 'completed')"
-                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Complete Appointment
-                      </button>
-                      <button
-                        v-if="appointment.status !== 'cancelled'"
-                        @click="updateAppointmentStatus(appointment.id, 'cancelled')"
-                        class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-100"
-                      >
-                        Cancel Appointment
-                      </button>
-                    </div>
+          <!-- Card Header with Time and Status -->
+          <div class="relative p-4 pb-3" :class="getStatusHeaderClass(appointment.status)">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center space-x-3 flex-1">
+                <!-- Status indicator -->
+                <div class="relative">
+                  <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm" :class="getStatusAvatarClass(appointment.status)">
+                    <font-awesome-icon :icon="getStatusIcon(appointment.status)" class="w-5 h-5 text-white" />
                   </div>
+                  <!-- Urgency pulse for upcoming appointments -->
+                  <div v-if="appointment.status === 'confirmed' && isUpcomingSoon(appointment.start_time)" class="absolute -top-1 -right-1 w-4 h-4 bg-orange-400 rounded-full animate-pulse border-2 border-white"></div>
+                </div>
+                
+                <!-- Time info -->
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-baseline space-x-1">
+                    <span class="text-lg font-bold text-gray-900">{{ formatTime(appointment.start_time) }}</span>
+                    <span class="text-lg font-bold text-gray-400">-</span>
+                    <span class="text-lg font-bold text-gray-600">{{ formatTime(appointment.end_time) }}</span>
+                  </div>
+                  <p class="text-xs text-gray-500 font-medium">{{ formatDate(appointment.start_time) }}</p>
+                </div>
+              </div>
+              
+              <!-- Status badge -->
+              <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium" :class="getStatusBadgeClass(appointment.status)">
+                {{ formatStatus(appointment.status) }}
+              </span>
+            </div>
+            
+            <!-- Quick actions (visible on hover) -->
+            <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="relative" @click.stop>
+                <button
+                  @click="toggleStatusMenu(appointment.id)"
+                  class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white/20 transition-colors"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                  </svg>
+                </button>
+
+                <!-- Status Menu -->
+                <div
+                  v-if="activeStatusMenu === appointment.id"
+                  class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-20 border border-gray-200 py-1"
+                >
+                  <button
+                    v-if="appointment.status === 'scheduled'"
+                    @click="updateAppointmentStatus(appointment.id, 'confirmed')"
+                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-check-circle" class="w-4 h-4 mr-3 text-green-500" />
+                    Mark as Confirmed
+                  </button>
+                  <button
+                    v-if="appointment.status === 'confirmed'"
+                    @click="updateAppointmentStatus(appointment.id, 'in_progress')"
+                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-play-circle" class="w-4 h-4 mr-3 text-yellow-500" />
+                    Start Appointment
+                  </button>
+                  <button
+                    v-if="appointment.status === 'in_progress'"
+                    @click="updateAppointmentStatus(appointment.id, 'completed')"
+                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-check-double" class="w-4 h-4 mr-3 text-purple-500" />
+                    Complete Appointment
+                  </button>
+                  <button
+                    v-if="appointment.status !== 'cancelled'"
+                    @click="updateAppointmentStatus(appointment.id, 'cancelled')"
+                    class="flex items-center w-full text-left px-3 py-2 text-sm text-red-700 hover:bg-red-50"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-times-circle" class="w-4 h-4 mr-3 text-red-500" />
+                    Cancel Appointment
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
 
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">
-              {{ appointment.patient?.first_name }} {{ appointment.patient?.last_name }}
-            </h3>
-            <p class="text-sm text-gray-600 mb-4">ID: {{ appointment.patient?.patient_number || appointment.patient_id }}</p>
+          <!-- Card Content -->
+          <div class="p-4 pt-3">
+            <!-- Patient info -->
+            <div class="mb-4">
+              <h3 class="font-semibold text-gray-900 text-base leading-tight mb-1">
+                {{ appointment.patient?.first_name }} {{ appointment.patient?.last_name }}
+              </h3>
+              <p class="text-xs text-gray-500 font-medium">
+                ID: {{ appointment.patient?.patient_number || appointment.patient_id }}
+              </p>
+            </div>
 
-            <div class="appointment-details space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Date</span>
-                <span class="text-sm text-gray-900">{{ formatDate(appointment.start_time) }}</span>
+            <!-- Doctor & Type Info -->
+            <div class="space-y-2.5 mb-4">
+              <div class="flex items-center text-sm text-gray-600">
+                <div class="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center mr-3">
+                  <font-awesome-icon icon="fa-solid fa-user-md" class="w-3 h-3 text-blue-600" />
+                </div>
+                <span class="truncate">Dr. {{ appointment.doctor?.first_name }} {{ appointment.doctor?.last_name }}</span>
               </div>
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Time</span>
-                <span class="text-sm text-gray-900">{{ formatTime(appointment.start_time) }} - {{ formatTime(appointment.end_time) }}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Doctor</span>
-                <span class="text-sm text-gray-900">Dr. {{ appointment.doctor?.first_name }} {{ appointment.doctor?.last_name }}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</span>
-                <span class="text-xs px-2 py-1 rounded-full" :class="getStatusBadgeClass(appointment.status)">
-                  {{ formatStatus(appointment.status) }}
-                </span>
+              
+              <div v-if="appointment.type" class="flex items-center text-sm text-gray-600">
+                <div class="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center mr-3">
+                  <font-awesome-icon icon="fa-solid fa-clipboard-list" class="w-3 h-3 text-purple-600" />
+                </div>
+                <span class="truncate capitalize">{{ formatAppointmentType(appointment.type) }}</span>
               </div>
             </div>
 
-            <div class="mt-4 flex items-center justify-between">
-              <router-link
-                :to="`/appointments/${appointment.id}/edit`"
-                class="text-indigo-600 hover:text-indigo-900 text-sm font-medium transition-colors"
-                @click.stop
-              >
-                Edit
-              </router-link>
+            <!-- Duration and notes -->
+            <div v-if="appointment.notes" class="mb-4 p-2.5 bg-gray-50 rounded-lg">
+              <p class="text-xs text-gray-500 mb-1">Notes:</p>
+              <p class="text-sm text-gray-700 leading-relaxed line-clamp-2">{{ appointment.notes }}</p>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+              <div class="flex items-center space-x-1">
+                <router-link
+                  :to="`/appointments/${appointment.id}/edit`"
+                  @click.stop
+                  class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                  title="Edit Appointment"
+                >
+                  <font-awesome-icon icon="fa-solid fa-edit" class="w-4 h-4" />
+                </router-link>
+                <button
+                  v-if="appointment.patient_id"
+                  @click.stop="$router.push(`/patients/${appointment.patient_id}/dental-chart`)"
+                  class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                  title="Dental Chart"
+                >
+                  <font-awesome-icon icon="fa-solid fa-tooth" class="w-4 h-4" />
+                </button>
+              </div>
+              
               <router-link
                 :to="`/appointments/${appointment.id}`"
-                class="text-blue-600 hover:text-blue-900 text-sm font-medium transition-colors"
                 @click.stop
+                class="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
               >
-                View Details
+                View Details →
               </router-link>
             </div>
           </div>
@@ -715,6 +763,54 @@ const formatTime = (dateTime) => {
   })
 }
 
+const formatAppointmentType = (type) => {
+  return type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'General'
+}
+
+const getStatusHeaderClass = (status) => {
+  const classes = {
+    scheduled: 'bg-gradient-to-br from-blue-50 to-blue-100',
+    confirmed: 'bg-gradient-to-br from-green-50 to-green-100', 
+    in_progress: 'bg-gradient-to-br from-yellow-50 to-yellow-100',
+    completed: 'bg-gradient-to-br from-purple-50 to-purple-100',
+    cancelled: 'bg-gradient-to-br from-red-50 to-red-100',
+    no_show: 'bg-gradient-to-br from-gray-50 to-gray-100'
+  }
+  return classes[status] || classes.scheduled
+}
+
+const getStatusAvatarClass = (status) => {
+  const classes = {
+    scheduled: 'bg-gradient-to-br from-blue-500 to-blue-600',
+    confirmed: 'bg-gradient-to-br from-green-500 to-green-600',
+    in_progress: 'bg-gradient-to-br from-yellow-500 to-yellow-600', 
+    completed: 'bg-gradient-to-br from-purple-500 to-purple-600',
+    cancelled: 'bg-gradient-to-br from-red-500 to-red-600',
+    no_show: 'bg-gradient-to-br from-gray-500 to-gray-600'
+  }
+  return classes[status] || classes.scheduled
+}
+
+const getStatusIcon = (status) => {
+  const icons = {
+    scheduled: 'fa-solid fa-calendar-check',
+    confirmed: 'fa-solid fa-check-circle',
+    in_progress: 'fa-solid fa-clock', 
+    completed: 'fa-solid fa-check-double',
+    cancelled: 'fa-solid fa-times-circle',
+    no_show: 'fa-solid fa-user-slash'
+  }
+  return icons[status] || icons.scheduled
+}
+
+const isUpcomingSoon = (startTime) => {
+  const now = new Date()
+  const appointmentTime = new Date(startTime)
+  const timeDiff = appointmentTime.getTime() - now.getTime()
+  // Return true if appointment is within next 2 hours
+  return timeDiff > 0 && timeDiff <= (2 * 60 * 60 * 1000)
+}
+
 // Close status menu when clicking outside
 const handleClickOutside = (event) => {
   if (!event.target.closest('.relative')) {
@@ -794,15 +890,24 @@ watch([searchQuery, dateFilter, statusFilter, doctorFilter], () => {
 
 .appointment-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.15), 0 8px 16px -8px rgba(0, 0, 0, 0.1);
 }
 
-.patient-avatar {
-  transition: transform 0.2s ease-in-out;
+/* Text truncation utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.appointment-card:hover .patient-avatar {
-  transform: scale(1.05);
+/* Improved status animations */
+.appointment-card .bg-gradient-to-br {
+  transition: all 0.3s ease-in-out;
+}
+
+.appointment-card:hover .bg-gradient-to-br {
+  background-size: 150% 150%;
 }
 
 /* View toggle buttons */
@@ -840,8 +945,12 @@ watch([searchQuery, dateFilter, statusFilter, doctorFilter], () => {
     @apply grid-cols-1 gap-4;
   }
 
-  .appointment-card .p-6 {
-    @apply p-4;
+  .appointment-card .p-4 {
+    @apply p-3;
+  }
+  
+  .grid {
+    @apply gap-3;
   }
 }
 

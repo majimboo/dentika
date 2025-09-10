@@ -138,25 +138,40 @@
     </div>
 
     <!-- Patient Grid View -->
-    <div v-else-if="viewMode === 'grid'" class="patients-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div v-else-if="viewMode === 'grid'" class="patients-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <div
         v-for="patient in patients"
         :key="patient.id"
-        class="patient-card bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer"
+        class="patient-card group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
         @click="viewPatient(patient)"
       >
-        <div class="p-6">
-          <div class="flex items-start justify-between mb-4">
-            <div class="patient-avatar w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center mr-4">
-              <span class="text-white font-medium text-lg">
-                {{ getPatientInitials(patient) }}
-              </span>
+        <!-- Card Header with Avatar and Status -->
+        <div class="relative bg-gradient-to-br from-blue-50 to-indigo-50 p-4 pb-3">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="relative">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+                  <span class="text-white font-semibold text-lg">
+                    {{ getPatientInitials(patient) }}
+                  </span>
+                </div>
+                <!-- Online status indicator -->
+                <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white" :class="patient.is_active ? 'bg-green-400' : 'bg-gray-400'"></div>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="font-semibold text-gray-900 truncate text-base leading-tight">
+                  {{ patient.first_name }} {{ patient.last_name }}
+                </h3>
+                <p class="text-xs text-gray-500 font-medium">#{{ patient.patient_number }}</p>
+              </div>
             </div>
-            <div class="patient-actions">
+            
+            <!-- Quick actions dropdown -->
+            <div class="patient-actions opacity-0 group-hover:opacity-100 transition-opacity">
               <div class="relative" @click.stop>
                 <button
                   @click="togglePatientMenu(patient.id)"
-                  class="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white/50 transition-colors"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
@@ -166,63 +181,110 @@
                 <!-- Dropdown Menu -->
                 <div
                   v-if="activePatientMenu === patient.id"
-                  class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border"
+                  class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-20 border border-gray-200 py-1"
                 >
-                  <div class="py-1">
-                    <button
-                      @click="viewPatient(patient)"
-                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      View Details
-                    </button>
-                    <button
-                      v-if="canManagePatients"
-                      @click="editPatient(patient)"
-                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Edit Patient
-                    </button>
-                    <button
-                      @click="viewDentalChart(patient)"
-                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Dental Chart
-                    </button>
-                    <button
-                      @click="scheduleAppointment(patient)"
-                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Schedule Appointment
-                    </button>
-                  </div>
+                  <button
+                    @click="viewPatient(patient)"
+                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-eye" class="w-4 h-4 mr-3 text-gray-400" />
+                    View Details
+                  </button>
+                  <button
+                    v-if="canManagePatients"
+                    @click="editPatient(patient)"
+                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-edit" class="w-4 h-4 mr-3 text-gray-400" />
+                    Edit Patient
+                  </button>
+                  <button
+                    @click="viewDentalChart(patient)"
+                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-tooth" class="w-4 h-4 mr-3 text-gray-400" />
+                    Dental Chart
+                  </button>
+                  <button
+                    @click="scheduleAppointment(patient)"
+                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-calendar-plus" class="w-4 h-4 mr-3 text-gray-400" />
+                    Schedule
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Content -->
+        <div class="p-4 pt-3">
+          <!-- Key Info Grid -->
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div class="bg-gray-50 rounded-lg p-2.5">
+              <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center">
+                  <font-awesome-icon icon="fa-solid fa-birthday-cake" class="w-3 h-3 text-blue-600" />
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 leading-none">Age</p>
+                  <p class="text-sm font-semibold text-gray-900">{{ getPatientAge(patient) }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-gray-50 rounded-lg p-2.5">
+              <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center">
+                  <font-awesome-icon :icon="patient.gender === 'female' ? 'fa-solid fa-venus' : patient.gender === 'male' ? 'fa-solid fa-mars' : 'fa-solid fa-genderless'" class="w-3 h-3 text-purple-600" />
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 leading-none">Gender</p>
+                  <p class="text-sm font-semibold text-gray-900 capitalize">{{ patient.gender || 'N/A' }}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">
-            {{ patient.first_name }} {{ patient.last_name }}
-          </h3>
-          <p class="text-sm text-gray-600 mb-4">#{{ patient.patient_number }}</p>
+          <!-- Contact Info -->
+          <div class="space-y-2">
+            <div class="flex items-center text-sm text-gray-600">
+              <font-awesome-icon icon="fa-solid fa-phone" class="w-4 h-4 mr-3 text-gray-400" />
+              <span class="truncate">{{ patient.phone || 'No phone' }}</span>
+            </div>
+            <div class="flex items-center text-sm text-gray-600">
+              <font-awesome-icon icon="fa-solid fa-envelope" class="w-4 h-4 mr-3 text-gray-400" />
+              <span class="truncate">{{ patient.email || 'No email' }}</span>
+            </div>
+          </div>
 
-          <div class="patient-details space-y-2">
+          <!-- Quick Actions -->
+          <div class="mt-4 pt-3 border-t border-gray-100">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Age</span>
-              <span class="text-sm text-gray-900">{{ getPatientAge(patient) }} years</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Gender</span>
-              <span class="text-sm text-gray-900">{{ patient.gender || 'Not specified' }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</span>
-              <span class="text-sm text-gray-900">{{ patient.phone || 'No phone' }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</span>
-              <span class="text-xs px-2 py-1 rounded-full" :class="patient.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                {{ patient.is_active ? 'Active' : 'Inactive' }}
-              </span>
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium" :class="patient.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                  <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="patient.is_active ? 'bg-green-400' : 'bg-red-400'"></span>
+                  {{ patient.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+              
+              <div class="flex items-center space-x-1">
+                <button
+                  @click.stop="viewDentalChart(patient)"
+                  class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                  title="Dental Chart"
+                >
+                  <font-awesome-icon icon="fa-solid fa-tooth" class="w-4 h-4" />
+                </button>
+                <button
+                  @click.stop="scheduleAppointment(patient)"
+                  class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                  title="Schedule Appointment"
+                >
+                  <font-awesome-icon icon="fa-solid fa-calendar-plus" class="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -532,6 +594,30 @@ onMounted(() => {
   @apply bg-blue-50;
 }
 
+/* Patient card animations and effects */
+.patient-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.patient-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.15), 0 8px 16px -8px rgba(0, 0, 0, 0.1);
+}
+
+.patient-card .bg-gradient-to-br {
+  transition: all 0.3s ease-in-out;
+}
+
+.patient-card:hover .bg-gradient-to-br {
+  background-size: 150% 150%;
+}
+
+/* Improved hover effects */
+.patient-card:hover .w-12.h-12.bg-gradient-to-br {
+  transform: scale(1.05) rotate(2deg);
+  transition: all 0.2s ease-in-out;
+}
+
 @media (max-width: 768px) {
   .table-header,
   .patient-row {
@@ -541,6 +627,18 @@ onMounted(() => {
   .table-header > div,
   .patient-row > div {
     @apply col-span-1;
+  }
+  
+  .patients-grid .grid {
+    @apply gap-3;
+  }
+  
+  .patient-card .p-4 {
+    @apply p-3;
+  }
+  
+  .patient-card .grid-cols-2 {
+    @apply grid-cols-1;
   }
 }
 </style>

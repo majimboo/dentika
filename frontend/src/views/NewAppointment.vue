@@ -933,7 +933,7 @@ const filteredProcedures = computed(() => {
   return procedures
 })
 
-const initializeForm = () => {
+const initializeForm = async () => {
   // Check for URL parameters (from calendar time slot clicks)
   if (route.query.date) {
     formData.value.date = route.query.date
@@ -947,6 +947,11 @@ const initializeForm = () => {
       const hour = parseInt(route.query.time)
       formData.value.time = `${hour.toString().padStart(2, '0')}:00`
     }
+  }
+
+  // Pre-select patient if coming from patient list
+  if (route.query.patient) {
+    await preSelectPatient(route.query.patient)
   }
 
   // Auto-select main branch if available
@@ -983,6 +988,49 @@ const selectPatient = (patient) => {
   formData.value.patient_id = patient.id.toString()
   patientSearchQuery.value = `${patient.first_name} ${patient.last_name}`
   showPatientDropdown.value = false
+}
+
+const preSelectPatient = async (patientId) => {
+  try {
+    // First try to get patient from store
+    const patient = patientStore.patients.find(p => p.id.toString() === patientId.toString())
+    
+    if (patient) {
+      selectPatient(patient)
+      return
+    }
+    
+    // If not found in store, try to fetch patient data
+    const result = await patientStore.fetchPatient(patientId)
+    if (result) {
+      selectPatient(result)
+      return
+    }
+    
+    // Fallback: search all patients to find this specific patient
+    if (patientStore.patients.length === 0) {
+      // Load all patients first
+      await patientStore.fetchPatients({ limit: 1000 })
+      const patient = patientStore.patients.find(p => p.id.toString() === patientId.toString())
+      if (patient) {
+        selectPatient(patient)
+        return
+      }
+    }
+    
+    // Final fallback: search with empty query to get all patients
+    patientSearchQuery.value = ''
+    await searchPatients()
+    const foundPatient = filteredPatients.value.find(p => p.id.toString() === patientId.toString())
+    
+    if (foundPatient) {
+      selectPatient(foundPatient)
+    } else {
+      console.warn(`Patient with ID ${patientId} not found`)
+    }
+  } catch (error) {
+    console.warn('Could not pre-select patient:', error)
+  }
 }
 
 const createNewPatient = () => {
@@ -1265,8 +1313,8 @@ const handleClickOutside = (event) => {
   }
 }
 
-onMounted(() => {
-  initializeForm()
+onMounted(async () => {
+  await initializeForm()
   document.addEventListener('click', handleClickOutside)
 
   // Load initial data

@@ -202,7 +202,7 @@ func CreatePatient(c *fiber.Ctx) error {
 	}
 
 	// Create initial dental records
-	go createInitialDentalRecords(patient.ID)
+	go createInitialDentalRecords(patient.ID, clinicID)
 
 	// Reload with relationships
 	database.DB.Preload("Clinic").First(&patient, patient.ID)
@@ -335,10 +335,11 @@ func DeactivatePatient(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Patient deactivated successfully"})
 }
 
-func createInitialDentalRecords(patientID uint) {
+func createInitialDentalRecords(patientID uint, clinicID uint) {
 	// Create permanent teeth record
 	permanentRecord := models.DentalRecord{
 		PatientID:  patientID,
+		ClinicID:   clinicID,
 		RecordType: models.ToothTypePermanent,
 		IsActive:   true,
 	}
@@ -357,6 +358,7 @@ func createInitialDentalRecords(patientID uint) {
 	// Create primary teeth record for children (can be activated later if needed)
 	primaryRecord := models.DentalRecord{
 		PatientID:  patientID,
+		ClinicID:   clinicID,
 		RecordType: models.ToothTypePrimary,
 		IsActive:   false, // Inactive by default
 	}

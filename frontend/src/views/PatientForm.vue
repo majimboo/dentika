@@ -567,7 +567,9 @@ const form = reactive({
   insurance_provider: '',
   insurance_number: '',
   notes: '',
-  avatar_path: ''
+  avatar_path: '',
+  blood_type: '',
+  preferred_language: 'English'
 })
 
 // Computed properties
@@ -601,10 +603,12 @@ const hasChanges = computed(() => {
     form.medical_conditions !== (originalPatient.value.medical_conditions || '') ||
     allergiesChanged ||
     form.current_medications !== (originalPatient.value.current_medications || '') ||
-    form.insurance_provider !== (originalPatient.value.insurance_provider || '') ||
-    form.insurance_number !== (originalPatient.value.insurance_number || '') ||
-    form.notes !== (originalPatient.value.notes || '') ||
-    form.avatar_path !== (originalPatient.value.avatar_path || '')
+     form.insurance_provider !== (originalPatient.value.insurance_provider || '') ||
+     form.insurance_number !== (originalPatient.value.insurance_number || '') ||
+     form.notes !== (originalPatient.value.notes || '') ||
+     form.avatar_path !== (originalPatient.value.avatar_path || '') ||
+     form.blood_type !== (originalPatient.value.blood_type || '') ||
+     form.preferred_language !== (originalPatient.value.preferred_language || 'English')
   )
 })
 
@@ -630,6 +634,8 @@ const resetForm = () => {
     form.insurance_number = patient.insurance_number || ''
     form.notes = patient.notes || ''
     form.avatar_path = patient.avatar_path || ''
+    form.blood_type = patient.blood_type || ''
+    form.preferred_language = patient.preferred_language || 'English'
 
     // Format date of birth for date input (YYYY-MM-DD)
     if (patient.date_of_birth) {
@@ -659,6 +665,8 @@ const resetForm = () => {
     form.insurance_number = ''
     form.notes = ''
     form.avatar_path = ''
+    form.blood_type = ''
+    form.preferred_language = 'English'
   }
   errors.value = {}
   submitError.value = ''
@@ -694,6 +702,8 @@ const loadPatient = async (patientId) => {
       form.insurance_number = patient.insurance_number || ''
       form.notes = patient.notes || ''
       form.avatar_path = patient.avatar_path || ''
+      form.blood_type = patient.blood_type || ''
+      form.preferred_language = patient.preferred_language || 'English'
 
       // Format date of birth for date input (YYYY-MM-DD)
       if (patient.date_of_birth) {
@@ -780,6 +790,14 @@ const handleSubmit = async () => {
     const submitData = {
       ...form,
       allergies: form.allergies.join(', ')
+    }
+
+    // Format date_of_birth to RFC3339 format for Go backend
+    if (submitData.date_of_birth) {
+      const date = new Date(submitData.date_of_birth)
+      if (!isNaN(date.getTime())) {
+        submitData.date_of_birth = date.toISOString()
+      }
     }
 
     if (isEditing.value) {

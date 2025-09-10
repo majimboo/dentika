@@ -158,7 +158,14 @@ func CreatePatient(c *fiber.Ctx) error {
 		}
 	}
 
+	// Generate unique patient number before creating patient
+	patientNumber, err := models.GenerateUniquePatientNumber(clinicID, database.DB)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate patient number"})
+	}
+
 	patient := models.Patient{
+		PatientNumber:            patientNumber,
 		FirstName:                req.FirstName,
 		LastName:                 req.LastName,
 		Email:                    req.Email,
@@ -193,10 +200,6 @@ func CreatePatient(c *fiber.Ctx) error {
 	if err := database.DB.Create(&patient).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to create patient"})
 	}
-
-	// Generate patient number
-	patient.PatientNumber = patient.GeneratePatientNumber(clinicID)
-	database.DB.Save(&patient)
 
 	// Create initial dental records
 	go createInitialDentalRecords(patient.ID)

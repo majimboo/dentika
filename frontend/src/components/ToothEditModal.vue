@@ -290,6 +290,8 @@ const handleSave = () => {
 </script>
 
 <style scoped>
+@import "../styles/main.css";
+
 .surfaces-grid label {
   @apply transition-colors;
 }

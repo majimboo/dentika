@@ -29,6 +29,7 @@ type CreatePatientRequest struct {
 	InsuranceProvider        string     `json:"insurance_provider"`
 	InsuranceNumber          string     `json:"insurance_number"`
 	PreferredLanguage        string     `json:"preferred_language"`
+	AvatarPath               string     `json:"avatar_path"`
 }
 
 func GetPatients(c *fiber.Ctx) error {
@@ -175,6 +176,7 @@ func CreatePatient(c *fiber.Ctx) error {
 		InsuranceProvider:        req.InsuranceProvider,
 		InsuranceNumber:          req.InsuranceNumber,
 		PreferredLanguage:        req.PreferredLanguage,
+		AvatarPath:               req.AvatarPath,
 		IsActive:                 true,
 		ClinicID:                 clinicID,
 	}
@@ -286,6 +288,9 @@ func UpdatePatient(c *fiber.Ctx) error {
 	}
 	if req.PreferredLanguage != "" {
 		patient.PreferredLanguage = req.PreferredLanguage
+	}
+	if req.AvatarPath != "" {
+		patient.AvatarPath = req.AvatarPath
 	}
 
 	if err := database.DB.Save(&patient).Error; err != nil {

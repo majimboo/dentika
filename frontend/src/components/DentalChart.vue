@@ -312,6 +312,8 @@ watch(() => props.readonly, (newValue) => {
 </script>
 
 <style scoped>
+@import "../styles/main.css";
+
 .dental-chart {
   @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
 }

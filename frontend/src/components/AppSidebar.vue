@@ -20,7 +20,7 @@
       </div>
 
        <!-- Navigation -->
-       <nav class="flex-1 p-6 space-y-2 overflow-y-auto">
+       <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
         <div class="mb-6">
           <h3 class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">Main Menu</h3>
           <ul class="space-y-2" role="list">
@@ -28,7 +28,7 @@
                <router-link
                  to="/"
                  @click="closeSidebarOnMobile"
-                 class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                 class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                  :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.name === 'Dashboard' }"
                  :aria-current="$route.name === 'Dashboard' ? 'page' : null"
                >
@@ -46,7 +46,7 @@
                 <router-link
                   to="/agenda"
                   @click="closeSidebarOnMobile"
-                  class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.name === 'Agenda' }"
                   :aria-current="$route.name === 'Agenda' ? 'page' : null"
                 >
@@ -64,7 +64,7 @@
                 <router-link
                   to="/patients"
                  @click="closeSidebarOnMobile"
-                 class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                 class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                  :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/patients') }"
                  :aria-current="$route.path.startsWith('/patients') ? 'page' : null"
                >
@@ -82,7 +82,7 @@
                 <router-link
                   to="/appointments/list"
                   @click="closeSidebarOnMobile"
-                  class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/appointments') }"
                   :aria-current="$route.path.startsWith('/appointments') ? 'page' : null"
                 >
@@ -100,7 +100,7 @@
                <router-link
                  to="/procedures"
                  @click="closeSidebarOnMobile"
-                 class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                 class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                  :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/procedures') || $route.path.startsWith('/diagnoses') || $route.path.startsWith('/treatments') || $route.path.startsWith('/consent') || $route.path.startsWith('/prescriptions') }"
                  :aria-current="$route.path.startsWith('/procedures') ? 'page' : null"
                >
@@ -118,7 +118,7 @@
                <router-link
                  to="/staff"
                  @click="closeSidebarOnMobile"
-                 class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                 class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                  :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/staff') }"
                  :aria-current="$route.path.startsWith('/staff') ? 'page' : null"
                >

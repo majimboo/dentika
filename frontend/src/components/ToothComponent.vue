@@ -168,6 +168,8 @@ const handleClick = () => {
 </script>
 
 <style scoped>
+@import "../styles/main.css";
+
 .tooth-component {
   @apply relative cursor-pointer transition-all duration-200 ease-in-out;
 }

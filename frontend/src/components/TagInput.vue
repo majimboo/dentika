@@ -192,12 +192,7 @@ watch(() => props.modelValue, (newValue) => {
   }
 }, { deep: true })
 
-// Focus input when component mounts
-nextTick(() => {
-  if (inputRef.value) {
-    inputRef.value.focus()
-  }
-})
+// Auto-focus removed to prevent unwanted focus on page load
 
 defineExpose({
   focus: () => inputRef.value?.focus()

@@ -334,6 +334,8 @@ watch(() => props.tooth, (newTooth) => {
 </script>
 
 <style scoped>
+@import "../styles/main.css";
+
 .tooth-details-panel {
   max-width: 800px;
 }

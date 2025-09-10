@@ -20,6 +20,7 @@ import DiagnosisForm from '../views/DiagnosisForm.vue';
 import TreatmentPlanForm from '../views/TreatmentPlanForm.vue';
 import ConsentForm from '../views/ConsentForm.vue';
 import PrescriptionForm from '../views/PrescriptionForm.vue';
+import PatientDentalChart from '../views/PatientDentalChart.vue';
 import ClinicManagement from '../views/ClinicManagement.vue';
 import ClinicForm from '../views/ClinicForm.vue';
 import AppLayout from '../layouts/AppLayout.vue';
@@ -154,6 +155,16 @@ const routes = [
                 meta: {
                     level: 2,
                     title: 'Patient Details',
+                    parent: 'PatientList',
+                },
+            },
+            {
+                path: '/patients/:patientId/dental-chart',
+                name: 'PatientDentalChartView',
+                component: PatientDentalChart,
+                meta: {
+                    level: 2,
+                    title: 'Patient Dental Chart',
                     parent: 'PatientList',
                 },
             },

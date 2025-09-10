@@ -1,219 +1,321 @@
 <template>
-  <div class="flex flex-col items-center space-y-4">
-    <!-- Current Avatar Display -->
-    <div class="relative">
-      <UserAvatar 
-        :user="user" 
-        size="2xl"
-        class="transition-all duration-200 hover:scale-105"
-      />
-      
-      <!-- Upload overlay on hover -->
-      <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200 cursor-pointer">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-      </div>
-    </div>
-
-    <!-- Upload Controls -->
-    <div class="flex flex-col sm:flex-row items-center gap-3">
-      <!-- File Input -->
-      <input 
-        ref="fileInput"
-        type="file" 
-        accept="image/*"
-        @change="handleFileSelect"
-        class="hidden"
-      />
-      
-      <!-- Upload Button -->
-      <button
-        @click="$refs.fileInput.click()"
-        :disabled="uploading"
-        class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+  <div class="avatar-upload-component">
+    <!-- Avatar Display -->
+    <div class="relative inline-block">
+      <div 
+        class="avatar-container w-24 h-24 rounded-full overflow-hidden border-4 border-gray-200 bg-gray-100 cursor-pointer transition-all duration-200 hover:border-blue-300 group"
+        @click="triggerFileInput"
       >
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-        </svg>
-        {{ uploading ? 'Uploading...' : 'Choose Photo' }}
-      </button>
-      
-      <!-- Remove Button -->
-      <button
-        v-if="user?.avatar"
-        @click="removeAvatar"
-        :disabled="uploading"
-        class="inline-flex items-center px-4 py-2 border border-danger-300 rounded-lg text-sm font-medium text-danger-700 bg-danger-50 hover:bg-danger-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-      >
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-        </svg>
-        Remove
-      </button>
-    </div>
-
-    <!-- Upload Progress -->
-    <BaseTransition name="fade">
-      <div v-if="uploading" class="w-full max-w-xs">
-        <div class="flex items-center space-x-3">
-          <BaseLoading type="spinner" size="small" color="primary" :show-text="false" />
-          <div class="flex-1">
-            <div class="text-sm text-neutral-600">Uploading...</div>
-            <div class="w-full bg-neutral-200 rounded-full h-2 mt-1">
-              <div 
-                class="bg-primary-600 h-2 rounded-full transition-all duration-300" 
-                :style="{ width: uploadProgress + '%' }"
-              ></div>
-            </div>
+        <!-- Current Avatar -->
+        <img 
+          v-if="currentAvatarUrl" 
+          :src="currentAvatarUrl" 
+          :alt="`${fullName} avatar`"
+          class="w-full h-full object-cover"
+          @error="handleImageError"
+        />
+        
+        <!-- Fallback Initials -->
+        <div 
+          v-else 
+          class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-xl"
+        >
+          {{ initials }}
+        </div>
+        
+        <!-- Upload Overlay -->
+        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div class="text-white text-center">
+            <font-awesome-icon icon="fa-solid fa-camera" class="w-6 h-6 mb-1" />
+            <div class="text-xs font-medium">{{ currentAvatarUrl ? 'Change' : 'Upload' }}</div>
           </div>
         </div>
       </div>
-    </BaseTransition>
-
-    <!-- Upload Guidelines -->
-    <div class="text-center">
-      <p class="text-sm text-neutral-500">
-        Recommended: Square image, at least 200x200px
-      </p>
-      <p class="text-xs text-neutral-400 mt-1">
-        JPG, PNG, GIF, or WebP. Max file size: 5MB
-      </p>
-    </div>
-
-    <!-- Error Message -->
-    <BaseTransition name="fade">
-      <div v-if="error" class="bg-danger-50 border border-danger-200 rounded-lg p-3 max-w-sm">
-        <div class="flex items-center">
-          <svg class="w-5 h-5 text-danger-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <p class="text-sm text-danger-700">{{ error }}</p>
+      
+      <!-- Remove Button -->
+      <button
+        v-if="currentAvatarUrl && !disabled"
+        @click.stop="removeAvatar"
+        class="absolute -top-2 -right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors duration-200"
+        title="Remove avatar"
+        :disabled="uploading"
+      >
+        <font-awesome-icon icon="fa-solid fa-times" class="w-4 h-4" />
+      </button>
+      
+      <!-- Upload Progress -->
+      <div 
+        v-if="uploading" 
+        class="absolute inset-0 rounded-full bg-black bg-opacity-70 flex items-center justify-center"
+      >
+        <div class="text-white text-center">
+          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-white mb-1"></div>
+          <div class="text-xs">Uploading...</div>
         </div>
       </div>
-    </BaseTransition>
+    </div>
+    
+    <!-- Hidden File Input -->
+    <input
+      ref="fileInput"
+      type="file"
+      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+      @change="handleFileChange"
+      class="hidden"
+      :disabled="disabled || uploading"
+    />
+    
+    <!-- Upload Instructions -->
+    <div class="mt-2 text-center">
+      <div class="text-sm text-gray-600">
+        {{ currentAvatarUrl ? 'Click to change avatar' : 'Click to upload avatar' }}
+      </div>
+      <div class="text-xs text-gray-500 mt-1">
+        JPEG, PNG, GIF, WebP (max 5MB)
+      </div>
+    </div>
+    
+    <!-- Error Message -->
+    <div v-if="error" class="mt-2 text-center">
+      <div class="text-sm text-red-600">{{ error }}</div>
+    </div>
   </div>
 </template>
 
-<script>
-import UserAvatar from './UserAvatar.vue'
-import BaseLoading from './BaseLoading.vue'
-import BaseTransition from './BaseTransition.vue'
-import apiService from '../services/api'
+<script setup>
+import { ref, computed, watch } from 'vue'
+import { useNotificationStore } from '../stores/notification'
 
-export default {
-  name: 'AvatarUpload',
-  components: {
-    UserAvatar,
-    BaseLoading,
-    BaseTransition
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: ''
   },
-  props: {
-    user: {
-      type: Object,
-      required: true
-    }
+  user: {
+    type: Object,
+    default: null
   },
-  data() {
-    return {
-      uploading: false,
-      uploadProgress: 0,
-      error: null
-    }
+  fullName: {
+    type: String,
+    default: ''
   },
-  methods: {
-    async handleFileSelect(event) {
-      const file = event.target.files[0]
-      if (!file) return
+  disabled: {
+    type: Boolean,
+    default: false
+  },
+  size: {
+    type: String,
+    default: 'large', // 'small', 'medium', 'large'
+    validator: (value) => ['small', 'medium', 'large'].includes(value)
+  }
+})
 
-      // Validate file
-      const validationError = this.validateFile(file)
-      if (validationError) {
-        this.error = validationError
-        return
-      }
+const emit = defineEmits(['update:modelValue', 'upload-success', 'upload-error', 'avatar-updated'])
 
-      this.error = null
-      await this.uploadFile(file)
-    },
+const notificationStore = useNotificationStore()
 
-    validateFile(file) {
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-      if (!allowedTypes.includes(file.type)) {
-        return 'Please select a valid image file (JPG, PNG, GIF, or WebP)'
-      }
+const fileInput = ref(null)
+const uploading = ref(false)
+const error = ref('')
 
-      // Check file size (5MB limit)
-      const maxSize = 5 * 1024 * 1024
-      if (file.size > maxSize) {
-        return 'File size must be less than 5MB'
-      }
+const currentAvatarUrl = computed(() => {
+  // Support both v-model pattern and user object pattern
+  const avatarPath = props.user ? (props.user.avatar_path || props.user.avatar) : props.modelValue
+  if (!avatarPath) return ''
+  
+  // If it's already a full URL, return as is
+  if (avatarPath.startsWith('http')) {
+    return avatarPath
+  }
+  
+  // If it's a relative path, prepend the server URL
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  return `${baseUrl}/uploads/${avatarPath}`
+})
 
-      return null
-    },
-
-    async uploadFile(file) {
-      this.uploading = true
-      this.uploadProgress = 0
-
-      try {
-        const formData = new FormData()
-        formData.append('avatar', file)
-
-        // Simulate progress for better UX
-        const progressInterval = setInterval(() => {
-          if (this.uploadProgress < 90) {
-            this.uploadProgress += Math.random() * 20
-          }
-        }, 200)
-
-        const result = await apiService.uploadAvatar(formData)
-
-        clearInterval(progressInterval)
-        this.uploadProgress = 100
-
-        if (result.success) {
-          // Update user avatar
-          this.$emit('avatar-updated', result.data.path)
-          
-          // Clear file input
-          this.$refs.fileInput.value = ''
-        } else {
-          this.error = result.error || 'Upload failed'
-        }
-      } catch (error) {
-        console.error('Upload error:', error)
-        this.error = 'Upload failed. Please try again.'
-      } finally {
-        this.uploading = false
-        
-        // Reset progress after a delay
-        setTimeout(() => {
-          this.uploadProgress = 0
-        }, 1000)
-      }
-    },
-
-    async removeAvatar() {
-      if (!confirm('Are you sure you want to remove your avatar?')) {
-        return
-      }
-
-      try {
-        const result = await apiService.deleteAvatar(this.user.avatar)
-        
-        if (result.success) {
-          this.$emit('avatar-updated', null)
-        } else {
-          this.error = result.error || 'Failed to remove avatar'
-        }
-      } catch (error) {
-        console.error('Remove avatar error:', error)
-        this.error = 'Failed to remove avatar. Please try again.'
-      }
+const initials = computed(() => {
+  // Support both patterns: fullName prop or user object
+  let fullName = props.fullName
+  if (props.user && !fullName) {
+    if (props.user.first_name && props.user.last_name) {
+      fullName = `${props.user.first_name} ${props.user.last_name}`
+    } else if (props.user.username) {
+      return props.user.username.charAt(0).toUpperCase()
     }
   }
+  
+  if (!fullName) return '?'
+  
+  const nameParts = fullName.trim().split(' ')
+  if (nameParts.length === 1) {
+    return nameParts[0].charAt(0).toUpperCase()
+  }
+  
+  return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase()
+})
+
+const sizeClasses = computed(() => {
+  const sizes = {
+    small: 'w-12 h-12 text-sm',
+    medium: 'w-16 h-16 text-base',
+    large: 'w-24 h-24 text-xl'
+  }
+  return sizes[props.size] || sizes.large
+})
+
+const triggerFileInput = () => {
+  if (!props.disabled && !uploading.value) {
+    fileInput.value?.click()
+  }
 }
+
+const handleFileChange = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  error.value = ''
+  
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    error.value = 'File size must be less than 5MB'
+    return
+  }
+  
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    error.value = 'Only JPEG, PNG, GIF, and WebP files are allowed'
+    return
+  }
+  
+  await uploadFile(file)
+}
+
+const uploadFile = async (file) => {
+  uploading.value = true
+  error.value = ''
+  
+  try {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    
+    const response = await fetch('/api/upload/avatar', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Upload failed')
+    }
+    
+    const data = await response.json()
+    
+    // Update the model value with the relative path
+    emit('update:modelValue', data.path)
+    emit('upload-success', data)
+    // Also emit avatar-updated for user object pattern
+    emit('avatar-updated', data.path)
+    
+    notificationStore.showSuccess('Avatar uploaded successfully')
+    
+    // Clear file input
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+    
+  } catch (err) {
+    error.value = err.message || 'Failed to upload avatar'
+    emit('upload-error', err)
+    notificationStore.showError('Failed to upload avatar')
+    
+  } finally {
+    uploading.value = false
+  }
+}
+
+const removeAvatar = async () => {
+  if (!props.modelValue || uploading.value) return
+  
+  uploading.value = true
+  error.value = ''
+  
+  try {
+    const response = await fetch(`/api/upload/avatar?path=${encodeURIComponent(props.modelValue)}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to remove avatar')
+    }
+    
+    // Clear the model value
+    emit('update:modelValue', '')
+    emit('avatar-updated', '')
+    notificationStore.showSuccess('Avatar removed successfully')
+    
+  } catch (err) {
+    error.value = err.message || 'Failed to remove avatar'
+    notificationStore.showError('Failed to remove avatar')
+    
+  } finally {
+    uploading.value = false
+  }
+}
+
+const handleImageError = () => {
+  // If image fails to load, clear the avatar path
+  emit('update:modelValue', '')
+  emit('avatar-updated', '')
+}
+
+// Clear error when modelValue changes
+watch(() => props.modelValue, () => {
+  error.value = ''
+})
 </script>
+
+<style scoped>
+@import "../styles/main.css";
+
+.avatar-upload-component {
+  @apply flex flex-col items-center;
+}
+
+.avatar-container {
+  @apply relative transition-all duration-200;
+}
+
+.avatar-container:hover {
+  @apply shadow-lg;
+}
+
+/* Size variants */
+.avatar-container.size-small {
+  @apply w-12 h-12;
+}
+
+.avatar-container.size-medium {
+  @apply w-16 h-16;
+}
+
+.avatar-container.size-large {
+  @apply w-24 h-24;
+}
+
+/* Disabled state */
+.avatar-upload-component[disabled] .avatar-container {
+  @apply cursor-not-allowed opacity-60;
+}
+
+.avatar-upload-component[disabled] .avatar-container:hover {
+  @apply border-gray-200 shadow-none;
+}
+</style>

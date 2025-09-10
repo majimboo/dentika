@@ -30,7 +30,7 @@
               <router-link
                 to="/"
                 @click="closeSidebarOnMobile"
-                class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.name === 'Dashboard' }"
                 :aria-current="$route.name === 'Dashboard' ? 'page' : null"
               >
@@ -50,7 +50,7 @@
               <router-link
                 to="/clinics"
                 @click="closeSidebarOnMobile"
-                class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path.startsWith('/clinics') }"
                 :aria-current="$route.path.startsWith('/clinics') ? 'page' : null"
               >
@@ -70,7 +70,7 @@
               <router-link
                 to="/users"
                 @click="closeSidebarOnMobile"
-                class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path.startsWith('/users') }"
                 :aria-current="$route.path.startsWith('/users') ? 'page' : null"
               >
@@ -97,7 +97,7 @@
               <router-link
                 to="/analytics"
                 @click="closeSidebarOnMobile"
-                class="group flex items-center px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                 :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path.startsWith('/analytics') }"
                 :aria-current="$route.path.startsWith('/analytics') ? 'page' : null"
               >

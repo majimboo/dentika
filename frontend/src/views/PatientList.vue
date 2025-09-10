@@ -142,21 +142,30 @@
       <div
         v-for="patient in patients"
         :key="patient.id"
-        class="patient-card group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
-        @click="viewPatient(patient)"
+        class="patient-card group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
       >
         <!-- Card Header with Avatar and Status -->
         <div class="relative bg-gradient-to-br from-blue-50 to-indigo-50 p-4 pb-3">
           <div class="flex items-start justify-between">
-            <div class="flex items-center space-x-3">
-              <div class="relative">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+            <div class="flex items-center space-x-3 flex-1">
+              <div class="w-12 h-12 rounded-xl overflow-hidden shadow-sm">
+                <!-- Patient Avatar -->
+                <img 
+                  v-if="patient.avatar_path" 
+                  :src="getPatientAvatarUrl(patient)" 
+                  :alt="`${patient.first_name} ${patient.last_name} avatar`"
+                  class="w-full h-full object-cover"
+                  @error="handleAvatarError(patient)"
+                />
+                <!-- Fallback Initials -->
+                <div 
+                  v-else
+                  class="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center"
+                >
                   <span class="text-white font-semibold text-lg">
                     {{ getPatientInitials(patient) }}
                   </span>
                 </div>
-                <!-- Online status indicator -->
-                <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white" :class="patient.is_active ? 'bg-green-400' : 'bg-gray-400'"></div>
               </div>
               <div class="min-w-0 flex-1">
                 <h3 class="font-semibold text-gray-900 truncate text-base leading-tight">
@@ -166,84 +175,24 @@
               </div>
             </div>
             
-            <!-- Quick actions dropdown -->
-            <div class="patient-actions opacity-0 group-hover:opacity-100 transition-opacity">
-              <div class="relative" @click.stop>
-                <button
-                  @click="togglePatientMenu(patient.id)"
-                  class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white/50 transition-colors"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-                  </svg>
-                </button>
-
-                <!-- Dropdown Menu -->
-                <div
-                  v-if="activePatientMenu === patient.id"
-                  class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-20 border border-gray-200 py-1"
-                >
-                  <button
-                    @click="viewPatient(patient)"
-                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    <font-awesome-icon icon="fa-solid fa-eye" class="w-4 h-4 mr-3 text-gray-400" />
-                    View Details
-                  </button>
-                  <button
-                    v-if="canManagePatients"
-                    @click="editPatient(patient)"
-                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    <font-awesome-icon icon="fa-solid fa-edit" class="w-4 h-4 mr-3 text-gray-400" />
-                    Edit Patient
-                  </button>
-                  <button
-                    @click="viewDentalChart(patient)"
-                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    <font-awesome-icon icon="fa-solid fa-tooth" class="w-4 h-4 mr-3 text-gray-400" />
-                    Dental Chart
-                  </button>
-                  <button
-                    @click="scheduleAppointment(patient)"
-                    class="flex items-center w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    <font-awesome-icon icon="fa-solid fa-calendar-plus" class="w-4 h-4 mr-3 text-gray-400" />
-                    Schedule
-                  </button>
-                </div>
-              </div>
-            </div>
+            <!-- Status Badge -->
+            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium" :class="patient.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+              <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="patient.is_active ? 'bg-green-400' : 'bg-red-400'"></span>
+              {{ patient.is_active ? 'Active' : 'Inactive' }}
+            </span>
           </div>
         </div>
 
         <!-- Card Content -->
         <div class="p-4 pt-3">
-          <!-- Key Info Grid -->
-          <div class="grid grid-cols-2 gap-3 mb-3">
-            <div class="bg-gray-50 rounded-lg p-2.5">
-              <div class="flex items-center space-x-2">
-                <div class="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center">
-                  <font-awesome-icon icon="fa-solid fa-birthday-cake" class="w-3 h-3 text-blue-600" />
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500 leading-none">Age</p>
-                  <p class="text-sm font-semibold text-gray-900">{{ getPatientAge(patient) }}</p>
-                </div>
-              </div>
+          <!-- Basic Info -->
+          <div class="space-y-1 mb-3 text-sm text-gray-600">
+            <div class="flex items-center justify-between">
+              <span>Age: <span class="font-medium text-gray-900">{{ getPatientAge(patient) }}</span></span>
+              <span>Gender: <span class="font-medium text-gray-900 capitalize">{{ patient.gender || 'N/A' }}</span></span>
             </div>
-            
-            <div class="bg-gray-50 rounded-lg p-2.5">
-              <div class="flex items-center space-x-2">
-                <div class="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center">
-                  <font-awesome-icon :icon="patient.gender === 'female' ? 'fa-solid fa-venus' : patient.gender === 'male' ? 'fa-solid fa-mars' : 'fa-solid fa-genderless'" class="w-3 h-3 text-purple-600" />
-                </div>
-                <div>
-                  <p class="text-xs text-gray-500 leading-none">Gender</p>
-                  <p class="text-sm font-semibold text-gray-900 capitalize">{{ patient.gender || 'N/A' }}</p>
-                </div>
-              </div>
+            <div>
+              <span>DOB: <span class="font-medium text-gray-900">{{ formatDate(patient.date_of_birth) }}</span></span>
             </div>
           </div>
 
@@ -261,30 +210,39 @@
 
           <!-- Quick Actions -->
           <div class="mt-4 pt-3 border-t border-gray-100">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium" :class="patient.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
-                  <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="patient.is_active ? 'bg-green-400' : 'bg-red-400'"></span>
-                  {{ patient.is_active ? 'Active' : 'Inactive' }}
-                </span>
-              </div>
-              
-              <div class="flex items-center space-x-1">
-                <button
-                  @click.stop="viewDentalChart(patient)"
-                  class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                  title="Dental Chart"
-                >
-                  <font-awesome-icon icon="fa-solid fa-tooth" class="w-4 h-4" />
-                </button>
-                <button
-                  @click.stop="scheduleAppointment(patient)"
-                  class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
-                  title="Schedule Appointment"
-                >
-                  <font-awesome-icon icon="fa-solid fa-calendar-plus" class="w-4 h-4" />
-                </button>
-              </div>
+            <!-- Action Buttons Grid -->
+            <div class="grid grid-cols-4 gap-2">
+              <button
+                @click.stop="viewPatient(patient)"
+                class="p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-center text-sm font-medium"
+                title="View Details"
+              >
+                View
+              </button>
+              <button
+                v-if="canManagePatients"
+                @click.stop="editPatient(patient)"
+                class="p-3 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors text-center text-sm font-medium"
+                title="Edit Patient"
+              >
+                Edit
+              </button>
+              <!-- Placeholder when edit is not available -->
+              <div v-else class="opacity-0"></div>
+              <button
+                @click.stop="viewDentalChart(patient)"
+                class="p-3 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-center text-sm font-medium"
+                title="Dental Chart"
+              >
+                Chart
+              </button>
+              <button
+                @click.stop="scheduleAppointment(patient)"
+                class="p-3 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors text-center text-sm font-medium"
+                title="Schedule Appointment"
+              >
+                Schedule
+              </button>
             </div>
           </div>
         </div>
@@ -414,7 +372,6 @@ const router = useRouter()
 const searchQuery = ref('')
 const statusFilter = ref('')
 const sortBy = ref('name')
-const activePatientMenu = ref(null)
 const currentPage = ref(1)
 const pageSize = ref(50)
 const viewMode = ref('grid') // 'grid' or 'list'
@@ -498,6 +455,24 @@ const getPatientInitials = (patient) => {
   return (first + last).toUpperCase() || '?'
 }
 
+const getPatientAvatarUrl = (patient) => {
+  if (!patient.avatar_path) return ''
+  
+  // If it's already a full URL, return as is
+  if (patient.avatar_path.startsWith('http')) {
+    return patient.avatar_path
+  }
+  
+  // If it's a relative path, prepend the server URL
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  return `${baseUrl}/uploads/${patient.avatar_path}`
+}
+
+const handleAvatarError = (patient) => {
+  // If avatar fails to load, clear the avatar_path so initials show instead
+  patient.avatar_path = ''
+}
+
 const getPatientAge = (patient) => {
   if (!patient.date_of_birth) return 'N/A'
   const birthDate = new Date(patient.date_of_birth)
@@ -510,14 +485,21 @@ const getPatientAge = (patient) => {
   return age
 }
 
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
 const getLastVisit = (patient) => {
   // This would come from appointments data
   return 'No visits'
 }
 
-const togglePatientMenu = (patientId) => {
-  activePatientMenu.value = activePatientMenu.value === patientId ? null : patientId
-}
 
 const viewPatient = (patient) => {
   router.push(`/patients/${patient.id}`)
@@ -525,7 +507,6 @@ const viewPatient = (patient) => {
 
 const editPatient = (patient) => {
   router.push(`/patients/${patient.id}/edit`)
-  activePatientMenu.value = null
 }
 
 const viewDentalChart = (patient) => {
@@ -555,12 +536,6 @@ onMounted(() => {
   loadPatients()
 })
 
-// Close dropdown when clicking outside
-onMounted(() => {
-  document.addEventListener('click', () => {
-    activePatientMenu.value = null
-  })
-})
 </script>
 
 <style scoped>

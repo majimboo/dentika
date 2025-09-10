@@ -34,6 +34,14 @@
             <!-- Basic Information -->
             <div class="space-y-6">
               <h3 class="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-2">Basic Information</h3>
+              
+              <!-- Avatar Upload -->
+              <div class="flex justify-center">
+                <AvatarUpload
+                  :user="form"
+                  @avatar-updated="handleAvatarUpdated"
+                />
+              </div>
 
               <!-- Name Fields -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -421,6 +429,7 @@ import { useNotificationStore } from '../stores/notification'
 import BaseLoading from '../components/BaseLoading.vue'
 import BaseTransition from '../components/BaseTransition.vue'
 import TagInput from '../components/TagInput.vue'
+import AvatarUpload from '../components/AvatarUpload.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -452,7 +461,8 @@ const form = reactive({
   current_medications: '',
   insurance_provider: '',
   insurance_number: '',
-  notes: ''
+  notes: '',
+  avatar_path: ''
 })
 
 // Computed properties
@@ -485,7 +495,8 @@ const hasChanges = computed(() => {
     form.current_medications !== (originalPatient.value.current_medications || '') ||
     form.insurance_provider !== (originalPatient.value.insurance_provider || '') ||
     form.insurance_number !== (originalPatient.value.insurance_number || '') ||
-    form.notes !== (originalPatient.value.notes || '')
+    form.notes !== (originalPatient.value.notes || '') ||
+    form.avatar_path !== (originalPatient.value.avatar_path || '')
   )
 })
 
@@ -510,6 +521,7 @@ const resetForm = () => {
     form.insurance_provider = patient.insurance_provider || ''
     form.insurance_number = patient.insurance_number || ''
     form.notes = patient.notes || ''
+    form.avatar_path = patient.avatar_path || ''
 
     // Format date of birth for date input (YYYY-MM-DD)
     if (patient.date_of_birth) {
@@ -538,6 +550,7 @@ const resetForm = () => {
     form.insurance_provider = ''
     form.insurance_number = ''
     form.notes = ''
+    form.avatar_path = ''
   }
   errors.value = {}
   submitError.value = ''
@@ -571,6 +584,7 @@ const loadPatient = async (patientId) => {
       form.insurance_provider = patient.insurance_provider || ''
       form.insurance_number = patient.insurance_number || ''
       form.notes = patient.notes || ''
+      form.avatar_path = patient.avatar_path || ''
 
       // Format date of birth for date input (YYYY-MM-DD)
       if (patient.date_of_birth) {
@@ -594,6 +608,10 @@ const loadPatient = async (patientId) => {
   } finally {
     loading.value = false
   }
+}
+
+const handleAvatarUpdated = (avatarPath) => {
+  form.avatar_path = avatarPath || ''
 }
 
 const validateForm = () => {

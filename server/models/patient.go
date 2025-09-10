@@ -50,6 +50,7 @@ type Patient struct {
 	// Status
 	IsActive          bool           `json:"is_active" gorm:"default:true"`
 	PreferredLanguage string         `json:"preferred_language" gorm:"size:50;default:'English'"`
+	AvatarPath        string         `json:"avatar_path" gorm:"size:500"`
 	
 	// Foreign Keys
 	ClinicID          uint           `json:"clinic_id" gorm:"not null;index"`

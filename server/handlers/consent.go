@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strings"
 	"time"
 
 	"dentika/server/database"
@@ -218,6 +219,47 @@ func CreateConsentForm(c *fiber.Ctx) error {
 	// Set status to draft if not provided
 	if req.Status == "" {
 		req.Status = models.DocStatusDraft
+	}
+
+	// Generate content from template with signature areas
+	if req.ConsentTemplateID != nil {
+		var template models.ConsentTemplate
+		if err := database.DB.First(&template, *req.ConsentTemplateID).Error; err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid consent template"})
+		}
+
+		// Load patient for placeholder replacement
+		var patient models.Patient
+		if err := database.DB.First(&patient, req.PatientID).Error; err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid patient"})
+		}
+
+		// Replace placeholders in template content
+		content := template.Content
+		content = strings.ReplaceAll(content, "[PATIENT_NAME]", patient.FirstName+" "+patient.LastName)
+		content = strings.ReplaceAll(content, "[PATIENT_FIRST_NAME]", patient.FirstName)
+		content = strings.ReplaceAll(content, "[PATIENT_LAST_NAME]", patient.LastName)
+
+		currentDate := time.Now().Format("January 2, 2006")
+		content = strings.ReplaceAll(content, "[CURRENT_DATE]", currentDate)
+		content = strings.ReplaceAll(content, "[TODAY]", currentDate)
+		content = strings.ReplaceAll(content, "[DATE]", currentDate)
+
+		if patient.DateOfBirth != nil {
+			dob := patient.DateOfBirth.Format("January 2, 2006")
+			content = strings.ReplaceAll(content, "[PATIENT_DOB]", dob)
+		}
+
+		if patient.Phone != "" {
+			content = strings.ReplaceAll(content, "[PATIENT_PHONE]", patient.Phone)
+		}
+
+		if patient.Email != "" {
+			content = strings.ReplaceAll(content, "[PATIENT_EMAIL]", patient.Email)
+		}
+
+		// Set the populated content
+		req.Content = content
 	}
 
 	if err := database.DB.Create(&req).Error; err != nil {

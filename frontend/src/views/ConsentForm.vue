@@ -79,9 +79,71 @@
           <div class="form-section" v-if="selectedConsentTemplate">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Consent Form Content</h3>
 
-            <div class="bg-gray-50 p-4 rounded-lg border">
-              <div v-html="populatedConsentContent" class="prose prose-sm max-w-none"></div>
-            </div>
+              <div class="bg-gray-50 p-4 rounded-lg border">
+                <div class="max-w-4xl mx-auto">
+                  <div class="consent-content prose prose-sm max-w-none">
+                     <div v-html="consentContent" class="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed"></div>
+
+                     <!-- Signature Section -->
+                     <div class="signature-section" style="margin-top: 20px; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                       <h3 style="margin-bottom: 20px; color: #1f2937; font-size: 18px; font-weight: 600; text-align: center; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">Signatures Required</h3>
+
+                       <div style="display: flex; gap: 30px; margin-bottom: 15px;">
+                         <div style="flex: 1; background: white; padding: 15px; border-radius: 6px; border: 1px solid #d1d5db; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                           <div style="margin-bottom: 12px; font-weight: 600; color: #374151; font-size: 14px;">
+                             Patient Signature:
+                           </div>
+                           <div class="signature-pad-container" style="margin-bottom: 8px;">
+                             <canvas
+                               ref="patientCanvasRef"
+                               width="400"
+                               height="100"
+                               style="width: 100%; height: 100px; border: 2px solid #374151; border-radius: 4px; background: #fefefe; cursor: crosshair;"
+                             ></canvas>
+                             <div style="display: flex; gap: 8px; margin-top: 8px;">
+                               <button type="button" @click="clearPatientSignature" style="font-size: 11px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">Clear</button>
+                               <span style="font-size: 11px; color: #6b7280;">Draw your signature above</span>
+                             </div>
+                           </div>
+                           <div style="font-size: 12px; color: #6b7280; text-align: center;">
+                             Date: {{ formData.signature_date || new Date().toISOString().split('T')[0] }}
+                           </div>
+                         </div>
+
+                         <div style="flex: 1; background: white; padding: 15px; border-radius: 6px; border: 1px solid #d1d5db; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                           <div style="margin-bottom: 12px; font-weight: 600; color: #374151; font-size: 14px;">
+                             Witness Signature:
+                           </div>
+                           <div class="signature-pad-container" style="margin-bottom: 8px;">
+                             <canvas
+                               ref="witnessCanvasRef"
+                               width="400"
+                               height="100"
+                               style="width: 100%; height: 100px; border: 2px solid #374151; border-radius: 4px; background: #fefefe; cursor: crosshair;"
+                             ></canvas>
+                             <div style="display: flex; gap: 8px; margin-top: 8px;">
+                               <button type="button" @click="clearWitnessSignature" style="font-size: 11px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">Clear</button>
+                               <span style="font-size: 11px; color: #6b7280;">Draw witness signature above</span>
+                             </div>
+                           </div>
+                           <div style="font-size: 12px; color: #6b7280; text-align: center;">
+                             Date: {{ formData.signature_date || new Date().toISOString().split('T')[0] }}
+                           </div>
+                           <div v-if="formData.witness_name" style="margin-top: 8px; font-size: 12px; color: #6b7280; text-align: center; font-style: italic;">
+                             Witness: {{ formData.witness_name }}
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+
+                     <!-- Footer -->
+                     <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #6b7280; padding-top: 10px; font-weight: normal;">
+                       <p style="margin: 0 0 5px 0;">This consent form has been electronically generated and is legally binding.</p>
+                       <p style="margin: 0;">Please retain a copy for your records.</p>
+                     </div>
+                  </div>
+                </div>
+              </div>
           </div>
 
          <!-- Treatment Details -->
@@ -271,7 +333,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePatientStore } from '../stores/patient'
 import { useAppointmentStore } from '../stores/appointment'
@@ -307,10 +369,23 @@ const formData = reactive({
   consents_to_treatment: false,
   had_opportunity_to_ask: false,
   patient_signature: '',
+  patient_signature_data: '',
   signature_date: new Date().toISOString().split('T')[0],
   witness_name: '',
-  witness_signature: ''
+  witness_signature: '',
+  witness_signature_data: ''
 })
+
+// Signature pad variables
+let patientCanvas = null
+let patientCtx = null
+let witnessCanvas = null
+let witnessCtx = null
+let isDrawing = false
+
+// Vue refs
+const patientCanvasRef = ref(null)
+const witnessCanvasRef = ref(null)
 
 // Auto-population state
 const autoPopulateFields = ref(true)
@@ -333,7 +408,7 @@ const selectedConsentTemplate = computed(() => {
   return consentStore.getConsentTemplateById(parseInt(formData.consent_template_id))
 })
 
-const populatedConsentContent = computed(() => {
+const consentContent = computed(() => {
   if (!selectedConsentTemplate.value || !selectedPatient.value) return ''
 
   const patient = selectedPatient.value
@@ -373,6 +448,9 @@ const populatedConsentContent = computed(() => {
     content = content.replace(/\[PATIENT_EMAIL\]/g, patient.email)
   }
 
+  // Apply formatting to the template content
+  content = formatConsentContent(content)
+
   return content
 })
 
@@ -383,6 +461,179 @@ const formatDate = (dateString) => {
 
 const formatDateTime = (dateString) => {
   return new Date(dateString).toLocaleString()
+}
+
+const formatConsentContent = (content) => {
+  if (!content) return ''
+
+  // Split content into lines and format each section
+  const lines = content.split('\n')
+  const formattedLines = lines.map(line => {
+    // Format main headings (all caps)
+    if (line.match(/^[A-Z\s]+$/)) {
+      return `<h2 class="text-xl font-bold text-gray-900 mt-6 mb-3 border-b border-gray-300 pb-2">${line}</h2>`
+    }
+
+    // Format section headings (UPPERCASE)
+    if (line.match(/^[A-Z\s]+:$/)) {
+      return `<h3 class="text-lg font-semibold text-gray-800 mt-4 mb-2">${line.replace(':', '')}</h3>`
+    }
+
+    // Format bullet points
+    if (line.trim().startsWith('- ')) {
+      return `<li class="ml-4 mb-1">${line.trim().substring(2)}</li>`
+    }
+
+    // Format patient info lines (contain colons)
+    if (line.includes(':') && !line.includes('http') && line.split(':').length === 2) {
+      const [label, value] = line.split(':')
+      return `<div class="mb-2"><strong class="text-gray-700">${label.trim()}:</strong> ${value.trim()}</div>`
+    }
+
+    // Regular paragraphs
+    if (line.trim()) {
+      return `<p class="mb-3 text-gray-700 leading-relaxed">${line.trim()}</p>`
+    }
+
+    // Empty lines
+    return '<br>'
+  })
+
+  return formattedLines.join('')
+}
+
+// Signature pad methods
+const initSignaturePads = () => {
+  // Initialize patient signature canvas
+  patientCanvas = patientCanvasRef.value
+  if (patientCanvas) {
+    // Set canvas internal dimensions to match CSS dimensions
+    const rect = patientCanvas.getBoundingClientRect()
+    patientCanvas.width = rect.width
+    patientCanvas.height = rect.height
+
+    patientCtx = patientCanvas.getContext('2d')
+    patientCtx.strokeStyle = '#374151'
+    patientCtx.lineWidth = 2
+    patientCtx.lineCap = 'round'
+    patientCtx.lineJoin = 'round'
+
+    // Mouse events
+    patientCanvas.addEventListener('mousedown', startDrawing.bind(null, 'patient'))
+    patientCanvas.addEventListener('mousemove', draw.bind(null, 'patient'))
+    patientCanvas.addEventListener('mouseup', stopDrawing)
+    patientCanvas.addEventListener('mouseout', stopDrawing)
+
+    // Touch events
+    patientCanvas.addEventListener('touchstart', handleTouchStart.bind(null, 'patient'))
+    patientCanvas.addEventListener('touchmove', handleTouchMove.bind(null, 'patient'))
+    patientCanvas.addEventListener('touchend', stopDrawing)
+  }
+
+  // Initialize witness signature canvas
+  witnessCanvas = witnessCanvasRef.value
+  if (witnessCanvas) {
+    // Set canvas internal dimensions to match CSS dimensions
+    const rect = witnessCanvas.getBoundingClientRect()
+    witnessCanvas.width = rect.width
+    witnessCanvas.height = rect.height
+
+    witnessCtx = witnessCanvas.getContext('2d')
+    witnessCtx.strokeStyle = '#374151'
+    witnessCtx.lineWidth = 2
+    witnessCtx.lineCap = 'round'
+    witnessCtx.lineJoin = 'round'
+
+    // Mouse events
+    witnessCanvas.addEventListener('mousedown', startDrawing.bind(null, 'witness'))
+    witnessCanvas.addEventListener('mousemove', draw.bind(null, 'witness'))
+    witnessCanvas.addEventListener('mouseup', stopDrawing)
+    witnessCanvas.addEventListener('mouseout', stopDrawing)
+
+    // Touch events
+    witnessCanvas.addEventListener('touchstart', handleTouchStart.bind(null, 'witness'))
+    witnessCanvas.addEventListener('touchmove', handleTouchMove.bind(null, 'witness'))
+    witnessCanvas.addEventListener('touchend', stopDrawing)
+  }
+}
+
+const startDrawing = (type, e) => {
+  isDrawing = true
+  const canvas = type === 'patient' ? patientCanvas : witnessCanvas
+  const ctx = type === 'patient' ? patientCtx : witnessCtx
+
+  if (!canvas || !ctx) return
+
+  const rect = canvas.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const y = e.clientY - rect.top
+
+  ctx.beginPath()
+  ctx.moveTo(x, y)
+}
+
+const draw = (type, e) => {
+  if (!isDrawing) return
+
+  const canvas = type === 'patient' ? patientCanvas : witnessCanvas
+  const ctx = type === 'patient' ? patientCtx : witnessCtx
+
+  if (!canvas || !ctx) return
+
+  const rect = canvas.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const y = e.clientY - rect.top
+
+  ctx.lineTo(x, y)
+  ctx.stroke()
+}
+
+const stopDrawing = () => {
+  isDrawing = false
+
+  // Save signature data
+  if (patientCanvas) {
+    formData.patient_signature_data = patientCanvas.toDataURL()
+  }
+  if (witnessCanvas) {
+    formData.witness_signature_data = witnessCanvas.toDataURL()
+  }
+}
+
+const handleTouchStart = (type, e) => {
+  e.preventDefault()
+  const touch = e.touches[0]
+  const mouseEvent = new MouseEvent('mousedown', {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  })
+  startDrawing(type, mouseEvent)
+}
+
+const handleTouchMove = (type, e) => {
+  e.preventDefault()
+  if (!isDrawing) return
+
+  const touch = e.touches[0]
+  const mouseEvent = new MouseEvent('mousemove', {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  })
+  draw(type, mouseEvent)
+}
+
+const clearPatientSignature = () => {
+  if (patientCtx && patientCanvas) {
+    patientCtx.clearRect(0, 0, patientCanvas.width, patientCanvas.height)
+    formData.patient_signature_data = ''
+  }
+}
+
+const clearWitnessSignature = () => {
+  if (witnessCtx && witnessCanvas) {
+    witnessCtx.clearRect(0, 0, witnessCanvas.width, witnessCanvas.height)
+    formData.witness_signature_data = ''
+  }
 }
 
 const loadPatientInfo = async () => {
@@ -500,6 +751,40 @@ const generateConsentDocument = () => {
     (selectedTemplate.code ? `${selectedTemplate.code} - ${selectedTemplate.name}` : selectedTemplate.name) :
     'Other Procedure'
 
+  // Add signature areas for PDF generation
+  const signatureAreas = `
+    <div class="signature-section" style="margin-top: 40px; padding-top: 30px; page-break-inside: avoid;">
+      <h3 style="margin-bottom: 25px; color: #374151; font-size: 16px; font-weight: 600; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Signatures</h3>
+
+      <div style="display: flex; justify-content: space-between; gap: 40px; margin-bottom: 20px;">
+        <div style="flex: 1;">
+          <div style="margin-bottom: 8px; font-weight: 500; color: #374151;">
+            Patient Signature:
+          </div>
+          <div class="signature-line" style="border-bottom: 1px solid #6b7280; height: 50px; margin-top: 8px; display: flex; align-items: flex-end; padding-bottom: 4px; background: #f9fafb;">
+            <span style="font-size: 11px; color: #6b7280; font-family: 'Courier New', monospace;">${formData.patient_signature || ''}</span>
+          </div>
+          <div style="margin-top: 4px; font-size: 11px; color: #6b7280;">
+            Date: ${formData.signature_date || currentDate}
+          </div>
+        </div>
+
+        <div style="flex: 1;">
+          <div style="margin-bottom: 8px; font-weight: 500; color: #374151;">
+            Witness Signature:
+          </div>
+          <div class="signature-line" style="border-bottom: 1px solid #6b7280; height: 50px; margin-top: 8px; display: flex; align-items: flex-end; padding-bottom: 4px; background: #f9fafb;">
+            <span style="font-size: 11px; color: #6b7280; font-family: 'Courier New', monospace;">${formData.witness_signature || ''}</span>
+          </div>
+          <div style="margin-top: 4px; font-size: 11px; color: #6b7280;">
+            Date: ${formData.signature_date || currentDate}
+          </div>
+          ${formData.witness_name ? `<div style="margin-top: 4px; font-size: 11px; color: #6b7280;">Witness: ${formData.witness_name}</div>` : ''}
+        </div>
+      </div>
+    </div>
+  `
+
   return `
     <!DOCTYPE html>
     <html>
@@ -549,6 +834,9 @@ const generateConsentDocument = () => {
           <p style="text-align: justify;">${formData.post_care_instructions}</p>
         </div>
       ` : ''}
+
+      <!-- Signature areas -->
+      ${signatureAreas}
     </body>
     </html>
   `
@@ -602,6 +890,11 @@ onMounted(async () => {
     if (patientId) {
       await loadPatientInfo()
     }
+
+    // Initialize signature pads after DOM is ready
+    nextTick(() => {
+      initSignaturePads()
+    })
   } catch (error) {
     console.error('Error loading data:', error)
     // Don't show error notification for now to avoid blocking the component

@@ -662,144 +662,59 @@ func seedConsentTemplatesForClinic(clinicID uint) {
 			IsActive:    true,
 			IsDefault:   true,
 			ClinicID:    clinicID,
-			Content: `<div style="font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; max-width: 800px; margin: 0 auto; padding: 20px;">
-<!-- Letterhead -->
-<div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px;">
-    <h1 style="margin: 0; font-size: 18pt; color: #333;">DENTAL CONSENT FORM</h1>
-    <p style="margin: 5px 0; font-size: 14pt;">Tooth Extraction Procedure</p>
-</div>
+			Content: `DENTAL CONSENT FORM
+Tooth Extraction Procedure
 
-<!-- Patient Information -->
-<div style="margin-bottom: 30px;">
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ccc; width: 30%;"><strong>Patient Name:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ccc;">[PATIENT_NAME]</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ccc;"><strong>Date:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ccc;">[CURRENT_DATE]</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ccc;"><strong>Procedure:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ccc;">Tooth Extraction</td>
-        </tr>
-    </table>
-</div>
+Patient Name: [PATIENT_NAME]
+Date: [CURRENT_DATE]
+Procedure: Tooth Extraction
 
-<!-- Consent Content -->
-<div style="margin-bottom: 30px;">
-    <p style="text-align: justify; margin-bottom: 20px;">
-        I, [PATIENT_NAME], hereby authorize Dr. [DOCTOR_NAME] and their associates to perform the extraction of tooth/teeth as indicated in my dental records. I understand that the procedure involves the surgical removal of the affected tooth/teeth from my mouth.
-    </p>
+PROCEDURE DESCRIPTION
+The procedure will involve the careful removal of the affected tooth/teeth using appropriate dental instruments. Local anesthesia will be administered to ensure your comfort during the procedure. The extraction site will be properly cleaned and may require sutures for optimal healing.
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">PROCEDURE DESCRIPTION</h3>
-    <p style="text-align: justify; margin-bottom: 20px;">
-        The procedure will involve the careful removal of the affected tooth/teeth using appropriate dental instruments. Local anesthesia will be administered to ensure your comfort during the procedure. The extraction site will be properly cleaned and may require sutures for optimal healing.
-    </p>
+RISKS AND COMPLICATIONS
+I understand that tooth extraction involves certain risks and potential complications, including but not limited to:
+- Pain and discomfort following the procedure
+- Swelling and bruising of the gums and face
+- Bleeding from the extraction site
+- Infection at the extraction site
+- Dry socket (alveolar osteitis)
+- Damage to adjacent teeth or dental restorations
+- Numbness or altered sensation in the area
+- Sinus complications (for upper teeth)
+- Fracture of the tooth during extraction
+- Post-operative infection requiring antibiotics
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">RISKS AND COMPLICATIONS</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        I understand that tooth extraction involves certain risks and potential complications, including but not limited to:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Pain and discomfort following the procedure</li>
-        <li>Swelling and bruising of the gums and face</li>
-        <li>Bleeding from the extraction site</li>
-        <li>Infection at the extraction site</li>
-        <li>Dry socket (alveolar osteitis)</li>
-        <li>Damage to adjacent teeth or dental restorations</li>
-        <li>Numbness or altered sensation in the area</li>
-        <li>Sinus complications (for upper teeth)</li>
-        <li>Fracture of the tooth during extraction</li>
-        <li>Post-operative infection requiring antibiotics</li>
-    </ul>
+BENEFITS OF THE PROCEDURE
+The benefits of tooth extraction include:
+- Relief from pain and discomfort caused by the affected tooth
+- Prevention of spread of infection to adjacent teeth or tissues
+- Elimination of a source of chronic infection
+- Prevention of damage to adjacent healthy teeth
+- Improvement in overall oral health
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">BENEFITS OF THE PROCEDURE</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        The benefits of tooth extraction include:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Relief from pain and discomfort caused by the affected tooth</li>
-        <li>Prevention of spread of infection to adjacent teeth or tissues</li>
-        <li>Elimination of a source of chronic infection</li>
-        <li>Prevention of damage to adjacent healthy teeth</li>
-        <li>Improvement in overall oral health</li>
-    </ul>
+ALTERNATIVES TO EXTRACTION
+Alternatives to tooth extraction may include:
+- Root canal treatment to save the tooth
+- Periodontal treatment to address gum disease
+- Restorative procedures such as crowns or fillings
+- No treatment (allowing natural progression of the condition)
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">ALTERNATIVES TO EXTRACTION</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        Alternatives to tooth extraction may include:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Root canal treatment to save the tooth</li>
-        <li>Periodontal treatment to address gum disease</li>
-        <li>Restorative procedures such as crowns or fillings</li>
-        <li>No treatment (allowing natural progression of the condition)</li>
-    </ul>
+POST-OPERATIVE INSTRUCTIONS
+I understand that I will receive detailed post-operative instructions including:
+- Bite gently on gauze for 30-45 minutes to control bleeding
+- Avoid smoking, drinking through straws, and vigorous rinsing for 24 hours
+- Eat soft foods and avoid chewing on the extraction site
+- Take prescribed medications as directed
+- Maintain good oral hygiene while avoiding the extraction site
+- Return for follow-up appointment as scheduled
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">POST-OPERATIVE INSTRUCTIONS</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        I understand that I will receive detailed post-operative instructions including:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Bite gently on gauze for 30-45 minutes to control bleeding</li>
-        <li>Avoid smoking, drinking through straws, and vigorous rinsing for 24 hours</li>
-        <li>Eat soft foods and avoid chewing on the extraction site</li>
-        <li>Take prescribed medications as directed</li>
-        <li>Maintain good oral hygiene while avoiding the extraction site</li>
-        <li>Return for follow-up appointment as scheduled</li>
-    </ul>
-</div>
+PATIENT AGREEMENT
+I, [PATIENT_NAME], hereby authorize Dr. [DOCTOR_NAME] and their associates to perform the extraction of tooth/teeth as indicated in my dental records. I understand that the procedure involves the surgical removal of the affected tooth/teeth from my mouth.
 
-<!-- Patient Agreement -->
-<div style="margin-bottom: 30px;">
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">PATIENT AGREEMENT</h3>
-    <p style="text-align: justify; margin-bottom: 20px;">
-        I have been given the opportunity to ask questions about the procedure, risks, benefits, and alternatives. I understand the information provided and agree to proceed with the tooth extraction.
-    </p>
-    <p style="text-align: justify; margin-bottom: 20px;">
-        I acknowledge that while every effort will be made to provide the best possible care, no guarantees can be made regarding the outcome of the procedure.
-    </p>
-    <p style="text-align: justify;">
-        By signing below, I acknowledge that I have read and understand this consent form, and I voluntarily consent to the tooth extraction procedure.
-    </p>
-</div>
+I have been given the opportunity to ask questions about the procedure, risks, benefits, and alternatives. I understand the information provided and agree to proceed with the tooth extraction.
 
-<!-- Signature Section -->
-<div style="margin-top: 50px;">
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="padding: 20px; border-top: 1px solid #333; width: 50%;">
-                <div style="margin-bottom: 40px;">
-                    <strong>Patient Signature:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 40px; margin-top: 10px;"></div>
-                </div>
-                <div>
-                    <strong>Date:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 20px; margin-top: 10px;"></div>
-                </div>
-            </td>
-            <td style="padding: 20px; border-top: 1px solid #333; width: 50%;">
-                <div style="margin-bottom: 40px;">
-                    <strong>Witness Signature:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 40px; margin-top: 10px;"></div>
-                </div>
-                <div>
-                    <strong>Date:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 20px; margin-top: 10px;"></div>
-                </div>
-            </td>
-        </tr>
-    </table>
-</div>
-
-<!-- Footer -->
-<div style="margin-top: 50px; text-align: center; font-size: 10pt; color: #666;">
-    <p>This consent form has been electronically generated and is legally binding.</p>
-    <p>Please retain a copy for your records.</p>
-</div>
-</div>`,
+By signing below, I acknowledge that I have read and understand this consent form, and I voluntarily consent to the tooth extraction procedure.`,
 		},
 		{
 			Code:        "DC001",
@@ -809,135 +724,53 @@ func seedConsentTemplatesForClinic(clinicID uint) {
 			IsActive:    true,
 			IsDefault:   true,
 			ClinicID:    clinicID,
-			Content: `<div style="font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; max-width: 800px; margin: 0 auto; padding: 20px;">
-<!-- Letterhead -->
-<div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px;">
-    <h1 style="margin: 0; font-size: 18pt; color: #333;">DENTAL CONSENT FORM</h1>
-    <p style="margin: 5px 0; font-size: 14pt;">Professional Dental Cleaning</p>
-</div>
+			Content: `DENTAL CONSENT FORM
+Professional Dental Cleaning
 
-<!-- Patient Information -->
-<div style="margin-bottom: 30px;">
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ccc; width: 30%;"><strong>Patient Name:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ccc;">[PATIENT_NAME]</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ccc;"><strong>Date:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ccc;">[CURRENT_DATE]</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ccc;"><strong>Procedure:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ccc;">Professional Dental Cleaning</td>
-        </tr>
-    </table>
-</div>
+Patient Name: [PATIENT_NAME]
+Date: [CURRENT_DATE]
+Procedure: Professional Dental Cleaning
 
-<!-- Consent Content -->
-<div style="margin-bottom: 30px;">
-    <p style="text-align: justify; margin-bottom: 20px;">
-        I, [PATIENT_NAME], hereby authorize Dr. [DOCTOR_NAME] and their associates to perform a professional dental cleaning (oral prophylaxis) on my teeth. This procedure involves the removal of plaque, calculus (tartar), and stains from the tooth surfaces above and below the gumline.
-    </p>
+PROCEDURE DESCRIPTION
+The dental cleaning procedure will involve scaling and polishing of the teeth to remove plaque, calculus, and surface stains. This comprehensive cleaning will include examination of the gums, teeth, and oral tissues. The procedure is typically completed in one appointment and helps maintain optimal oral health.
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">PROCEDURE DESCRIPTION</h3>
-    <p style="text-align: justify; margin-bottom: 20px;">
-        The dental cleaning procedure will involve scaling and polishing of the teeth to remove plaque, calculus, and surface stains. This comprehensive cleaning will include examination of the gums, teeth, and oral tissues. The procedure is typically completed in one appointment and helps maintain optimal oral health.
-    </p>
+RISKS AND COMPLICATIONS
+I understand that dental cleaning is generally a safe procedure, but may involve certain risks including:
+- Mild discomfort or sensitivity during the procedure
+- Temporary increased tooth sensitivity to hot/cold
+- Mild bleeding from gums (especially if gums are inflamed)
+- Rare allergic reaction to dental materials
+- Discomfort from injection if local anesthesia is used
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">RISKS AND COMPLICATIONS</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        I understand that dental cleaning is generally a safe procedure, but may involve certain risks including:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Mild discomfort or sensitivity during the procedure</li>
-        <li>Temporary increased tooth sensitivity to hot/cold</li>
-        <li>Mild bleeding from gums (especially if gums are inflamed)</li>
-        <li>Rare allergic reaction to dental materials</li>
-        <li>Discomfort from injection if local anesthesia is used</li>
-    </ul>
+BENEFITS OF THE PROCEDURE
+The benefits of professional dental cleaning include:
+- Removal of plaque and calculus that cannot be removed by brushing
+- Prevention of gum disease and tooth decay
+- Fresher breath and improved oral hygiene
+- Early detection of dental problems
+- Healthier gums and prevention of tooth loss
+- Improved overall health (link between oral and systemic health)
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">BENEFITS OF THE PROCEDURE</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        The benefits of professional dental cleaning include:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Removal of plaque and calculus that cannot be removed by brushing</li>
-        <li>Prevention of gum disease and tooth decay</li>
-        <li>Fresher breath and improved oral hygiene</li>
-        <li>Early detection of dental problems</li>
-        <li>Healthier gums and prevention of tooth loss</li>
-        <li>Improved overall health (link between oral and systemic health)</li>
-    </ul>
+ALTERNATIVES TO DENTAL CLEANING
+Alternatives to professional dental cleaning include:
+- Home oral hygiene maintenance only
+- Over-the-counter dental cleaning products
+- More frequent dental visits for maintenance
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">ALTERNATIVES TO DENTAL CLEANING</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        Alternatives to professional dental cleaning include:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Home oral hygiene maintenance only</li>
-        <li>Over-the-counter dental cleaning products</li>
-        <li>More frequent dental visits for maintenance</li>
-    </ul>
+POST-OPERATIVE CARE
+I understand that following the dental cleaning:
+- Some sensitivity may occur and usually resolves within a few days
+- Continue regular brushing and flossing
+- Use prescribed mouthwash if recommended
+- Schedule regular dental cleanings as advised
+- Contact the office if sensitivity persists or worsens
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">POST-OPERATIVE CARE</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        I understand that following the dental cleaning:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Some sensitivity may occur and usually resolves within a few days</li>
-        <li>Continue regular brushing and flossing</li>
-        <li>Use prescribed mouthwash if recommended</li>
-        <li>Schedule regular dental cleanings as advised</li>
-        <li>Contact the office if sensitivity persists or worsens</li>
-    </ul>
-</div>
+PATIENT AGREEMENT
+I, [PATIENT_NAME], hereby authorize Dr. [DOCTOR_NAME] and their associates to perform a professional dental cleaning (oral prophylaxis) on my teeth. This procedure involves the removal of plaque, calculus (tartar), and stains from the tooth surfaces above and below the gumline.
 
-<!-- Patient Agreement -->
-<div style="margin-bottom: 30px;">
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">PATIENT AGREEMENT</h3>
-    <p style="text-align: justify; margin-bottom: 20px;">
-        I have been given the opportunity to ask questions about the procedure, risks, benefits, and alternatives. I understand the information provided and agree to proceed with the dental cleaning.
-    </p>
-    <p style="text-align: justify;">
-        By signing below, I acknowledge that I have read and understand this consent form, and I voluntarily consent to the dental cleaning procedure.
-    </p>
-</div>
+I have been given the opportunity to ask questions about the procedure, risks, benefits, and alternatives. I understand the information provided and agree to proceed with the dental cleaning.
 
-<!-- Signature Section -->
-<div style="margin-top: 50px;">
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="padding: 20px; border-top: 1px solid #333; width: 50%;">
-                <div style="margin-bottom: 40px;">
-                    <strong>Patient Signature:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 40px; margin-top: 10px;"></div>
-                </div>
-                <div>
-                    <strong>Date:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 20px; margin-top: 10px;"></div>
-                </div>
-            </td>
-            <td style="padding: 20px; border-top: 1px solid #333; width: 50%;">
-                <div style="margin-bottom: 40px;">
-                    <strong>Dentist/Hygienist Signature:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 40px; margin-top: 10px;"></div>
-                </div>
-                <div>
-                    <strong>Date:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 20px; margin-top: 10px;"></div>
-                </div>
-            </td>
-        </tr>
-    </table>
-</div>
-
-<!-- Footer -->
-<div style="margin-top: 50px; text-align: center; font-size: 10pt; color: #666;">
-    <p>This consent form has been electronically generated and is legally binding.</p>
-    <p>Please retain a copy for your records.</p>
-</div>
-</div>`,
+By signing below, I acknowledge that I have read and understand this consent form, and I voluntarily consent to the dental cleaning procedure.`,
 		},
 		{
 			Code:        "FILL001",
@@ -947,143 +780,60 @@ func seedConsentTemplatesForClinic(clinicID uint) {
 			IsActive:    true,
 			IsDefault:   true,
 			ClinicID:    clinicID,
-			Content: `<div style="font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; max-width: 800px; margin: 0 auto; padding: 20px;">
-<!-- Letterhead -->
-<div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px;">
-    <h1 style="margin: 0; font-size: 18pt; color: #333;">DENTAL CONSENT FORM</h1>
-    <p style="margin: 5px 0; font-size: 14pt;">Dental Filling Procedure</p>
-</div>
+			Content: `DENTAL CONSENT FORM
+Dental Filling Procedure
 
-<!-- Patient Information -->
-<div style="margin-bottom: 30px;">
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ccc; width: 30%;"><strong>Patient Name:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ccc;">[PATIENT_NAME]</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ccc;"><strong>Date:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ccc;">[CURRENT_DATE]</td>
-        </tr>
-        <tr>
-            <td style="padding: 8px; border: 1px solid #ccc;"><strong>Procedure:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ccc;">Dental Filling/Restoration</td>
-        </tr>
-    </table>
-</div>
+Patient Name: [PATIENT_NAME]
+Date: [CURRENT_DATE]
+Procedure: Dental Filling/Restoration
 
-<!-- Consent Content -->
-<div style="margin-bottom: 30px;">
-    <p style="text-align: justify; margin-bottom: 20px;">
-        I, [PATIENT_NAME], hereby authorize Dr. [DOCTOR_NAME] and their associates to perform dental restoration using filling materials on the affected tooth/teeth. This procedure involves the removal of decayed tooth structure and replacement with appropriate restorative material.
-    </p>
+PROCEDURE DESCRIPTION
+The dental filling procedure will involve the careful removal of decayed tooth structure using dental instruments. The cavity will be thoroughly cleaned and disinfected before placement of the restorative material. The filling material will be carefully shaped and polished to restore the tooth to its normal function and appearance.
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">PROCEDURE DESCRIPTION</h3>
-    <p style="text-align: justify; margin-bottom: 20px;">
-        The dental filling procedure will involve the careful removal of decayed tooth structure using dental instruments. The cavity will be thoroughly cleaned and disinfected before placement of the restorative material. The filling material will be carefully shaped and polished to restore the tooth to its normal function and appearance.
-    </p>
+RISKS AND COMPLICATIONS
+I understand that dental filling involves certain risks and potential complications, including but not limited to:
+- Temporary sensitivity to hot/cold following the procedure
+- Allergic reaction to filling materials
+- Fracture or failure of the filling over time
+- Need for root canal treatment if nerve becomes involved
+- Discomfort from dental injection
+- Rare infection at the filling site
+- Post-operative sensitivity or discomfort
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">RISKS AND COMPLICATIONS</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        I understand that dental filling involves certain risks and potential complications, including but not limited to:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Temporary sensitivity to hot/cold following the procedure</li>
-        <li>Allergic reaction to filling materials</li>
-        <li>Fracture or failure of the filling over time</li>
-        <li>Need for root canal treatment if nerve becomes involved</li>
-        <li>Discomfort from dental injection</li>
-        <li>Rare infection at the filling site</li>
-        <li>Post-operative sensitivity or discomfort</li>
-    </ul>
+BENEFITS OF THE PROCEDURE
+The benefits of dental filling include:
+- Restoration of tooth function and appearance
+- Prevention of further decay progression
+- Relief from pain caused by dental caries
+- Prevention of tooth fracture or loss
+- Improved chewing ability and comfort
+- Maintenance of proper dental occlusion
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">BENEFITS OF THE PROCEDURE</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        The benefits of dental filling include:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Restoration of tooth function and appearance</li>
-        <li>Prevention of further decay progression</li>
-        <li>Relief from pain caused by dental caries</li>
-        <li>Prevention of tooth fracture or loss</li>
-        <li>Improved chewing ability and comfort</li>
-        <li>Maintenance of proper dental occlusion</li>
-    </ul>
+ALTERNATIVES TO DENTAL FILLING
+Alternatives to dental filling may include:
+- No treatment (allowing decay to progress)
+- Tooth extraction
+- Dental crown placement
+- Root canal treatment if infection has reached the nerve
+- Other restorative procedures
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">ALTERNATIVES TO DENTAL FILLING</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        Alternatives to dental filling may include:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>No treatment (allowing decay to progress)</li>
-        <li>Tooth extraction</li>
-        <li>Dental crown placement</li>
-        <li>Root canal treatment if infection has reached the nerve</li>
-        <li>Other restorative procedures</li>
-    </ul>
+POST-OPERATIVE CARE
+I understand that following the dental filling:
+- Avoid chewing on the filled tooth for 24 hours
+- Some sensitivity may occur and usually resolves within a few days
+- Continue regular brushing and flossing
+- Return for follow-up appointment as scheduled
+- Contact the office if sensitivity persists or worsens
+- Maintain good oral hygiene to prevent future decay
 
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">POST-OPERATIVE CARE</h3>
-    <p style="text-align: justify; margin-bottom: 15px;">
-        I understand that following the dental filling:
-    </p>
-    <ul style="margin-bottom: 20px;">
-        <li>Avoid chewing on the filled tooth for 24 hours</li>
-        <li>Some sensitivity may occur and usually resolves within a few days</li>
-        <li>Continue regular brushing and flossing</li>
-        <li>Return for follow-up appointment as scheduled</li>
-        <li>Contact the office if sensitivity persists or worsens</li>
-        <li>Maintain good oral hygiene to prevent future decay</li>
-    </ul>
-</div>
+PATIENT AGREEMENT
+I, [PATIENT_NAME], hereby authorize Dr. [DOCTOR_NAME] and their associates to perform dental restoration using filling materials on the affected tooth/teeth. This procedure involves the removal of decayed tooth structure and replacement with appropriate restorative material.
 
-<!-- Patient Agreement -->
-<div style="margin-bottom: 30px;">
-    <h3 style="color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px;">PATIENT AGREEMENT</h3>
-    <p style="text-align: justify; margin-bottom: 20px;">
-        I have been given the opportunity to ask questions about the procedure, risks, benefits, and alternatives. I understand the information provided and agree to proceed with the dental filling.
-    </p>
-    <p style="text-align: justify; margin-bottom: 20px;">
-        I acknowledge that while every effort will be made to provide the best possible care, no guarantees can be made regarding the outcome of the procedure or the longevity of the restoration.
-    </p>
-    <p style="text-align: justify;">
-        By signing below, I acknowledge that I have read and understand this consent form, and I voluntarily consent to the dental filling procedure.
-    </p>
-</div>
+I have been given the opportunity to ask questions about the procedure, risks, benefits, and alternatives. I understand the information provided and agree to proceed with the dental filling.
 
-<!-- Signature Section -->
-<div style="margin-top: 50px;">
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="padding: 20px; border-top: 1px solid #333; width: 50%;">
-                <div style="margin-bottom: 40px;">
-                    <strong>Patient Signature:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 40px; margin-top: 10px;"></div>
-                </div>
-                <div>
-                    <strong>Date:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 20px; margin-top: 10px;"></div>
-                </div>
-            </td>
-            <td style="padding: 20px; border-top: 1px solid #333; width: 50%;">
-                <div style="margin-bottom: 40px;">
-                    <strong>Dentist Signature:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 40px; margin-top: 10px;"></div>
-                </div>
-                <div>
-                    <strong>Date:</strong>
-                    <div style="border-bottom: 1px solid #333; height: 20px; margin-top: 10px;"></div>
-                </div>
-            </td>
-        </tr>
-    </table>
-</div>
+I acknowledge that while every effort will be made to provide the best possible care, no guarantees can be made regarding the outcome of the procedure or the longevity of the restoration.
 
-<!-- Footer -->
-<div style="margin-top: 50px; text-align: center; font-size: 10pt; color: #666;">
-    <p>This consent form has been electronically generated and is legally binding.</p>
-    <p>Please retain a copy for your records.</p>
-</div>
-</div>`,
+By signing below, I acknowledge that I have read and understand this consent form, and I voluntarily consent to the dental filling procedure.`,
 		},
 	}
 

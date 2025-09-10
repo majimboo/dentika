@@ -103,3 +103,66 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Disable zoom and make it feel like native mobile app */
+html, body {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Prevent zoom on input focus (iOS) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  font-size: 16px;
+}
+
+/* Prevent bounce scrolling on iOS */
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent zoom on double tap */
+* {
+  touch-action: manipulation;
+}
+
+/* Ensure proper mobile viewport handling */
+@media screen and (max-width: 768px) {
+  html, body {
+    height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height when available */
+    overflow-x: hidden;
+  }
+
+  /* Prevent horizontal scroll */
+  body {
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  #app {
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}

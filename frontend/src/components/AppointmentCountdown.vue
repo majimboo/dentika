@@ -4,9 +4,7 @@
     <div class="countdown-header flex items-center justify-between mb-4">
       <div class="flex items-center">
         <div class="countdown-icon mr-2">
-          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
+          <font-awesome-icon icon="fa-solid fa-clock" class="w-5 h-5 text-blue-600" />
         </div>
         <h3 class="text-sm font-semibold text-gray-900">Upcoming Appointments</h3>
       </div>
@@ -18,15 +16,11 @@
           class="text-gray-400 hover:text-gray-600 transition-colors"
           title="Refresh appointments"
         >
-          <svg 
-            class="w-4 h-4" 
+          <font-awesome-icon
+            icon="fa-solid fa-sync"
+            class="w-4 h-4"
             :class="{ 'animate-spin': loading }"
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
+          />
         </button>
         
         <button
@@ -34,14 +28,10 @@
           class="text-gray-400 hover:text-gray-600 transition-colors"
           :title="minimized ? 'Expand' : 'Minimize'"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path 
-              stroke-linecap="round" 
-              stroke-linejoin="round" 
-              stroke-width="2" 
-              :d="minimized ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'"
-            ></path>
-          </svg>
+          <font-awesome-icon
+            :icon="minimized ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up'"
+            class="w-4 h-4"
+          />
         </button>
       </div>
     </div>

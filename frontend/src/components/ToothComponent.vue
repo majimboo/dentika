@@ -29,11 +29,15 @@
         ></div>
       </div>
       
-      <!-- Status indicators -->
-      <div class="tooth-indicators">
-        <div v-if="tooth.notes" class="indicator-note" title="Has notes">📝</div>
-        <div v-if="isRecentlyUpdated" class="indicator-recent" title="Recently updated">🔄</div>
-      </div>
+       <!-- Status indicators -->
+       <div class="tooth-indicators">
+         <div v-if="tooth.notes" class="indicator-note" title="Has notes">
+           <font-awesome-icon icon="fa-solid fa-sticky-note" class="w-3 h-3" />
+         </div>
+         <div v-if="isRecentlyUpdated" class="indicator-recent" title="Recently updated">
+           <font-awesome-icon icon="fa-solid fa-sync" class="w-3 h-3" />
+         </div>
+       </div>
     </div>
     
     <!-- Tooth label -->

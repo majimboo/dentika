@@ -473,7 +473,7 @@
                     Created: {{ formatDate(consentForm.created_at) }}
                     <span class="mx-2">•</span>
                     <font-awesome-icon icon="fa-solid fa-user" class="w-3 h-3 mr-1" />
-                    {{ consentForm.signature_date ? `Signed: ${formatDate(consentForm.signature_date)}` : 'Not signed' }}
+                    {{ consentForm.patient_signed_at ? `Signed: ${formatDate(consentForm.patient_signed_at)}` : 'Not signed' }}
                   </div>
                 </div>
                 <div class="flex items-center space-x-2 ml-4">
@@ -848,6 +848,11 @@ const generateConsentPreview = (consentForm) => {
   let consentContent = ''
   
   if (template) {
+    // Get doctor information if available
+    const doctorName = consentForm.doctor_id ? 
+      `${consentForm.doctor?.first_name || 'Doctor'} ${consentForm.doctor?.last_name || ''}`.trim() : 
+      'Doctor'
+    
     // Apply the same placeholder replacement logic as in the create form
     consentContent = template.content
       .replace(/\[PATIENT_NAME\]/g, `${patient.first_name} ${patient.last_name}`)
@@ -856,6 +861,8 @@ const generateConsentPreview = (consentForm) => {
       .replace(/\[CURRENT_DATE\]/g, currentDate)
       .replace(/\[TODAY\]/g, currentDate)
       .replace(/\[DATE\]/g, currentDate)
+      .replace(/\[DOCTOR_NAME\]/g, doctorName)
+      .replace(/\[CLINIC_NAME\]/g, 'Clinic')
   }
 
   // Format the consent content with the same styling as the create form
@@ -890,10 +897,8 @@ const generateConsentPreview = (consentForm) => {
         .print-btn:hover { background: #2563eb; }
         
         .consent-content {
-          background: #f8fafc;
+          background: white;
           padding: 24px;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
           margin-bottom: 20px;
         }
         
@@ -935,70 +940,20 @@ const generateConsentPreview = (consentForm) => {
           color: #374151;
         }
 
-        /* Signature Section Styling - Match the create form exactly */
+        /* Signature Section Styling - Traditional document style */
         .signature-section {
-          margin-top: 20px;
+          margin-top: 30px;
           padding: 20px;
-          background: #f1f5f9;
-          border-radius: 8px;
-          border: 1px solid #cbd5e1;
+          page-break-inside: avoid;
         }
         
         .signature-section h3 {
-          margin-bottom: 20px;
+          margin-bottom: 25px;
           color: #374151;
-          font-size: 18px;
+          font-size: 16px;
           font-weight: 600;
-          text-align: center;
-          border-bottom: 2px solid #3b82f6;
-          padding-bottom: 10px;
-        }
-        
-        .signature-container {
-          display: flex;
-          gap: 32px;
-          margin-bottom: 16px;
-        }
-        
-        .signature-box {
-          flex: 1;
-          background: white;
-          padding: 16px;
-          border-radius: 6px;
-          border: 1px solid #d1d5db;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        
-        .signature-label {
-          margin-bottom: 12px;
-          font-weight: 600;
-          color: #374151;
-          font-size: 14px;
-        }
-        
-        .signature-display {
-          width: 100%;
-          height: 144px;
-          border: 2px solid #374151;
-          border-radius: 4px;
-          background: #f9fafb;
-          margin-bottom: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-        }
-        
-        .signature-display img {
-          max-width: 100%;
-          max-height: 100%;
-          object-fit: contain;
-        }
-        
-        .signature-info {
-          font-size: 12px;
-          color: #6b7280;
-          text-align: center;
+          border-bottom: 1px solid #d1d5db;
+          padding-bottom: 8px;
         }
         
         .footer-text {
@@ -1021,33 +976,37 @@ const generateConsentPreview = (consentForm) => {
       <div class="consent-content">
         <div>${formattedContent}</div>
 
-        <!-- Signature Section - Matching the create form exactly -->
+        <!-- Signature Section - Traditional document style -->
         <div class="signature-section">
-          <h3>Signatures Required</h3>
+          <h3>Signatures</h3>
           
-          <div class="signature-container">
-            <div class="signature-box">
-              <div class="signature-label">Patient Signature:</div>
-              <div class="signature-display">
+          <div style="display: flex; justify-content: space-between; gap: 40px; margin-bottom: 20px;">
+            <div style="flex: 1;">
+              <div style="margin-bottom: 8px; font-weight: 500; color: #374151;">
+                Patient Signature:
+              </div>
+              <div style="border-bottom: 2px solid #374151; height: 60px; margin-top: 8px; display: flex; align-items: center; justify-content: center; position: relative; background: white;">
                 ${consentForm.patient_signature 
-                  ? `<img src="${consentForm.patient_signature}" alt="Patient Signature" />`
-                  : '<span style="color: #9ca3af;">No signature</span>'
+                  ? `<img src="${consentForm.patient_signature}" alt="Patient Signature" style="max-width: 100%; max-height: 50px; object-fit: contain;" />`
+                  : '<span style="font-size: 12px; color: #9ca3af;">Not signed</span>'
                 }
               </div>
-              <div class="signature-info">
+              <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
                 Date: ${formatDate(consentForm.patient_signed_at || consentForm.created_at)}
               </div>
             </div>
-            
-            <div class="signature-box">
-              <div class="signature-label">Witness Signature:</div>
-              <div class="signature-display">
-                ${consentForm.witness_signature 
-                  ? `<img src="${consentForm.witness_signature}" alt="Witness Signature" />`
-                  : '<span style="color: #9ca3af;">No witness signature</span>'
+
+            <div style="flex: 1;">
+              <div style="margin-bottom: 8px; font-weight: 500; color: #374151;">
+                Witness Signature:
+              </div>
+              <div style="border-bottom: 2px solid #374151; height: 60px; margin-top: 8px; display: flex; align-items: center; justify-content: center; position: relative; background: white;">
+                ${consentForm.witness_signature
+                  ? `<img src="${consentForm.witness_signature}" alt="Witness Signature" style="max-width: 100%; max-height: 50px; object-fit: contain;" />`
+                  : '<span style="font-size: 12px; color: #9ca3af;">No witness signature</span>'
                 }
               </div>
-              <div class="signature-info">
+              <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
                 Date: ${formatDate(consentForm.witness_signed_at || consentForm.created_at)}
                 ${consentForm.witness_name ? `<br>Witness: ${consentForm.witness_name}` : ''}
               </div>

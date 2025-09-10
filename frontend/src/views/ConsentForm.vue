@@ -30,6 +30,49 @@
                </div>
 
                <div class="form-group">
+                 <label class="form-label">Date</label>
+                 <input
+                   v-model="formData.signature_date"
+                   type="date"
+                   class="form-input bg-gray-50 text-gray-700 cursor-not-allowed"
+                   readonly
+                 />
+                 <p class="text-sm text-gray-500 mt-1">Date is set to today automatically</p>
+               </div>
+             </div>
+
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div class="form-group">
+                 <label class="form-label">Treating Doctor *</label>
+                 <div class="relative">
+                   <input
+                     v-model="doctorSearchQuery"
+                     @input="searchDoctors"
+                     @focus="showDoctorSuggestions = true"
+                     @blur="hideDoctorSuggestions"
+                     type="text"
+                     class="form-input"
+                     :class="{ 'border-red-500': errors.doctor_id }"
+                     placeholder="Type doctor name..."
+                     autocomplete="off"
+                   />
+                   <div v-if="showDoctorSuggestions && filteredDoctors.length > 0" 
+                        class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                     <div
+                       v-for="doctor in filteredDoctors"
+                       :key="doctor.id"
+                       @mousedown="selectDoctor(doctor)"
+                       class="px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors"
+                     >
+                       <div class="font-medium">Dr. {{ doctor.first_name }} {{ doctor.last_name }}</div>
+                       <div v-if="doctor.specialization" class="text-sm text-gray-600">{{ doctor.specialization }}</div>
+                     </div>
+                   </div>
+                 </div>
+                 <div v-if="errors.doctor_id" class="error-message">{{ errors.doctor_id }}</div>
+               </div>
+
+               <div class="form-group">
                  <label class="form-label">Consent Template *</label>
                  <select
                    v-model="formData.consent_template_id"
@@ -302,6 +345,7 @@ const showTreatmentDetails = ref(false)
 // Form data
 const formData = reactive({
   consent_template_id: '',
+  doctor_id: '',
   procedure_description: '',
   risks: '',
   alternatives: '',
@@ -336,9 +380,16 @@ const autoPopulateFields = ref(true)
 // Data from stores
 const patients = ref([])
 const patientAppointments = ref([])
+const doctors = ref([])
 const consentTemplate = ref('')
 const treatmentRisks = ref([])
 const alternativeTreatments = ref([])
+
+// Doctor search functionality
+const doctorSearchQuery = ref('')
+const showDoctorSuggestions = ref(false)
+const filteredDoctors = ref([])
+const selectedDoctorInfo = ref(null)
 
 // Computed properties
 const selectedPatient = computed(() => {
@@ -349,6 +400,11 @@ const selectedPatient = computed(() => {
 const selectedConsentTemplate = computed(() => {
   if (!formData.consent_template_id) return null
   return consentStore.getConsentTemplateById(parseInt(formData.consent_template_id))
+})
+
+const selectedDoctor = computed(() => {
+  if (!formData.doctor_id) return null
+  return doctors.value.find(d => d.id === parseInt(formData.doctor_id)) || selectedDoctorInfo.value
 })
 
 const consentContent = computed(() => {
@@ -363,6 +419,8 @@ const consentContent = computed(() => {
   })
 
   // Replace common placeholders
+  const doctorName = selectedDoctor.value ? `${selectedDoctor.value.first_name} ${selectedDoctor.value.last_name}` : 'Doctor'
+  
   let content = template.content
     .replace(/\[PATIENT_NAME\]/g, `${patient.first_name} ${patient.last_name}`)
     .replace(/\[PATIENT_FIRST_NAME\]/g, patient.first_name)
@@ -370,7 +428,7 @@ const consentContent = computed(() => {
     .replace(/\[CURRENT_DATE\]/g, currentDate)
     .replace(/\[TODAY\]/g, currentDate)
     .replace(/\[DATE\]/g, currentDate)
-    .replace(/\[DOCTOR_NAME\]/g, authStore.user?.first_name ? `${authStore.user.first_name} ${authStore.user.last_name}` : 'Doctor')
+    .replace(/\[DOCTOR_NAME\]/g, doctorName)
     .replace(/\[CLINIC_NAME\]/g, authStore.userClinic?.name || 'Clinic')
 
   // Replace patient-specific placeholders if available
@@ -689,6 +747,10 @@ const validateForm = () => {
     errors.value.consent_template_id = 'Consent template selection is required'
   }
 
+  if (!formData.doctor_id) {
+    errors.value.doctor_id = 'Please select a treating doctor from the suggestions'
+  }
+
   if (!formData.understands_treatment || !formData.understands_risks ||
       !formData.consents_to_treatment || !formData.had_opportunity_to_ask) {
     errors.value.agreement = 'All patient agreement checkboxes must be checked'
@@ -723,6 +785,42 @@ const isCanvasEmpty = (signatureData) => {
   // For more thorough checking, we could decode and check pixel data
   // But for now, this basic check should suffice
   return false
+}
+
+// Doctor search methods
+const searchDoctors = () => {
+  if (!doctorSearchQuery.value.trim()) {
+    filteredDoctors.value = []
+    return
+  }
+  
+  const query = doctorSearchQuery.value.toLowerCase()
+  filteredDoctors.value = doctors.value.filter(doctor => {
+    const fullName = `${doctor.first_name} ${doctor.last_name}`.toLowerCase()
+    const firstNameMatch = doctor.first_name.toLowerCase().includes(query)
+    const lastNameMatch = doctor.last_name.toLowerCase().includes(query)
+    const fullNameMatch = fullName.includes(query)
+    const specializationMatch = doctor.specialization?.toLowerCase().includes(query) || false
+    
+    return firstNameMatch || lastNameMatch || fullNameMatch || specializationMatch
+  })
+}
+
+const selectDoctor = (doctor) => {
+  formData.doctor_id = doctor.id
+  selectedDoctorInfo.value = doctor
+  doctorSearchQuery.value = `Dr. ${doctor.first_name} ${doctor.last_name}`
+  showDoctorSuggestions.value = false
+  // Clear any doctor validation errors
+  if (errors.value.doctor_id) {
+    delete errors.value.doctor_id
+  }
+}
+
+const hideDoctorSuggestions = () => {
+  setTimeout(() => {
+    showDoctorSuggestions.value = false
+  }, 200) // Delay to allow click events on suggestions
 }
 
 const previewConsent = () => {
@@ -961,6 +1059,7 @@ onMounted(async () => {
 
     // Load doctors
     await userStore.fetchDoctors()
+    doctors.value = userStore.doctors || []
 
     // Patient is automatically selected from route params
     const patientId = route.params.patientId

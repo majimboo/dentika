@@ -320,10 +320,10 @@
           >
             <div v-if="isSubmitting" class="flex items-center justify-center">
               <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              {{ isEditing ? 'Updating...' : 'Creating...' }}
+              {{ isEditing ? 'Updating...' : 'Saving...' }}
             </div>
             <span v-else>
-              {{ isEditing ? 'Update Consent Form' : 'Create Consent Form' }}
+              {{ isEditing ? 'Update Consent Form' : 'Save Consent Form' }}
             </span>
           </button>
         </div>
@@ -382,6 +382,8 @@ let patientCtx = null
 let witnessCanvas = null
 let witnessCtx = null
 let isDrawing = false
+let lastPoint = null
+let lastTime = null
 
 // Vue refs
 const patientCanvasRef = ref(null)
@@ -538,9 +540,10 @@ const setupCanvas = (canvas, type) => {
   
   // Set drawing styles
   ctx.strokeStyle = '#374151'
-  ctx.lineWidth = 2
+  ctx.lineWidth = 1.0
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
+  ctx.globalCompositeOperation = 'source-over'
 
   // Store context reference
   if (type === 'patient') {
@@ -593,13 +596,15 @@ const startDrawing = (type, e) => {
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
 
+  lastPoint = { x, y }
+  lastTime = Date.now()
   
   ctx.beginPath()
   ctx.moveTo(x, y)
 }
 
 const draw = (type, e) => {
-  if (!isDrawing) return
+  if (!isDrawing || !lastPoint) return
 
   const canvas = type === 'patient' ? patientCanvas : witnessCanvas
   const ctx = type === 'patient' ? patientCtx : witnessCtx
@@ -610,15 +615,40 @@ const draw = (type, e) => {
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
 
+  // Calculate distance and time to determine stroke width
+  const currentTime = Date.now()
+  const distance = Math.sqrt(Math.pow(x - lastPoint.x, 2) + Math.pow(y - lastPoint.y, 2))
+  const timeDelta = currentTime - lastTime
+  
+  // Calculate velocity (distance per time)
+  const velocity = timeDelta > 0 ? distance / timeDelta : 0
+  
+  // Variable stroke width based on velocity (slower = thicker, faster = thinner)
+  // Clamp between 0.5 and 3.0 for signature-like appearance with smaller dots
+  const baseWidth = 1.5
+  const maxWidth = 3.0
+  const minWidth = 0.5
+  const velocityFactor = Math.max(0.1, Math.min(1, 1 / (velocity * 50 + 1)))
+  const strokeWidth = minWidth + (maxWidth - minWidth) * velocityFactor
 
-  ctx.lineTo(x, y)
-  ctx.stroke()
+  // Only draw if there's meaningful movement to reduce unwanted dots
+  if (distance > 0.5) {
+    ctx.lineWidth = strokeWidth
+    ctx.lineTo(x, y)
+    ctx.stroke()
+  }
+
+  // Update last point and time
+  lastPoint = { x, y }
+  lastTime = currentTime
 }
 
 const stopDrawing = () => {
   if (!isDrawing) return
   
   isDrawing = false
+  lastPoint = null
+  lastTime = null
 
   // Save signature data
   if (patientCanvas) {
@@ -655,6 +685,8 @@ const clearPatientSignature = () => {
   if (patientCtx && patientCanvas) {
     patientCtx.clearRect(0, 0, patientCanvas.width, patientCanvas.height)
     formData.patient_signature_data = ''
+    lastPoint = null
+    lastTime = null
   }
 }
 
@@ -662,6 +694,8 @@ const clearWitnessSignature = () => {
   if (witnessCtx && witnessCanvas) {
     witnessCtx.clearRect(0, 0, witnessCanvas.width, witnessCanvas.height)
     formData.witness_signature_data = ''
+    lastPoint = null
+    lastTime = null
   }
 }
 

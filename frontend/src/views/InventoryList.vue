@@ -424,22 +424,15 @@ export default {
 
     // Computed properties
     const items = computed(() => inventoryStore.items)
-    const totalItems = computed(() => inventoryStore.total)
-    const totalPages = computed(() => Math.ceil(inventoryStore.total / limit.value))
+    const totalItems = computed(() => inventoryStore.getTotalItems)
+    const totalPages = computed(() => Math.ceil(inventoryStore.getTotalItems / limit.value))
     const loading = computed(() => inventoryStore.loading)
     const error = computed(() => inventoryStore.error)
 
-    const lowStockItems = computed(() => {
-      return items.value.filter(item => item.current_stock <= item.min_stock_level).length
-    })
-
-    const expiringItems = computed(() => {
-      return items.value.filter(item => item.is_expiring_soon).length
-    })
-
-    const totalValue = computed(() => {
-      return items.value.reduce((sum, item) => sum + item.stock_value, 0)
-    })
+    // Use server-provided stats instead of client-side calculations
+    const lowStockItems = computed(() => inventoryStore.getLowStockItems)
+    const expiringItems = computed(() => inventoryStore.getExpiringItems)
+    const totalValue = computed(() => inventoryStore.getTotalValue)
 
     const hasActiveFilters = computed(() => {
       return searchQuery.value || categoryFilter.value || statusFilter.value || lowStockOnly.value

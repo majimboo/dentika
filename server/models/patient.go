@@ -57,9 +57,11 @@ type Patient struct {
 	Clinic   Clinic `json:"clinic" gorm:"foreignKey:ClinicID"`
 
 	// Relationships
-	Appointments     []Appointment     `json:"appointments,omitempty" gorm:"foreignKey:PatientID"`
-	DentalRecords    []DentalRecord    `json:"dental_records,omitempty" gorm:"foreignKey:PatientID"`
-	PatientDocuments []PatientDocument `json:"documents,omitempty" gorm:"foreignKey:PatientID"`
+	Appointments     []Appointment          `json:"appointments,omitempty" gorm:"foreignKey:PatientID"`
+	DentalRecords    []DentalRecord         `json:"dental_records,omitempty" gorm:"foreignKey:PatientID"`
+	PatientDocuments []PatientDocument      `json:"documents,omitempty" gorm:"foreignKey:PatientID"`
+	Diagnoses        []PatientDiagnosis     `json:"diagnoses,omitempty" gorm:"foreignKey:PatientID"`
+	TreatmentPlans   []PatientTreatmentPlan `json:"treatment_plans,omitempty" gorm:"foreignKey:PatientID"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`

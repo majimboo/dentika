@@ -108,3 +108,149 @@ func (ap *AppointmentProcedure) GetDuration() *time.Duration {
 	}
 	return nil
 }
+
+// PatientDiagnosis - Patient-specific diagnosis records
+type PatientDiagnosis struct {
+	ID                  uint              `json:"id" gorm:"primarykey"`
+	DiagnosisTemplateID uint              `json:"diagnosis_template_id" gorm:"not null;index"`
+	DiagnosisTemplate   DiagnosisTemplate `json:"diagnosis_template" gorm:"foreignKey:DiagnosisTemplateID"`
+
+	PatientID uint    `json:"patient_id" gorm:"not null;index"`
+	Patient   Patient `json:"patient" gorm:"foreignKey:PatientID"`
+
+	// Clinic scoping for multi-tenancy
+	ClinicID uint   `json:"clinic_id" gorm:"not null;index"`
+	Clinic   Clinic `json:"clinic" gorm:"foreignKey:ClinicID"`
+
+	// Diagnosis specific details
+	ToothNumber string `json:"tooth_number" gorm:"size:10"`
+	Surface     string `json:"surface" gorm:"size:50"`
+	Notes       string `json:"notes" gorm:"type:text"`
+	Severity    string `json:"severity" gorm:"size:50"`
+	Status      string `json:"status" gorm:"size:50;default:'active'"` // active, resolved, inactive
+
+	// Associated appointment (optional - diagnosis might be made outside appointment)
+	AppointmentID *uint        `json:"appointment_id" gorm:"index"`
+	Appointment   *Appointment `json:"appointment,omitempty" gorm:"foreignKey:AppointmentID"`
+
+	// Diagnosed by
+	DiagnosedByID uint `json:"diagnosed_by_id" gorm:"not null;index"`
+	DiagnosedBy   User `json:"diagnosed_by" gorm:"foreignKey:DiagnosedByID"`
+
+	// Dates
+	DiagnosedAt time.Time  `json:"diagnosed_at"`
+	ResolvedAt  *time.Time `json:"resolved_at"`
+
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+// PatientTreatmentPlan - Patient-specific treatment plans
+type PatientTreatmentPlan struct {
+	ID        uint    `json:"id" gorm:"primarykey"`
+	PatientID uint    `json:"patient_id" gorm:"not null;index"`
+	Patient   Patient `json:"patient" gorm:"foreignKey:PatientID"`
+
+	// Clinic scoping for multi-tenancy
+	ClinicID uint   `json:"clinic_id" gorm:"not null;index"`
+	Clinic   Clinic `json:"clinic" gorm:"foreignKey:ClinicID"`
+
+	// Treatment plan details
+	Title       string `json:"title" gorm:"size:200;not null"`
+	Description string `json:"description" gorm:"type:text"`
+	Priority    string `json:"priority" gorm:"size:50;default:'medium'"` // low, medium, high, urgent
+	Status      string `json:"status" gorm:"size:50;default:'active'"`   // active, completed, cancelled, on_hold
+
+	// Associated diagnosis (optional)
+	DiagnosisID *uint             `json:"diagnosis_id" gorm:"index"`
+	Diagnosis   *PatientDiagnosis `json:"diagnosis,omitempty" gorm:"foreignKey:DiagnosisID"`
+
+	// Estimated details
+	EstimatedCost     float64    `json:"estimated_cost" gorm:"type:decimal(10,2)"`
+	EstimatedVisits   int        `json:"estimated_visits" gorm:"default:1"`
+	EstimatedDuration int        `json:"estimated_duration"` // in days
+	StartDate         *time.Time `json:"start_date"`
+	TargetCompletion  *time.Time `json:"target_completion"`
+
+	// Progress tracking
+	CompletedVisits int     `json:"completed_visits" gorm:"default:0"`
+	ActualCost      float64 `json:"actual_cost" gorm:"type:decimal(10,2);default:0"`
+
+	// Created by
+	CreatedByID uint `json:"created_by_id" gorm:"not null;index"`
+	CreatedBy   User `json:"created_by" gorm:"foreignKey:CreatedByID"`
+
+	// Dates
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	CompletedAt *time.Time     `json:"completed_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+// TreatmentPlanProcedure - Links procedures to treatment plans
+type TreatmentPlanProcedure struct {
+	ID uint `json:"id" gorm:"primarykey"`
+
+	TreatmentPlanID uint                 `json:"treatment_plan_id" gorm:"not null;index"`
+	TreatmentPlan   PatientTreatmentPlan `json:"treatment_plan" gorm:"foreignKey:TreatmentPlanID"`
+
+	ProcedureTemplateID uint              `json:"procedure_template_id" gorm:"not null;index"`
+	ProcedureTemplate   ProcedureTemplate `json:"procedure_template" gorm:"foreignKey:ProcedureTemplateID"`
+
+	// Procedure specific details for this treatment plan
+	ToothNumber   string  `json:"tooth_number" gorm:"size:10"`
+	Surface       string  `json:"surface" gorm:"size:50"`
+	Notes         string  `json:"notes" gorm:"type:text"`
+	EstimatedCost float64 `json:"estimated_cost" gorm:"type:decimal(10,2)"`
+	Sequence      int     `json:"sequence" gorm:"default:1"` // order in treatment plan
+
+	Status string `json:"status" gorm:"size:50;default:'planned'"` // planned, completed, skipped
+
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+// Helper methods for PatientDiagnosis
+func (pd *PatientDiagnosis) IsActive() bool {
+	return pd.Status == "active"
+}
+
+func (pd *PatientDiagnosis) IsResolved() bool {
+	return pd.Status == "resolved"
+}
+
+func (pd *PatientDiagnosis) MarkAsResolved() {
+	pd.Status = "resolved"
+	now := time.Now()
+	pd.ResolvedAt = &now
+	pd.UpdatedAt = now
+}
+
+// Helper methods for PatientTreatmentPlan
+func (ptp *PatientTreatmentPlan) IsActive() bool {
+	return ptp.Status == "active"
+}
+
+func (ptp *PatientTreatmentPlan) IsCompleted() bool {
+	return ptp.Status == "completed"
+}
+
+func (ptp *PatientTreatmentPlan) MarkAsCompleted() {
+	ptp.Status = "completed"
+	now := time.Now()
+	ptp.CompletedAt = &now
+	ptp.UpdatedAt = now
+}
+
+func (ptp *PatientTreatmentPlan) GetProgressPercentage() float64 {
+	if ptp.EstimatedVisits == 0 {
+		return 0
+	}
+	return (float64(ptp.CompletedVisits) / float64(ptp.EstimatedVisits)) * 100
+}
+
+func (ptp *PatientTreatmentPlan) GetRemainingVisits() int {
+	return ptp.EstimatedVisits - ptp.CompletedVisits
+}

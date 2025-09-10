@@ -423,6 +423,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useInventoryStore } from '../stores/inventory'
 import { useAuthStore } from '../stores/auth'
+import { useClinicStore } from '../stores/clinic'
 import { useNavigation } from '../composables/useNavigation'
 
 export default {
@@ -433,6 +434,7 @@ export default {
     const { goBack } = useNavigation()
     const inventoryStore = useInventoryStore()
     const authStore = useAuthStore()
+    const clinicStore = useClinicStore()
 
     // Reactive data
     const loading = ref(false)
@@ -566,6 +568,33 @@ export default {
       return Object.keys(errors.value).length === 0
     }
 
+    const getBranchId = async () => {
+      // If user is super admin, they can choose any branch
+      if (authStore.isSuperAdmin) {
+        // For now, default to branch 1 for super admin
+        return 1
+      }
+
+      // For regular users, get branches for their clinic
+      const clinicId = authStore.userClinicId
+      if (!clinicId) {
+        throw new Error('User is not assigned to any clinic')
+      }
+
+      // Fetch branches if not already loaded
+      if (clinicStore.branches.length === 0) {
+        await clinicStore.fetchBranches(clinicId)
+      }
+
+      // Use the first active branch
+      const activeBranches = clinicStore.getActiveBranches
+      if (activeBranches.length === 0) {
+        throw new Error('No active branches found for your clinic')
+      }
+
+      return activeBranches[0].id
+    }
+
     const handleSubmit = async () => {
       if (!validateForm()) return
 
@@ -578,10 +607,27 @@ export default {
           imagePath = await uploadImage()
         }
 
+        // Get the branch ID
+        const branchId = await getBranchId()
+
+        // Only send fields that the server expects for create request
         const itemData = {
-          ...form.value,
-          image_path: imagePath,
-          branch_id: authStore.user?.branch_id || 1 // Default to first branch if not set
+          name: form.value.name,
+          description: form.value.description,
+          sku: form.value.sku,
+          category: form.value.category,
+          unit_of_measure: form.value.unit_of_measure,
+          unit_cost: form.value.unit_cost,
+          selling_price: form.value.selling_price,
+          min_stock_level: form.value.min_stock_level,
+          reorder_point: form.value.reorder_point,
+          supplier_name: form.value.supplier_name,
+          supplier_sku: form.value.supplier_sku,
+          supplier_email: form.value.supplier_email,
+          supplier_phone: form.value.supplier_phone,
+          has_expiration: form.value.has_expiration,
+          expiry_date: form.value.expiry_date ? new Date(form.value.expiry_date) : null,
+          branch_id: branchId
         }
 
         if (isEditing.value) {

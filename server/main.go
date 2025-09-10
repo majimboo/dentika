@@ -63,6 +63,9 @@ func main() {
 		&models.AppointmentProcedure{},
 		&models.DiagnosisTemplate{},
 		&models.AppointmentDiagnosis{},
+		&models.PatientDiagnosis{},
+		&models.PatientTreatmentPlan{},
+		&models.TreatmentPlanProcedure{},
 		&models.DentalRecord{},
 		&models.DentalRecordHistory{},
 		&models.ConsentTemplate{},
@@ -150,6 +153,20 @@ func main() {
 	api.Post("/patients", handlers.CreatePatient)
 	api.Put("/patients/:id", handlers.UpdatePatient)
 	api.Delete("/patients/:id", handlers.DeactivatePatient)
+
+	// Patient diagnosis routes
+	api.Get("/patients/:patientId/diagnoses", handlers.GetPatientDiagnoses)
+	api.Get("/patients/:patientId/diagnoses/:diagnosisId", handlers.GetPatientDiagnosis)
+	api.Post("/patients/:patientId/diagnoses", middleware.RoleMiddleware(models.Doctor), handlers.CreatePatientDiagnosis)
+	api.Put("/patients/:patientId/diagnoses/:diagnosisId", middleware.RoleMiddleware(models.Doctor), handlers.UpdatePatientDiagnosis)
+	api.Delete("/patients/:patientId/diagnoses/:diagnosisId", middleware.RoleMiddleware(models.Doctor), handlers.DeletePatientDiagnosis)
+
+	// Patient treatment plan routes
+	api.Get("/patients/:patientId/treatment-plans", handlers.GetPatientTreatmentPlans)
+	api.Get("/patients/:patientId/treatment-plans/:treatmentPlanId", handlers.GetPatientTreatmentPlan)
+	api.Post("/patients/:patientId/treatment-plans", middleware.RoleMiddleware(models.Doctor), handlers.CreatePatientTreatmentPlan)
+	api.Put("/patients/:patientId/treatment-plans/:treatmentPlanId", middleware.RoleMiddleware(models.Doctor), handlers.UpdatePatientTreatmentPlan)
+	api.Delete("/patients/:patientId/treatment-plans/:treatmentPlanId", middleware.RoleMiddleware(models.Doctor), handlers.DeletePatientTreatmentPlan)
 
 	// Analytics routes
 	api.Get("/analytics/dashboard", handlers.GetDashboardMetrics)

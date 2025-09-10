@@ -452,8 +452,188 @@
             </div>
         </form>
 
+        <!-- Diagnoses Section (View Mode Only) -->
+        <div v-if="isViewMode" class="mt-8">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-neutral-900">Diagnoses</h3>
+            <router-link
+              :to="`/patients/${route.params.id}/diagnosis/new`"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+            >
+              <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
+              Add Diagnosis
+            </router-link>
+          </div>
+
+          <!-- Diagnoses List -->
+          <div v-if="patientDiagnoses && patientDiagnoses.length > 0" class="space-y-3">
+            <div
+              v-for="diagnosis in patientDiagnoses"
+              :key="diagnosis.id"
+              class="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:bg-gray-100 transition-colors"
+            >
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex-1 mb-3 sm:mb-0">
+                  <div class="flex items-center space-x-2 mb-2">
+                    <h4 class="font-medium text-gray-900">{{ diagnosis.diagnosis_template?.name }}</h4>
+                    <span
+                      :class="getDiagnosisStatusClass(diagnosis.status)"
+                      class="inline-block text-xs px-2 py-1 rounded-full font-medium"
+                    >
+                      {{ diagnosis.status }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">{{ diagnosis.diagnosis_template?.description }}</p>
+                  <div class="flex flex-col sm:flex-row sm:items-center mt-2 text-xs text-gray-500">
+                    <div class="flex items-center">
+                      <font-awesome-icon icon="fa-solid fa-calendar" class="w-3 h-3 mr-1" />
+                      Diagnosed: {{ formatDate(diagnosis.diagnosed_at) }}
+                    </div>
+                    <span class="hidden sm:inline mx-2">•</span>
+                    <div class="flex items-center mt-1 sm:mt-0">
+                      <font-awesome-icon icon="fa-solid fa-user-md" class="w-3 h-3 mr-1" />
+                      By: {{ diagnosis.diagnosed_by?.first_name }} {{ diagnosis.diagnosed_by?.last_name }}
+                    </div>
+                    <span class="hidden sm:inline mx-2">•</span>
+                    <div class="flex items-center mt-1 sm:mt-0" v-if="diagnosis.tooth_number">
+                      <font-awesome-icon icon="fa-solid fa-tooth" class="w-3 h-3 mr-1" />
+                      Tooth: {{ diagnosis.tooth_number }}
+                    </div>
+                  </div>
+                  <div v-if="diagnosis.notes" class="mt-2 text-sm text-gray-700 bg-white p-2 rounded border">
+                    <strong>Notes:</strong> {{ diagnosis.notes }}
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2 sm:ml-4">
+                  <button
+                    @click="viewDiagnosis(diagnosis)"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-eye" class="w-4 h-4 sm:mr-2" />
+                    <span class="ml-2 sm:ml-0">View</span>
+                  </button>
+                  <button
+                    @click="editDiagnosis(diagnosis)"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-edit" class="w-4 h-4 sm:mr-2" />
+                    <span class="ml-2 sm:ml-0">Edit</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State for Diagnoses -->
+          <div v-else class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+            <font-awesome-icon icon="fa-solid fa-stethoscope" class="w-12 h-12 text-gray-400 mb-4" />
+            <h4 class="text-lg font-medium text-gray-900 mb-2">No Diagnoses</h4>
+            <p class="text-gray-600 mb-4">This patient doesn't have any diagnoses recorded yet.</p>
+            <router-link
+              :to="`/patients/${route.params.id}/diagnosis/new`"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+            >
+              <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
+              Add First Diagnosis
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Treatment Plans Section (View Mode Only) -->
+        <div v-if="isViewMode" class="mt-8">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-neutral-900">Treatment Plans</h3>
+            <router-link
+              :to="`/patients/${route.params.id}/treatment-plan/new`"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
+            >
+              <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
+              Add Treatment Plan
+            </router-link>
+          </div>
+
+          <!-- Treatment Plans List -->
+          <div v-if="patientTreatmentPlans && patientTreatmentPlans.length > 0" class="space-y-3">
+            <div
+              v-for="plan in patientTreatmentPlans"
+              :key="plan.id"
+              class="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:bg-gray-100 transition-colors"
+            >
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex-1 mb-3 sm:mb-0">
+                  <div class="flex items-center space-x-2 mb-2">
+                    <h4 class="font-medium text-gray-900">{{ plan.title }}</h4>
+                    <span
+                      :class="getTreatmentPlanStatusClass(plan.status)"
+                      class="inline-block text-xs px-2 py-1 rounded-full font-medium"
+                    >
+                      {{ plan.status }}
+                    </span>
+                    <span
+                      :class="getPriorityClass(plan.priority)"
+                      class="inline-block text-xs px-2 py-1 rounded-full font-medium"
+                    >
+                      {{ plan.priority }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">{{ plan.description }}</p>
+                  <div class="flex flex-col sm:flex-row sm:items-center mt-2 text-xs text-gray-500">
+                    <div class="flex items-center">
+                      <font-awesome-icon icon="fa-solid fa-calendar" class="w-3 h-3 mr-1" />
+                      Created: {{ formatDate(plan.created_at) }}
+                    </div>
+                    <span class="hidden sm:inline mx-2">•</span>
+                    <div class="flex items-center mt-1 sm:mt-0">
+                      <font-awesome-icon icon="fa-solid fa-user-md" class="w-3 h-3 mr-1" />
+                      By: {{ plan.created_by?.first_name }} {{ plan.created_by?.last_name }}
+                    </div>
+                    <span class="hidden sm:inline mx-2">•</span>
+                    <div class="flex items-center mt-1 sm:mt-0" v-if="plan.estimated_cost">
+                      <font-awesome-icon icon="fa-solid fa-dollar-sign" class="w-3 h-3 mr-1" />
+                      Est. Cost: ₱{{ plan.estimated_cost.toFixed(2) }}
+                    </div>
+                  </div>
+                  <div v-if="plan.diagnosis" class="mt-2 text-xs text-blue-600 bg-blue-50 p-2 rounded border">
+                    <strong>Related Diagnosis:</strong> {{ plan.diagnosis.diagnosis_template?.name }}
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2 sm:ml-4">
+                  <button
+                    @click="viewTreatmentPlan(plan)"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-eye" class="w-4 h-4 sm:mr-2" />
+                    <span class="ml-2 sm:ml-0">View</span>
+                  </button>
+                  <button
+                    @click="editTreatmentPlan(plan)"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-edit" class="w-4 h-4 sm:mr-2" />
+                    <span class="ml-2 sm:ml-0">Edit</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State for Treatment Plans -->
+          <div v-else class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+            <font-awesome-icon icon="fa-solid fa-clipboard-list" class="w-12 h-12 text-gray-400 mb-4" />
+            <h4 class="text-lg font-medium text-gray-900 mb-2">No Treatment Plans</h4>
+            <p class="text-gray-600 mb-4">This patient doesn't have any treatment plans yet.</p>
+            <router-link
+              :to="`/patients/${route.params.id}/treatment-plan/new`"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
+            >
+              <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
+              Add First Treatment Plan
+            </router-link>
+          </div>
+        </div>
+
         <!-- Consent Forms Section (View Mode Only) -->
-        <div v-if="isViewMode" class="">
+        <div v-if="isViewMode" class="mt-8">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-neutral-900">Consent Forms</h3>
 
@@ -548,6 +728,8 @@ const submitSuccess = ref(false)
 const errors = ref({})
 const originalPatient = ref(null)
 const consentForms = ref([])
+const patientDiagnoses = ref([])
+const patientTreatmentPlans = ref([])
 
 // Form data
 const form = reactive({
@@ -715,9 +897,11 @@ const loadPatient = async (patientId) => {
         form.date_of_birth = ''
       }
 
-      // Load consent forms if in view mode
+      // Load related data if in view mode
       if (isViewMode.value) {
         await loadConsentForms(patientId)
+        await loadPatientDiagnoses(patientId)
+        await loadPatientTreatmentPlans(patientId)
       }
     } else {
       const errorMessage = result?.error || 'Patient not found'
@@ -834,13 +1018,115 @@ const loadConsentForms = async (patientId) => {
     // Load consent forms for this patient
     await consentStore.fetchConsentForms({ patient_id: patientId })
     consentForms.value = consentStore.getPatientConsentForms(patientId)
-    
+
     // Also make sure consent templates are loaded for preview generation
     if (!consentStore.consentTemplates || consentStore.consentTemplates.length === 0) {
       await consentStore.fetchConsentTemplates()
     }
   } catch (error) {
     console.error('Error loading consent forms:', error)
+  }
+}
+
+// Diagnosis methods
+const loadPatientDiagnoses = async (patientId) => {
+  try {
+    // For now, we'll use a simple fetch to the API
+    // TODO: Create a proper diagnosis store
+    const response = await fetch(`/api/patients/${patientId}/diagnoses`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      patientDiagnoses.value = data.diagnoses || []
+    }
+  } catch (error) {
+    console.error('Error loading patient diagnoses:', error)
+  }
+}
+
+const loadPatientTreatmentPlans = async (patientId) => {
+  try {
+    // For now, we'll use a simple fetch to the API
+    // TODO: Create a proper treatment plan store
+    const response = await fetch(`/api/patients/${patientId}/treatment-plans`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      patientTreatmentPlans.value = data.treatment_plans || []
+    }
+  } catch (error) {
+    console.error('Error loading patient treatment plans:', error)
+  }
+}
+
+// Diagnosis and treatment plan action methods
+const viewDiagnosis = (diagnosis) => {
+  // TODO: Navigate to diagnosis detail view
+  console.log('View diagnosis:', diagnosis)
+}
+
+const editDiagnosis = (diagnosis) => {
+  // TODO: Navigate to diagnosis edit page
+  console.log('Edit diagnosis:', diagnosis)
+}
+
+const viewTreatmentPlan = (plan) => {
+  // TODO: Navigate to treatment plan detail view
+  console.log('View treatment plan:', plan)
+}
+
+const editTreatmentPlan = (plan) => {
+  // TODO: Navigate to treatment plan edit page
+  console.log('Edit treatment plan:', plan)
+}
+
+// Helper methods for styling
+const getDiagnosisStatusClass = (status) => {
+  switch (status) {
+    case 'active':
+      return 'bg-blue-100 text-blue-800'
+    case 'resolved':
+      return 'bg-green-100 text-green-800'
+    case 'inactive':
+      return 'bg-gray-100 text-gray-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
+const getTreatmentPlanStatusClass = (status) => {
+  switch (status) {
+    case 'active':
+      return 'bg-blue-100 text-blue-800'
+    case 'completed':
+      return 'bg-green-100 text-green-800'
+    case 'cancelled':
+      return 'bg-red-100 text-red-800'
+    case 'on_hold':
+      return 'bg-yellow-100 text-yellow-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
+const getPriorityClass = (priority) => {
+  switch (priority) {
+    case 'urgent':
+      return 'bg-red-100 text-red-800'
+    case 'high':
+      return 'bg-orange-100 text-orange-800'
+    case 'medium':
+      return 'bg-yellow-100 text-yellow-800'
+    case 'low':
+      return 'bg-green-100 text-green-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
   }
 }
 

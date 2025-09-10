@@ -75,81 +75,37 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="form-group">
-                <label class="form-label">Severity *</label>
-                <select
-                  v-model="formData.severity"
-                  class="form-input"
-                  :class="{ 'border-red-500': errors.severity }"
-                  required
-                >
-                  <option value="">Select severity...</option>
-                  <option value="mild">Mild</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="severe">Severe</option>
-                </select>
-                <div v-if="errors.severity" class="error-message">{{ errors.severity }}</div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Affected Tooth/Teeth</label>
-                <input
-                  v-model="formData.affected_teeth"
-                  type="text"
-                  class="form-input"
-                  placeholder="e.g. #14, #15 or Upper Left Molar"
-                />
-              </div>
+            <div class="form-group">
+              <label class="form-label">Severity *</label>
+              <select
+                v-model="formData.severity"
+                class="form-input"
+                :class="{ 'border-red-500': errors.severity }"
+                required
+              >
+                <option value="">Select severity...</option>
+                <option value="mild">Mild</option>
+                <option value="moderate">Moderate</option>
+                <option value="severe">Severe</option>
+              </select>
+              <div v-if="errors.severity" class="error-message">{{ errors.severity }}</div>
             </div>
           </div>
         </div>
 
-        <!-- Clinical Details -->
+        <!-- Additional Information -->
         <div class="form-section">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Clinical Details</h3>
-          
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
+
           <div class="space-y-4">
             <div class="form-group">
-              <label class="form-label">Symptoms</label>
+              <label class="form-label">Differential Diagnosis</label>
               <textarea
-                v-model="formData.symptoms"
+                v-model="formData.differential_diagnosis"
                 rows="3"
                 class="form-input resize-none"
-                placeholder="List patient symptoms..."
+                placeholder="Alternative diagnoses that should be considered..."
               ></textarea>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Clinical Findings</label>
-              <textarea
-                v-model="formData.clinical_findings"
-                rows="3"
-                class="form-input resize-none"
-                placeholder="Describe clinical examination findings..."
-              ></textarea>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="form-group">
-                <label class="form-label">Radiographic Findings</label>
-                <textarea
-                  v-model="formData.radiographic_findings"
-                  rows="2"
-                  class="form-input resize-none"
-                  placeholder="X-ray findings..."
-                ></textarea>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Differential Diagnosis</label>
-                <textarea
-                  v-model="formData.differential_diagnosis"
-                  rows="2"
-                  class="form-input resize-none"
-                  placeholder="Alternative diagnoses considered..."
-                ></textarea>
-              </div>
             </div>
           </div>
         </div>
@@ -298,10 +254,6 @@ const formData = ref({
   icd10_code: '',
   category: '',
   severity: '',
-  affected_teeth: '',
-  symptoms: '',
-  clinical_findings: '',
-  radiographic_findings: '',
   differential_diagnosis: '',
   recommended_treatment: '',
   prognosis: '',
@@ -332,10 +284,6 @@ const loadDiagnosis = async (diagnosisId) => {
       icd10_code: 'K02.9',
       category: 'caries',
       severity: 'moderate',
-      affected_teeth: '#14, #15',
-      symptoms: 'Pain when chewing, sensitivity to hot/cold',
-      clinical_findings: 'Cavitation visible on occlusal surface',
-      radiographic_findings: 'Radiolucency extending to DEJ',
       differential_diagnosis: 'Arrested caries, enamel hypoplasia',
       recommended_treatment: 'Composite restoration, fluoride treatment',
       prognosis: 'good',
@@ -343,7 +291,7 @@ const loadDiagnosis = async (diagnosisId) => {
       is_chronic: false,
       requires_monitoring: true,
       is_active: true,
-      internal_notes: 'Patient has high caries risk'
+      internal_notes: 'Common dental condition requiring preventive care'
     }
     
     Object.assign(formData.value, mockDiagnosis)

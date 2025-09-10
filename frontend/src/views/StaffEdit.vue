@@ -303,6 +303,7 @@ export default {
 
     const originalUser = ref(null)
     const form = ref({
+      id: 0,
       username: '',
       email: '',
       first_name: '',
@@ -347,7 +348,6 @@ export default {
         const result = await apiService.getUser(userId.value)
 
         if (result.success) {
-          form.id = result.data.id;
           originalUser.value = result.data
           resetForm()
         } else {
@@ -365,6 +365,7 @@ export default {
       if (originalUser.value) {
         // Reset to original user data
         form.value = {
+          id: originalUser.value.id || 0,
           username: originalUser.value.username,
           email: originalUser.value.email || '',
           first_name: originalUser.value.first_name || '',

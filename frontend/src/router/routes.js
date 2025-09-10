@@ -27,6 +27,7 @@ import PeerReviewCase from '../views/PeerReviewCase.vue';
 import PeerReviewCreate from '../views/PeerReviewCreate.vue';
 import InventoryList from '../views/InventoryList.vue';
 import InventoryForm from '../views/InventoryForm.vue';
+import InventoryView from '../views/InventoryView.vue';
 import AppLayout from '../layouts/AppLayout.vue';
 
 const routes = [
@@ -170,6 +171,46 @@ const routes = [
                     level: 2,
                     title: 'Patient Details',
                     parent: 'PatientList',
+                },
+            },
+            {
+                path: '/patients/:patientId/diagnosis/new',
+                name: 'PatientDiagnosisCreate',
+                component: () => import('../views/PatientDiagnosisForm.vue'),
+                meta: {
+                    level: 3,
+                    title: 'Add Diagnosis',
+                    parent: 'PatientView',
+                },
+            },
+            {
+                path: '/patients/:patientId/diagnosis/:diagnosisId/edit',
+                name: 'PatientDiagnosisEdit',
+                component: () => import('../views/PatientDiagnosisForm.vue'),
+                meta: {
+                    level: 3,
+                    title: 'Edit Diagnosis',
+                    parent: 'PatientView',
+                },
+            },
+            {
+                path: '/patients/:patientId/treatment-plan/new',
+                name: 'PatientTreatmentPlanCreate',
+                component: () => import('../views/PatientTreatmentPlanForm.vue'),
+                meta: {
+                    level: 3,
+                    title: 'Add Treatment Plan',
+                    parent: 'PatientView',
+                },
+            },
+            {
+                path: '/patients/:patientId/treatment-plan/:treatmentPlanId/edit',
+                name: 'PatientTreatmentPlanEdit',
+                component: () => import('../views/PatientTreatmentPlanForm.vue'),
+                meta: {
+                    level: 3,
+                    title: 'Edit Treatment Plan',
+                    parent: 'PatientView',
                 },
             },
             {
@@ -359,16 +400,26 @@ const routes = [
                      parent: 'InventoryList',
                  },
              },
-             {
-                 path: '/inventory/:id/edit',
-                 name: 'InventoryEdit',
-                 component: InventoryForm,
-                 meta: {
-                     level: 2,
-                     title: 'Edit Inventory Item',
-                     parent: 'InventoryList',
-                 },
-             },
+              {
+                  path: '/inventory/:id/edit',
+                  name: 'InventoryEdit',
+                  component: InventoryForm,
+                  meta: {
+                      level: 2,
+                      title: 'Edit Inventory Item',
+                      parent: 'InventoryList',
+                  },
+              },
+              {
+                  path: '/inventory/:id',
+                  name: 'InventoryView',
+                  component: InventoryView,
+                  meta: {
+                      level: 2,
+                      title: 'Inventory Item Details',
+                      parent: 'InventoryList',
+                  },
+              },
         ],
     },
 ];

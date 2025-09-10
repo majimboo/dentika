@@ -162,11 +162,40 @@ func GetInventoryItems(c *fiber.Ctx) error {
 	}
 	countQuery.Count(&total)
 
+	// Calculate aggregated stats for the entire inventory (ignoring pagination and filters)
+	statsQuery := database.DB.Model(&models.InventoryItem{})
+	if clinicID > 0 {
+		statsQuery = statsQuery.Where("clinic_id = ?", clinicID)
+	}
+	if branchID > 0 {
+		statsQuery = statsQuery.Where("branch_id = ?", branchID)
+	}
+
+	// Total value calculation
+	var totalValue struct {
+		Value float64 `json:"value"`
+	}
+	statsQuery.Select("COALESCE(SUM(current_stock * unit_cost), 0) as value").Scan(&totalValue)
+
+	// Low stock count
+	var lowStockCount int64
+	statsQuery.Where("current_stock <= min_stock_level").Count(&lowStockCount)
+
+	// Expiring soon count (next 30 days)
+	var expiringCount int64
+	thirtyDaysFromNow := time.Now().AddDate(0, 0, 30)
+	statsQuery.Where("has_expiration = ? AND expiry_date <= ? AND expiry_date > ?", true, thirtyDaysFromNow, time.Now()).Count(&expiringCount)
+
 	return c.JSON(fiber.Map{
 		"items": items,
 		"total": total,
 		"page":  page,
 		"limit": limit,
+		"stats": fiber.Map{
+			"total_value":     totalValue.Value,
+			"low_stock_count": lowStockCount,
+			"expiring_count":  expiringCount,
+		},
 	})
 }
 

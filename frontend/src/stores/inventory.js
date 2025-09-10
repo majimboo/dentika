@@ -19,15 +19,20 @@ export const useInventoryStore = defineStore('inventory', {
       total: 0,
       page: 1,
       limit: 50
+    },
+    stats: {
+      total_value: 0,
+      low_stock_count: 0,
+      expiring_count: 0
     }
   }),
 
   getters: {
     isLoading: (state) => state.loading,
     getTotalItems: (state) => state.pagination.total,
-    getLowStockItems: (state) => state.items.filter(item => item.current_stock <= item.min_stock_level),
-    getExpiringItems: (state) => state.items.filter(item => item.is_expiring_soon),
-    getTotalValue: (state) => state.items.reduce((sum, item) => sum + (item.current_stock * item.unit_cost), 0),
+    getLowStockItems: (state) => state.stats.low_stock_count,
+    getExpiringItems: (state) => state.stats.expiring_count,
+    getTotalValue: (state) => state.stats.total_value,
     getItemsByCategory: (state) => {
       const categories = {}
       state.items.forEach(item => {
@@ -59,6 +64,10 @@ export const useInventoryStore = defineStore('inventory', {
             total: result.data.total,
             page: result.data.page,
             limit: result.data.limit
+          }
+          // Store the aggregated stats from the server
+          if (result.data.stats) {
+            this.stats = result.data.stats
           }
           return { success: true, data: result.data }
         } else {
@@ -361,6 +370,11 @@ export const useInventoryStore = defineStore('inventory', {
         total: 0,
         page: 1,
         limit: 50
+      }
+      this.stats = {
+        total_value: 0,
+        low_stock_count: 0,
+        expiring_count: 0
       }
     }
   }

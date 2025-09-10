@@ -252,8 +252,7 @@ class ApiService {
 
   // Avatar upload methods
   async uploadAvatar(formData) {
-    const uploadUrl = this.getUploadUrl('/api/upload/avatar')
-    return this.request('post', uploadUrl, formData, {
+    return this.request('post', '/api/upload/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -261,8 +260,7 @@ class ApiService {
   }
 
   async deleteAvatar(avatarPath) {
-    const uploadUrl = this.getUploadUrl('/api/upload/avatar')
-    return this.request('delete', uploadUrl, null, {
+    return this.request('delete', '/api/upload/avatar', null, {
       params: { path: avatarPath }
     })
   }

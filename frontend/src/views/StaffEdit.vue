@@ -347,6 +347,7 @@ export default {
         const result = await apiService.getUser(userId.value)
 
         if (result.success) {
+          form.id = result.data.id;
           originalUser.value = result.data
           resetForm()
         } else {

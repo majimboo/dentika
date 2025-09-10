@@ -221,7 +221,7 @@ const uploadFile = async (file) => {
     // Simply use current host
     const baseUrl = window.location.host
 
-    const response = await fetch(`${baseUrl}/api/upload/avatar`, {
+    const response = await fetch(`/api/upload/avatar`, {
       method: 'POST',
       body: formData,
       headers: {
@@ -269,7 +269,7 @@ const removeAvatar = async () => {
     // Simply use current host
     const baseUrl = window.location.host
 
-    const response = await fetch(`${baseUrl}/api/upload/avatar?path=${encodeURIComponent(props.modelValue)}`, {
+    const response = await fetch(`/api/upload/avatar?path=${encodeURIComponent(props.modelValue)}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`

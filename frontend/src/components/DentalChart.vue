@@ -326,6 +326,33 @@ watch(() => props.readonly, (newValue) => {
   @apply flex flex-col items-center;
 }
 
+/* Wide screen layout - side by side quadrants */
+@media (min-width: 1024px) {
+  .upper-jaw {
+    @apply flex-row justify-center items-start;
+  }
+
+  .lower-jaw {
+    @apply flex-row justify-center items-start;
+  }
+
+  .upper-jaw .quadrant {
+    @apply mr-8;
+  }
+
+  .lower-jaw .quadrant {
+    @apply mr-8;
+  }
+
+  .lower-jaw .quadrant:last-child {
+    @apply mr-0;
+  }
+
+  .upper-jaw .quadrant:last-child {
+    @apply mr-0;
+  }
+}
+
 .quadrant {
   @apply flex flex-col items-center m-4;
 }

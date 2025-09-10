@@ -8,23 +8,19 @@
       </div>
       
       <div class="header-actions flex items-center space-x-3">
-        <router-link 
+        <router-link
           to="/procedures/new"
           class="btn btn-secondary flex items-center"
         >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-          </svg>
+          <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
           New Procedure
         </router-link>
         
-        <router-link 
+        <router-link
           to="/diagnoses/new"
           class="btn btn-primary flex items-center"
         >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
+          <font-awesome-icon icon="fa-solid fa-file-medical" class="w-4 h-4 mr-2" />
           New Diagnosis
         </router-link>
       </div>
@@ -61,18 +57,16 @@
     <div v-if="activeTab === 'procedures'" class="procedures-section">
       <div class="procedures-header flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div class="search-and-filters flex items-center space-x-4">
-          <div class="search-box relative">
-            <input
-              v-model="procedureSearchQuery"
-              @input="searchProcedures"
-              type="text"
-              placeholder="Search procedures..."
-              class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </div>
+           <div class="search-box relative">
+             <input
+               v-model="procedureSearchQuery"
+               @input="searchProcedures"
+               type="text"
+               placeholder="Search procedures..."
+               class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+             />
+             <font-awesome-icon icon="fa-solid fa-search" class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+           </div>
 
           <select
             v-model="selectedProcedureCategory"
@@ -90,24 +84,20 @@
         </div>
         
         <div class="view-options flex items-center space-x-2">
-          <button
-            @click="procedureViewMode = 'grid'"
-            :class="procedureViewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
-            class="p-2 rounded-lg transition-colors"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-            </svg>
-          </button>
-          <button
-            @click="procedureViewMode = 'list'"
-            :class="procedureViewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
-            class="p-2 rounded-lg transition-colors"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-            </svg>
-          </button>
+           <button
+             @click="procedureViewMode = 'grid'"
+             :class="procedureViewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
+             class="p-2 rounded-lg transition-colors"
+           >
+             <font-awesome-icon icon="fa-solid fa-th" class="w-5 h-5" />
+           </button>
+           <button
+             @click="procedureViewMode = 'list'"
+             :class="procedureViewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:text-gray-800'"
+             class="p-2 rounded-lg transition-colors"
+           >
+             <font-awesome-icon icon="fa-solid fa-list" class="w-5 h-5" />
+           </button>
         </div>
       </div>
 
@@ -126,21 +116,17 @@
         >
           <div class="p-6">
             <div class="flex items-start justify-between mb-4">
-              <div class="procedure-icon w-12 h-12 rounded-lg flex items-center justify-center mr-4"
-                   :class="getProcedureCategoryColor(procedure.category)">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getProcedureIcon(procedure.category)"></path>
-                </svg>
-              </div>
+               <div class="procedure-icon w-12 h-12 rounded-lg flex items-center justify-center mr-4"
+                    :class="getProcedureCategoryColor(procedure.category)">
+                 <font-awesome-icon icon="fa-solid fa-tooth" class="w-6 h-6" />
+               </div>
               <div class="procedure-actions">
-                <router-link
-                  :to="`/procedures/${procedure.id}/edit`"
-                  class="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                  </svg>
-                </router-link>
+                 <router-link
+                   :to="`/procedures/${procedure.id}/edit`"
+                   class="text-gray-400 hover:text-gray-600 transition-colors"
+                 >
+                   <font-awesome-icon icon="fa-solid fa-edit" class="w-5 h-5" />
+                 </router-link>
               </div>
             </div>
             
@@ -169,11 +155,9 @@
 
       <!-- Empty State for Procedures -->
       <div v-else-if="filteredProcedures.length === 0" class="empty-state text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="empty-icon text-gray-300 mb-4">
-          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-        </div>
+         <div class="empty-icon text-gray-300 mb-4">
+           <font-awesome-icon icon="fa-solid fa-file-alt" class="w-16 h-16 mx-auto" />
+         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">No procedures found</h3>
         <p class="text-gray-500 mb-4">
           {{ procedureSearchQuery ? 'No procedures match your search criteria.' : 'Get started by adding your first procedure.' }}
@@ -202,12 +186,10 @@
               >
                 <td class="px-6 py-4">
                   <div class="flex items-center">
-                    <div class="procedure-icon w-8 h-8 rounded-lg flex items-center justify-center mr-3"
-                         :class="getProcedureCategoryColor(procedure.category)">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getProcedureIcon(procedure.category)"></path>
-                      </svg>
-                    </div>
+                     <div class="procedure-icon w-8 h-8 rounded-lg flex items-center justify-center mr-3"
+                          :class="getProcedureCategoryColor(procedure.category)">
+                       <font-awesome-icon icon="fa-solid fa-tooth" class="w-4 h-4" />
+                     </div>
                      <div>
                        <div class="text-sm font-medium text-gray-900">{{ procedure.name }}</div>
                        <div class="text-sm text-gray-500 line-clamp-1">{{ procedure.description }}</div>
@@ -248,18 +230,16 @@
     <div v-if="activeTab === 'diagnoses'" class="diagnoses-section">
       <div class="diagnoses-header flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div class="search-and-filters flex items-center space-x-4">
-          <div class="search-box relative">
-            <input
-              v-model="diagnosisSearchQuery"
-              @input="searchDiagnoses"
-              type="text"
-              placeholder="Search diagnoses..."
-              class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </div>
+           <div class="search-box relative">
+             <input
+               v-model="diagnosisSearchQuery"
+               @input="searchDiagnoses"
+               type="text"
+               placeholder="Search diagnoses..."
+               class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+             />
+             <font-awesome-icon icon="fa-solid fa-search" class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+           </div>
 
           <select
             v-model="selectedDiagnosisCategory"
@@ -339,7 +319,7 @@
     <!-- Treatment Plans Tab -->
     <div v-if="activeTab === 'treatments'" class="treatments-section">
       <div class="treatments-header flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div class="treatment-stats grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="treatment-stats grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
           <div class="stat-card bg-blue-50 rounded-lg p-4">
             <div class="text-sm font-medium text-blue-600">Active Plans</div>
             <div class="text-2xl font-bold text-blue-900">{{ treatmentStats.active }}</div>
@@ -362,9 +342,7 @@
           to="/treatments/new"
           class="btn btn-primary flex items-center whitespace-nowrap"
         >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-          </svg>
+           <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
           New Treatment Plan
         </router-link>
       </div>
@@ -653,17 +631,7 @@ const getTreatmentStatusBadge = (status) => {
   return badges[status] || 'bg-gray-100 text-gray-800'
 }
 
-const getProcedureIcon = (category) => {
-  const icons = {
-    preventive: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-    restorative: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547A8.014 8.014 0 004 20h16a8.014 8.014 0 00-.244-4.572z',
-    surgical: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4',
-    orthodontic: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
-    cosmetic: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
-    emergency: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.081 16.5c-.77.833.192 2.5 1.732 2.5z'
-  }
-  return icons[category] || 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547A8.014 8.014 0 004 20h16a8.014 8.014 0 00-.244-4.572z'
-}
+
 
 onMounted(() => {
   loadProcedures()

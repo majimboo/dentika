@@ -73,7 +73,7 @@
         <div class="metric-card bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div class="flex items-center">
             <div class="metric-icon w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-              <font-awesome-icon icon="fa-solid fa-dollar-sign" class="w-6 h-6 text-green-600" />
+              <font-awesome-icon icon="fa-solid fa-peso-sign" class="w-6 h-6 text-green-600" />
             </div>
             <div class="metric-content">
               <div class="metric-value text-2xl font-bold text-gray-900">

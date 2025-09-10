@@ -47,7 +47,18 @@ import {
   faExclamationCircle,
   faEnvelope,
   faCheck,
-  faBoxes
+  faBoxes,
+  faEdit,
+  faTrash,
+  faFileMedical,
+  faTooth,
+  faFileAlt,
+  faUserInjured,
+  faArrowLeft,
+  faBox,
+  faUpload,
+  faTimesCircle,
+  faPesoSign
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -91,7 +102,19 @@ library.add(
   faExclamationCircle,
   faEnvelope,
   faCheck,
-  faBoxes
+  faBoxes,
+  faEdit,
+  faTrash,
+  faFileMedical,
+  faTooth,
+  faFileAlt,
+  faUserInjured,
+  faArrowLeft,
+  faBox,
+  faUpload,
+  faTimesCircle,
+  faPesoSign,
+  faTimes
 )
 
 import App from './App.vue'

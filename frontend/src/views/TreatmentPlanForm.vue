@@ -148,16 +148,14 @@
         <div class="form-section">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900">Primary Diagnoses</h3>
-            <button
-              type="button"
-              @click="addDiagnosis"
-              class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
-            >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-              </svg>
-              Add Diagnosis
-            </button>
+             <button
+               type="button"
+               @click="addDiagnosis"
+               class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
+             >
+               <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-1" />
+               Add Diagnosis
+             </button>
           </div>
           
           <div class="space-y-3">
@@ -184,15 +182,13 @@
                 placeholder="Notes for this diagnosis..."
               ></textarea>
               
-              <button
-                type="button"
-                @click="removeDiagnosis(index)"
-                class="text-red-600 hover:text-red-700 p-1"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
+               <button
+                 type="button"
+                 @click="removeDiagnosis(index)"
+                 class="text-red-600 hover:text-red-700 p-1"
+               >
+                 <font-awesome-icon icon="fa-solid fa-times" class="w-4 h-4" />
+               </button>
             </div>
             
             <div v-if="formData.diagnoses.length === 0" class="text-center py-6 text-gray-500">
@@ -212,16 +208,14 @@
         <div class="form-section">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900">Treatment Procedures</h3>
-            <button
-              type="button"
-              @click="addProcedure"
-              class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
-            >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-              </svg>
-              Add Procedure
-            </button>
+             <button
+               type="button"
+               @click="addProcedure"
+               class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
+             >
+               <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-1" />
+               Add Procedure
+             </button>
           </div>
           
           <div class="space-y-3">
@@ -287,15 +281,13 @@
                   placeholder="Notes for this procedure..."
                 ></textarea>
                 
-                <button
-                  type="button"
-                  @click="removeProcedure(index)"
-                  class="text-red-600 hover:text-red-700 p-1 mt-1"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </button>
+                 <button
+                   type="button"
+                   @click="removeProcedure(index)"
+                   class="text-red-600 hover:text-red-700 p-1 mt-1"
+                 >
+                   <font-awesome-icon icon="fa-solid fa-times" class="w-4 h-4" />
+                 </button>
               </div>
             </div>
             

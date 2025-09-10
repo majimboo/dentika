@@ -245,7 +245,11 @@ export default {
           status: newStatus
         })
 
-        if (!result.success) {
+        if (result.success) {
+          // After successful status update, refresh all appointments for the current date
+          // to ensure patient information and other details are properly loaded
+          await loadAppointments()
+        } else {
           console.error('Failed to update appointment status:', result.error)
         }
       } catch (err) {

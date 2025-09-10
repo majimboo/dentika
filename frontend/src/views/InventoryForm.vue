@@ -11,13 +11,13 @@
             {{ isEditing ? 'Update item details and stock information' : 'Create a new inventory item for your clinic' }}
           </p>
         </div>
-        <router-link
-          to="/inventory"
-          class="btn btn-secondary inline-flex items-center"
-        >
-          <font-awesome-icon icon="fa-solid fa-arrow-left" class="w-4 h-4 mr-2" />
-          Back to Inventory
-        </router-link>
+         <button
+           @click="goBack"
+           class="btn btn-secondary inline-flex items-center"
+         >
+           <font-awesome-icon icon="fa-solid fa-arrow-left" class="w-4 h-4 mr-2" />
+           Back to Inventory
+         </button>
       </div>
     </div>
 
@@ -392,12 +392,13 @@
 
         <!-- Form Actions -->
         <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-          <router-link
-            to="/inventory"
-            class="btn btn-secondary"
-          >
-            Cancel
-          </router-link>
+           <button
+             type="button"
+             @click="goBack"
+             class="btn btn-secondary"
+           >
+             Cancel
+           </button>
           <button
             type="submit"
             :disabled="submitting"
@@ -422,12 +423,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useInventoryStore } from '../stores/inventory'
 import { useAuthStore } from '../stores/auth'
+import { useNavigation } from '../composables/useNavigation'
 
 export default {
   name: 'InventoryForm',
   setup() {
     const route = useRoute()
     const router = useRouter()
+    const { goBack } = useNavigation()
     const inventoryStore = useInventoryStore()
     const authStore = useAuthStore()
 

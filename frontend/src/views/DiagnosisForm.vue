@@ -253,7 +253,7 @@
         <div class="form-actions flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t">
           <button
             type="button"
-            @click="$router.go(-1)"
+            @click="goBack"
             class="btn btn-secondary w-full sm:w-auto"
           >
             Cancel
@@ -282,9 +282,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useNavigation } from '../composables/useNavigation'
 
 const route = useRoute()
 const router = useRouter()
+const { goBack } = useNavigation()
 
 const isEditing = ref(false)
 const isSubmitting = ref(false)

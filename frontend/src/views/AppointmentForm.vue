@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <div class="flex items-center mb-6">
       <button
-        @click="$router.go(-1)"
+        @click="goBack"
         class="mr-4 p-2 rounded-xl hover:bg-neutral-100 transition-all duration-200"
       >
         <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -434,7 +434,7 @@
           <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-neutral-200">
             <button
               type="button"
-              @click="$router.go(-1)"
+              @click="goBack"
               class="inline-flex items-center px-6 py-3 border border-neutral-300 rounded-xl text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200"
             >
               Cancel
@@ -591,9 +591,11 @@ import { useClinicStore } from '../stores/clinic'
 import { useAppointmentStore } from '../stores/appointment'
 import { useAuthStore } from '../stores/auth'
 import { useInventoryStore } from '../stores/inventory'
+import { useNavigation } from '../composables/useNavigation'
 
 const route = useRoute()
 const router = useRouter()
+const { goBack } = useNavigation()
 
 const patientStore = usePatientStore()
 const clinicStore = useClinicStore()

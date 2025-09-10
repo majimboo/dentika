@@ -6,10 +6,10 @@
         <!-- Form Header - Only show on desktop as mobile has NavigationHeader -->
         <div class="hidden lg:block border-b border-gray-200 px-6 py-4">
           <div class="flex items-center">
-            <button 
-              @click="$router.go(-1)" 
-              class="mr-4 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
+             <button
+               @click="goBack"
+               class="mr-4 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+             >
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
               </svg>
@@ -360,9 +360,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { usePatientStore } from '../stores/patient'
 import { useAppointmentStore } from '../stores/appointment'
 import { useNotificationStore } from '../stores/notification'
+import { useNavigation } from '../composables/useNavigation'
 
 const route = useRoute()
 const router = useRouter()
+const { goBack } = useNavigation()
 const patientStore = usePatientStore()
 const appointmentStore = useAppointmentStore()
 const notificationStore = useNotificationStore()

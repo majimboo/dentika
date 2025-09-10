@@ -67,7 +67,8 @@ import {
   faCalendarCheck,
   faPhone,
   faPlayCircle,
-  faClipboardList
+  faClipboardList,
+  faFileSignature
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -132,6 +133,7 @@ library.add(
   faPhone,
   faPlayCircle,
   faClipboardList,
+  faFileSignature,
   faTimes
 )
 

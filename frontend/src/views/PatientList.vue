@@ -208,43 +208,33 @@
             </div>
           </div>
 
-          <!-- Quick Actions -->
-          <div class="mt-4 pt-3 border-t border-gray-100">
-            <!-- Action Buttons Grid -->
-            <div class="grid grid-cols-4 gap-2">
-              <button
-                @click.stop="viewPatient(patient)"
-                class="p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-center text-sm font-medium"
-                title="View Details"
-              >
-                View
-              </button>
-              <button
-                v-if="canManagePatients"
-                @click.stop="editPatient(patient)"
-                class="p-3 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors text-center text-sm font-medium"
-                title="Edit Patient"
-              >
-                Edit
-              </button>
-              <!-- Placeholder when edit is not available -->
-              <div v-else class="opacity-0"></div>
-              <button
-                @click.stop="viewDentalChart(patient)"
-                class="p-3 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-center text-sm font-medium"
-                title="Dental Chart"
-              >
-                Chart
-              </button>
-              <button
-                @click.stop="scheduleAppointment(patient)"
-                class="p-3 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors text-center text-sm font-medium"
-                title="Schedule Appointment"
-              >
-                Schedule
-              </button>
-            </div>
-          </div>
+           <!-- Quick Actions -->
+           <div class="mt-4 pt-3 border-t border-gray-100">
+             <!-- Action Buttons Grid -->
+             <div class="grid grid-cols-3 gap-2">
+               <button
+                 @click.stop="viewPatient(patient)"
+                 class="p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-center text-sm font-medium"
+                 title="View Details"
+               >
+                 View
+               </button>
+               <button
+                 @click.stop="viewDentalChart(patient)"
+                 class="p-3 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-center text-sm font-medium"
+                 title="Dental Chart"
+               >
+                 Chart
+               </button>
+               <button
+                 @click.stop="scheduleAppointment(patient)"
+                 class="p-3 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors text-center text-sm font-medium"
+                 title="Schedule Appointment"
+               >
+                 Schedule
+               </button>
+             </div>
+           </div>
         </div>
       </div>
     </div>

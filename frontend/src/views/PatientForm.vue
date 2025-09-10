@@ -26,17 +26,41 @@
     </div>
   </BaseTransition>
 
-  <!-- Edit Form -->
+  <!-- Patient Form -->
   <BaseTransition name="slide-up">
     <div v-if="!loading && !error" class="bg-white rounded-2xl shadow-lg border border-neutral-100 overflow-hidden">
       <div class="p-6 sm:p-8">
-        <form @submit.prevent="handleSubmit" class="space-y-8">
+        <!-- Header with Actions -->
+        <div v-if="isViewMode" class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b border-neutral-200">
+          <div>
+            <h2 class="text-xl font-semibold text-neutral-900">Patient Details</h2>
+            <p class="text-sm text-neutral-600 mt-1">View patient information and manage records</p>
+          </div>
+          <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+            <router-link
+              :to="`/patients/${route.params.id}/edit`"
+              class="inline-flex items-center px-4 py-2 border border-neutral-300 rounded-xl text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
+            >
+              <font-awesome-icon icon="fa-solid fa-edit" class="w-4 h-4 mr-2" />
+              Edit Patient
+            </router-link>
+            <router-link
+              :to="`/consent/new?patientId=${route.params.id}`"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
+            >
+              <font-awesome-icon icon="fa-solid fa-file-signature" class="w-4 h-4 mr-2" />
+              Consent Form
+            </router-link>
+          </div>
+        </div>
+
+        <form v-if="!isViewMode" @submit.prevent="handleSubmit" class="space-y-8">
             <!-- Basic Information -->
             <div class="space-y-6">
               <h3 class="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-2">Basic Information</h3>
               
               <!-- Avatar Upload -->
-              <div class="flex justify-center">
+              <div v-if="!isViewMode" class="flex justify-center">
                 <AvatarUpload
                   :user="form"
                   @avatar-updated="handleAvatarUpdated"
@@ -58,8 +82,9 @@
                     v-model="form.first_name"
                     type="text"
                     required
+                    :readonly="isViewMode"
                     class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                    :class="{ 'border-red-500': errors.first_name }"
+                    :class="{ 'border-red-500': errors.first_name, 'bg-gray-100 cursor-not-allowed': isViewMode }"
                     placeholder="Enter first name"
                   />
                   <span v-if="errors.first_name" class="text-red-500 text-sm mt-1">{{ errors.first_name }}</span>
@@ -75,8 +100,9 @@
                     v-model="form.last_name"
                     type="text"
                     required
+                    :readonly="isViewMode"
                     class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                    :class="{ 'border-red-500': errors.last_name }"
+                    :class="{ 'border-red-500': errors.last_name, 'bg-gray-100 cursor-not-allowed': isViewMode }"
                     placeholder="Enter last name"
                   />
                   <span v-if="errors.last_name" class="text-red-500 text-sm mt-1">{{ errors.last_name }}</span>
@@ -98,8 +124,9 @@
                     v-model="form.date_of_birth"
                     type="date"
                     required
+                    :readonly="isViewMode"
                     class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                    :class="{ 'border-red-500': errors.date_of_birth }"
+                    :class="{ 'border-red-500': errors.date_of_birth, 'bg-gray-100 cursor-not-allowed': isViewMode }"
                   />
                   <span v-if="errors.date_of_birth" class="text-red-500 text-sm mt-1">{{ errors.date_of_birth }}</span>
                 </div>
@@ -113,8 +140,9 @@
                     id="gender"
                     v-model="form.gender"
                     required
+                    :disabled="isViewMode"
                     class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                    :class="{ 'border-red-500': errors.gender }"
+                    :class="{ 'border-red-500': errors.gender, 'bg-gray-100 cursor-not-allowed': isViewMode }"
                   >
                     <option value="">Select gender</option>
                     <option value="male">Male</option>
@@ -146,8 +174,9 @@
                     v-model="form.phone"
                     type="tel"
                     required
+                    :readonly="isViewMode"
                     class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                    :class="{ 'border-red-500': errors.phone }"
+                    :class="{ 'border-red-500': errors.phone, 'bg-gray-100 cursor-not-allowed': isViewMode }"
                     placeholder="Enter phone number"
                   />
                   <span v-if="errors.phone" class="text-red-500 text-sm mt-1">{{ errors.phone }}</span>
@@ -164,8 +193,9 @@
                     id="email"
                     v-model="form.email"
                     type="email"
+                    :readonly="isViewMode"
                     class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                    :class="{ 'border-red-500': errors.email }"
+                    :class="{ 'border-red-500': errors.email, 'bg-gray-100 cursor-not-allowed': isViewMode }"
                     placeholder="your@email.com"
                   />
                   <span v-if="errors.email" class="text-red-500 text-sm mt-1">{{ errors.email }}</span>
@@ -185,8 +215,9 @@
                   id="address"
                   v-model="form.address"
                   rows="3"
+                  :readonly="isViewMode"
                   class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white resize-none"
-                  :class="{ 'border-red-500': errors.address }"
+                  :class="{ 'border-red-500': errors.address, 'bg-gray-100 cursor-not-allowed': isViewMode }"
                   placeholder="Enter full address"
                 ></textarea>
                 <span v-if="errors.address" class="text-red-500 text-sm mt-1">{{ errors.address }}</span>
@@ -356,7 +387,9 @@
                   id="notes"
                   v-model="form.notes"
                   rows="4"
+                  :readonly="isViewMode"
                   class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white resize-none"
+                  :class="{ 'bg-gray-100 cursor-not-allowed': isViewMode }"
                   placeholder="Any additional information about the patient..."
                 ></textarea>
               </div>
@@ -387,7 +420,7 @@
             </BaseTransition>
 
             <!-- Form Actions -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-6 border-t border-neutral-200">
+            <div v-if="!isViewMode" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-6 border-t border-neutral-200">
               <button
                 type="submit"
                 :disabled="loading || !hasChanges"
@@ -467,6 +500,9 @@ const form = reactive({
 
 // Computed properties
 const isEditing = computed(() => !!route.params.id)
+const isViewMode = computed(() => isEditing.value && route.path.includes('/patients/') && !route.path.includes('/edit'))
+const isEditMode = computed(() => isEditing.value && route.path.includes('/edit'))
+const isCreateMode = computed(() => !isEditing.value)
 
 const hasChanges = computed(() => {
   if (!isEditing.value) {

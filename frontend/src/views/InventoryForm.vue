@@ -290,7 +290,7 @@
                 v-model="form.supplier_phone"
                 type="tel"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="+1 (555) 123-4567"
+                placeholder="+63 917 234 5678"
               >
             </div>
           </div>
@@ -479,32 +479,36 @@ export default {
 
       try {
         const response = await inventoryStore.fetchItem(itemId.value)
-        item.value = response
+        if (response.success) {
+          item.value = response.data
 
-        // Populate form
-        form.value = {
-          name: response.name || '',
-          description: response.description || '',
-          sku: response.sku || '',
-          category: response.category || '',
-          unit_of_measure: response.unit_of_measure || 'pieces',
-          unit_cost: response.unit_cost || 0,
-          selling_price: response.selling_price || 0,
-          min_stock_level: response.min_stock_level || 10,
-          reorder_point: response.reorder_point || 5,
-          current_stock: response.current_stock || 0,
-          supplier_name: response.supplier_name || '',
-          supplier_sku: response.supplier_sku || '',
-          supplier_email: response.supplier_email || '',
-          supplier_phone: response.supplier_phone || '',
-          has_expiration: response.has_expiration || false,
-          expiry_date: response.expiry_date ? new Date(response.expiry_date).toISOString().split('T')[0] : '',
-          status: response.status || 'active'
-        }
+          // Populate form
+          form.value = {
+            name: response.data.name || '',
+            description: response.data.description || '',
+            sku: response.data.sku || '',
+            category: response.data.category || '',
+            unit_of_measure: response.data.unit_of_measure || 'pieces',
+            unit_cost: response.data.unit_cost || 0,
+            selling_price: response.data.selling_price || 0,
+            min_stock_level: response.data.min_stock_level || 10,
+            reorder_point: response.data.reorder_point || 5,
+            current_stock: response.data.current_stock || 0,
+            supplier_name: response.data.supplier_name || '',
+            supplier_sku: response.data.supplier_sku || '',
+            supplier_email: response.data.supplier_email || '',
+            supplier_phone: response.data.supplier_phone || '',
+            has_expiration: response.data.has_expiration || false,
+            expiry_date: response.data.expiry_date ? new Date(response.data.expiry_date).toISOString().split('T')[0] : '',
+            status: response.data.status || 'active'
+          }
 
-        // Set image preview if exists
-        if (response.image_path) {
-          imagePreview.value = getImageUrl(response.image_path)
+          // Set image preview if exists
+          if (response.data.image_path) {
+            imagePreview.value = getImageUrl(response.data.image_path)
+          }
+        } else {
+          error.value = response.error || 'Failed to load item'
         }
       } catch (err) {
         error.value = err.message || 'Failed to load item'

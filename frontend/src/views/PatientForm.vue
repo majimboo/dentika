@@ -36,22 +36,15 @@
             <h2 class="text-xl font-semibold text-neutral-900">Patient Details</h2>
             <p class="text-sm text-neutral-600 mt-1">View patient information and manage records</p>
           </div>
-          <div class="flex items-center space-x-3 mt-4 sm:mt-0">
-            <router-link
-              :to="`/patients/${route.params.id}/edit`"
-              class="inline-flex items-center px-4 py-2 border border-neutral-300 rounded-xl text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
-            >
-              <font-awesome-icon icon="fa-solid fa-edit" class="w-4 h-4 mr-2" />
-              Edit Patient
-            </router-link>
-            <router-link
-              :to="`/patients/${route.params.id}/consent/new`"
-              class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
-            >
-              <font-awesome-icon icon="fa-solid fa-file-signature" class="w-4 h-4 mr-2" />
-              New Consent Form
-            </router-link>
-          </div>
+           <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+             <router-link
+               :to="`/patients/${route.params.id}/edit`"
+               class="inline-flex items-center px-4 py-2 border border-neutral-300 rounded-xl text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
+             >
+               <font-awesome-icon icon="fa-solid fa-edit" class="w-4 h-4 mr-2" />
+               Edit Patient
+             </router-link>
+           </div>
         </div>
 
         <form v-if="!isViewMode" @submit.prevent="handleSubmit" class="space-y-8">
@@ -633,11 +626,17 @@
         </div>
 
         <!-- Consent Forms Section (View Mode Only) -->
-        <div v-if="isViewMode" class="mt-8">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-neutral-900">Consent Forms</h3>
-
-          </div>
+         <div v-if="isViewMode" class="mt-8">
+           <div class="flex items-center justify-between mb-4">
+             <h3 class="text-lg font-semibold text-neutral-900">Consent Forms</h3>
+             <router-link
+               :to="`/patients/${route.params.id}/consent/new`"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
+             >
+               <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
+               New Consent Form
+             </router-link>
+           </div>
 
           <!-- Consent Forms List -->
           <div v-if="consentForms && consentForms.length > 0" class="space-y-3">

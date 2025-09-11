@@ -293,7 +293,7 @@
                       <div class="flex items-center justify-between text-xs text-neutral-500">
                         <div class="flex items-center gap-2">
                           <span>{{ procedure.estimated_duration }}min</span>
-                          <span>${{ procedure.default_cost }}</span>
+                          <span>{{ procedure.default_cost }}</span>
                         </div>
                         <div class="flex gap-1">
                           <span v-if="procedure.requires_anesthesia" class="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded">A</span>

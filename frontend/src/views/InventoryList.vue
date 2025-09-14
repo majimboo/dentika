@@ -7,15 +7,22 @@
         <p class="text-gray-600">Track and manage clinic consumables and supplies</p>
       </div>
 
-      <div class="header-actions flex items-center space-x-3">
-        <router-link
-          to="/inventory/new"
-          class="btn btn-primary flex items-center"
-        >
-          <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
-          Add Item
-        </router-link>
-      </div>
+       <div class="header-actions flex items-center space-x-3">
+         <router-link
+           to="/inventory/new"
+           class="btn btn-secondary flex items-center"
+         >
+           <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
+           Add Item
+         </router-link>
+         <router-link
+           to="/platform-inventory"
+           class="btn btn-primary flex items-center"
+         >
+           <font-awesome-icon icon="fa-solid fa-shopping-cart" class="w-4 h-4 mr-2" />
+           Order Supplies
+         </router-link>
+       </div>
     </div>
 
     <!-- Filters and Search -->
@@ -49,17 +56,28 @@
               <option value="disposables">Disposables</option>
             </select>
 
-            <!-- Status Filter -->
-            <select
-              v-model="statusFilter"
-              @change="applyFilters"
-              class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="discontinued">Discontinued</option>
-            </select>
+             <!-- Status Filter -->
+             <select
+               v-model="statusFilter"
+               @change="applyFilters"
+               class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+             >
+               <option value="">All Status</option>
+               <option value="active">Active</option>
+               <option value="inactive">Inactive</option>
+               <option value="discontinued">Discontinued</option>
+             </select>
+
+             <!-- Type Filter -->
+             <select
+               v-model="typeFilter"
+               @change="applyFilters"
+               class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+             >
+               <option value="">All Types</option>
+               <option value="clinic">Clinic Inventory</option>
+               <option value="platform">Platform Inventory</option>
+             </select>
 
             <!-- Low Stock Filter -->
             <label class="flex items-center space-x-2">
@@ -110,9 +128,10 @@
         <div class="stat-label text-sm text-gray-600">Total Items</div>
       </div>
 
-      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+      <div class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" @click="showLowStockOnly = true">
         <div class="stat-value text-2xl font-bold text-red-600">{{ lowStockItems }}</div>
         <div class="stat-label text-sm text-gray-600">Low Stock Items</div>
+        <div class="text-xs text-red-500 mt-1">Click to view</div>
       </div>
 
       <div class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -123,6 +142,35 @@
       <div class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div class="stat-value text-2xl font-bold text-green-600">₱{{ totalValue.toFixed(2) }}</div>
         <div class="stat-label text-sm text-gray-600">Total Value</div>
+      </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div v-if="lowStockItems > 0 && !showLowStockOnly" class="low-stock-alert bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="flex items-center justify-center w-10 h-10 bg-red-100 rounded-full">
+            <font-awesome-icon icon="fa-solid fa-exclamation-triangle" class="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <div class="text-sm font-medium text-red-900">{{ lowStockItems }} items are running low on stock</div>
+            <div class="text-sm text-red-700">Consider reordering these items to avoid shortages</div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button
+            @click="showLowStockOnly = true"
+            class="btn btn-secondary text-sm"
+          >
+            View Low Stock
+          </button>
+          <router-link
+            to="/platform-inventory"
+            class="btn btn-primary text-sm"
+          >
+            Order Supplies
+          </router-link>
+        </div>
       </div>
     </div>
 
@@ -197,21 +245,21 @@
               </span>
             </div>
 
-            <!-- Actions -->
-            <div class="actions flex justify-between items-center">
-              <router-link
-                :to="`/inventory/${item.id}`"
-                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                View Details
-              </router-link>
-              <button
-                @click="quickStockUpdate(item)"
-                class="text-green-600 hover:text-green-800 text-sm font-medium"
-              >
-                Update Stock
-              </button>
-            </div>
+             <!-- Actions -->
+             <div class="actions flex justify-between items-center">
+                <router-link
+                  :to="`/inventory/${item.id}/view`"
+                  class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  View Details
+                </router-link>
+               <router-link
+                 :to="`/inventory/${item.id}/restock`"
+                 class="text-green-600 hover:text-green-800 text-sm font-medium"
+               >
+                 Restock Item
+               </router-link>
+             </div>
           </div>
         </div>
       </div>
@@ -273,22 +321,22 @@
                     {{ item.current_stock <= item.min_stock_level ? 'Low Stock' : 'In Stock' }}
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex items-center space-x-3">
-                    <router-link
-                      :to="`/inventory/${item.id}`"
-                      class="text-blue-600 hover:text-blue-900"
-                    >
-                      View
-                    </router-link>
-                    <button
-                      @click="quickStockUpdate(item)"
-                      class="text-green-600 hover:text-green-900"
-                    >
-                      Update Stock
-                    </button>
-                  </div>
-                </td>
+                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                   <div class="flex items-center space-x-3">
+                      <router-link
+                        :to="`/inventory/${item.id}/view`"
+                        class="text-blue-600 hover:text-blue-900"
+                      >
+                        View
+                      </router-link>
+                     <router-link
+                       :to="`/inventory/${item.id}/restock`"
+                       class="text-green-600 hover:text-green-900"
+                     >
+                       Restock
+                     </router-link>
+                   </div>
+                 </td>
               </tr>
             </tbody>
           </table>
@@ -341,54 +389,7 @@
       </nav>
     </div>
 
-    <!-- Quick Stock Update Modal -->
-    <div v-if="showStockModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="closeStockModal">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Update Stock - {{ selectedItem?.name }}</h3>
 
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Transaction Type</label>
-            <select
-              v-model="stockTransaction.type"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="restock">Restock (Add)</option>
-              <option value="usage">Usage (Deduct)</option>
-              <option value="adjustment">Adjustment</option>
-            </select>
-          </div>
-
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
-            <input
-              v-model.number="stockTransaction.quantity"
-              type="number"
-              :min="stockTransaction.type === 'usage' ? 1 : 0"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter quantity"
-            >
-          </div>
-
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Reason/Notes</label>
-            <textarea
-              v-model="stockTransaction.reason"
-              rows="3"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Optional notes about this transaction"
-            ></textarea>
-          </div>
-
-          <div class="flex justify-end space-x-3">
-            <button @click="closeStockModal" class="btn btn-secondary">Cancel</button>
-            <button @click="submitStockUpdate" class="btn btn-primary" :disabled="!canSubmitStockUpdate">
-              Update Stock
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -408,19 +409,14 @@ export default {
     const searchQuery = ref('')
     const categoryFilter = ref('')
     const statusFilter = ref('')
+    const typeFilter = ref('')
     const lowStockOnly = ref(false)
+    const showLowStockOnly = ref(false)
     const viewMode = ref('grid')
     const currentPage = ref(1)
     const limit = ref(20)
 
-    // Stock modal
-    const showStockModal = ref(false)
-    const selectedItem = ref(null)
-    const stockTransaction = ref({
-      type: 'restock',
-      quantity: 0,
-      reason: ''
-    })
+
 
     // Computed properties
     const items = computed(() => inventoryStore.items)
@@ -435,7 +431,7 @@ export default {
     const totalValue = computed(() => inventoryStore.getTotalValue)
 
     const hasActiveFilters = computed(() => {
-      return searchQuery.value || categoryFilter.value || statusFilter.value || lowStockOnly.value
+      return searchQuery.value || categoryFilter.value || statusFilter.value || typeFilter.value || lowStockOnly.value
     })
 
     const visiblePages = computed(() => {
@@ -450,9 +446,7 @@ export default {
       return pages
     })
 
-    const canSubmitStockUpdate = computed(() => {
-      return stockTransaction.value.quantity > 0
-    })
+
 
     // Methods
     const debouncedSearch = debounce(() => {
@@ -468,6 +462,7 @@ export default {
       searchQuery.value = ''
       categoryFilter.value = ''
       statusFilter.value = ''
+      typeFilter.value = ''
       lowStockOnly.value = false
       applyFilters()
     }
@@ -479,6 +474,7 @@ export default {
         search: searchQuery.value,
         category: categoryFilter.value,
         status: statusFilter.value,
+        type: typeFilter.value,
         low_stock: lowStockOnly.value ? 'true' : ''
       }
 
@@ -498,38 +494,15 @@ export default {
       return `/uploads/${imagePath}`
     }
 
-    const quickStockUpdate = (item) => {
-      selectedItem.value = item
-      stockTransaction.value = {
-        type: 'restock',
-        quantity: 0,
-        reason: ''
+
+
+    // Watchers
+    watch(showLowStockOnly, (newValue) => {
+      if (newValue) {
+        lowStockOnly.value = true
+        applyFilters()
       }
-      showStockModal.value = true
-    }
-
-    const closeStockModal = () => {
-      showStockModal.value = false
-      selectedItem.value = null
-    }
-
-    const submitStockUpdate = async () => {
-      if (!selectedItem.value || !canSubmitStockUpdate.value) return
-
-      try {
-        await inventoryStore.createStockTransaction({
-          item_id: selectedItem.value.id,
-          transaction_type: stockTransaction.value.type,
-          quantity: stockTransaction.value.type === 'usage' ? -stockTransaction.value.quantity : stockTransaction.value.quantity,
-          reason: stockTransaction.value.reason
-        })
-
-        closeStockModal()
-        loadItems() // Refresh the list
-      } catch (error) {
-        console.error('Failed to update stock:', error)
-      }
-    }
+    })
 
     // Lifecycle
     onMounted(() => {
@@ -546,12 +519,12 @@ export default {
       searchQuery,
       categoryFilter,
       statusFilter,
+      typeFilter,
       lowStockOnly,
+      showLowStockOnly,
       viewMode,
       currentPage,
-      showStockModal,
-      selectedItem,
-      stockTransaction,
+
 
       // Computed
       items,
@@ -564,7 +537,7 @@ export default {
       totalValue,
       hasActiveFilters,
       visiblePages,
-      canSubmitStockUpdate,
+
 
       // Methods
       debouncedSearch,
@@ -573,9 +546,7 @@ export default {
       loadItems,
       goToPage,
       getImageUrl,
-      quickStockUpdate,
-      closeStockModal,
-      submitStockUpdate
+
     }
   }
 }

@@ -6,7 +6,8 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     token: localStorage.getItem('token') || null,
     loading: false,
-    userLoading: false
+    userLoading: false,
+    initialized: false
   }),
 
   getters: {
@@ -185,12 +186,17 @@ export const useAuthStore = defineStore('auth', {
       // Silent logout without API call - for initialization
       this.user = null
       this.token = null
+      this.initialized = false
       apiService.clearAuthData()
     },
 
     async initializeAuth() {
+      if (this.initialized) {
+        return // Already initialized
+      }
+
       const storedToken = localStorage.getItem('token')
-      
+
       if (storedToken) {
         this.token = storedToken
         // Always fetch fresh user data from server
@@ -199,6 +205,8 @@ export const useAuthStore = defineStore('auth', {
         // Clear auth state if no token
         this.clearAuthState()
       }
+
+      this.initialized = true
     }
   }
 })

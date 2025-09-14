@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -63,7 +62,7 @@ type ConsentForm struct {
 	Patient       Patient      `json:"patient" gorm:"foreignKey:PatientID"`
 	AppointmentID *uint        `json:"appointment_id" gorm:"index"`
 	Appointment   *Appointment `json:"appointment,omitempty" gorm:"foreignKey:AppointmentID"`
-	
+
 	// Treating doctor
 	DoctorID *uint `json:"doctor_id" gorm:"index"`
 	Doctor   *User `json:"doctor,omitempty" gorm:"foreignKey:DoctorID"`
@@ -104,59 +103,6 @@ type ConsentForm struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-type Prescription struct {
-	ID                 uint           `json:"id" gorm:"primarykey"`
-	PrescriptionNumber string         `json:"prescription_number" gorm:"uniqueIndex;size:50"`
-	Status             DocumentStatus `json:"status" gorm:"type:varchar(20);default:'draft'"`
-
-	// Patient and appointment details
-	PatientID     uint         `json:"patient_id" gorm:"not null;index"`
-	Patient       Patient      `json:"patient" gorm:"foreignKey:PatientID"`
-	AppointmentID *uint        `json:"appointment_id" gorm:"index"`
-	Appointment   *Appointment `json:"appointment,omitempty" gorm:"foreignKey:AppointmentID"`
-
-	// Doctor details
-	DoctorID        uint       `json:"doctor_id" gorm:"not null;index"`
-	Doctor          User       `json:"doctor" gorm:"foreignKey:DoctorID"`
-	DoctorSignature string     `json:"doctor_signature" gorm:"type:text"` // base64 encoded signature
-	SignedAt        *time.Time `json:"signed_at"`
-
-	// Clinic header information
-	ClinicID uint   `json:"clinic_id" gorm:"not null;index"`
-	Clinic   Clinic `json:"clinic" gorm:"foreignKey:ClinicID"`
-
-	// Prescription details
-	Instructions string `json:"instructions" gorm:"type:text"`
-	Notes        string `json:"notes" gorm:"type:text"`
-
-	// Relationships
-	Medications []PrescriptionMedication `json:"medications,omitempty" gorm:"foreignKey:PrescriptionID"`
-
-	// Generated PDF
-	PDFPath string `json:"pdf_path" gorm:"size:500"`
-
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
-}
-
-type PrescriptionMedication struct {
-	ID             uint         `json:"id" gorm:"primarykey"`
-	PrescriptionID uint         `json:"prescription_id" gorm:"not null;index"`
-	Prescription   Prescription `json:"prescription" gorm:"foreignKey:PrescriptionID"`
-
-	MedicationName string `json:"medication_name" gorm:"size:200;not null"`
-	Dosage         string `json:"dosage" gorm:"size:100;not null"`    // e.g., "500mg"
-	Frequency      string `json:"frequency" gorm:"size:100;not null"` // e.g., "twice daily"
-	Duration       string `json:"duration" gorm:"size:100"`           // e.g., "7 days"
-	Instructions   string `json:"instructions" gorm:"type:text"`      // e.g., "take with food"
-	Quantity       int    `json:"quantity"`                           // number of pills/units
-
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
-}
-
 // ConsentTemplate methods
 func (ct *ConsentTemplate) GetFormattedName() string {
 	if ct.Code != "" {
@@ -176,21 +122,6 @@ func (cf *ConsentForm) IsPatientAgreementComplete() bool {
 }
 
 func (cf *ConsentForm) GeneratePDF() error {
-	// TODO: Implement PDF generation logic
-	return nil
-}
-
-// Prescription methods
-func (p *Prescription) IsSigned() bool {
-	return p.SignedAt != nil && p.DoctorSignature != ""
-}
-
-func (p *Prescription) GeneratePrescriptionNumber(clinicID uint) string {
-	now := time.Now()
-	return fmt.Sprintf("RX%d%04d%02d%05d", clinicID, now.Year(), now.Month(), p.ID)
-}
-
-func (p *Prescription) GeneratePDF() error {
 	// TODO: Implement PDF generation logic
 	return nil
 }

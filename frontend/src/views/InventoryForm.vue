@@ -100,6 +100,24 @@
               <span v-if="errors.category" class="text-red-500 text-sm mt-1">{{ errors.category }}</span>
             </div>
 
+            <!-- Type -->
+            <div>
+              <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
+                Inventory Type <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="type"
+                v-model="form.type"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                :class="{ 'border-red-500': errors.type }"
+              >
+                <option value="clinic">Clinic Inventory</option>
+                <option value="platform">Platform Inventory</option>
+              </select>
+              <span v-if="errors.type" class="text-red-500 text-sm mt-1">{{ errors.type }}</span>
+            </div>
+
             <!-- Unit of Measure -->
             <div>
               <label for="unit_of_measure" class="block text-sm font-medium text-gray-700 mb-2">
@@ -142,27 +160,11 @@
             Pricing Information
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Unit Cost -->
-            <div>
-              <label for="unit_cost" class="block text-sm font-medium text-gray-700 mb-2">
-                Unit Cost (₱)
-              </label>
-              <input
-                id="unit_cost"
-                v-model.number="form.unit_cost"
-                type="number"
-                step="0.01"
-                min="0"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0.00"
-              >
-            </div>
-
+          <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
             <!-- Selling Price -->
             <div>
               <label for="selling_price" class="block text-sm font-medium text-gray-700 mb-2">
-                Selling Price (₱)
+                Selling Price (₱) <span class="text-red-500">*</span>
               </label>
               <input
                 id="selling_price"
@@ -170,9 +172,15 @@
                 type="number"
                 step="0.01"
                 min="0"
+                required
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                :class="{ 'border-red-500': errors.selling_price }"
                 placeholder="0.00"
               >
+              <span v-if="errors.selling_price" class="text-red-500 text-sm mt-1">{{ errors.selling_price }}</span>
+              <p class="text-xs text-gray-500 mt-1">
+                For clinic inventory: price you charge patients. For platform inventory: price clinics pay when ordering.
+              </p>
             </div>
           </div>
         </div>
@@ -183,23 +191,8 @@
             Stock Management
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Current Stock -->
-            <div>
-              <label for="current_stock" class="block text-sm font-medium text-gray-700 mb-2">
-                Current Stock
-              </label>
-              <input
-                id="current_stock"
-                v-model.number="form.current_stock"
-                type="number"
-                min="0"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0"
-              >
-            </div>
-
-            <!-- Minimum Stock Level -->
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <!-- Minimum Stock Level -->
             <div>
               <label for="min_stock_level" class="block text-sm font-medium text-gray-700 mb-2">
                 Minimum Stock Level
@@ -449,8 +442,8 @@ export default {
       description: '',
       sku: '',
       category: '',
+      type: 'clinic',
       unit_of_measure: 'pieces',
-      unit_cost: 0,
       selling_price: 0,
       min_stock_level: 10,
       reorder_point: 5,
@@ -488,8 +481,8 @@ export default {
             description: response.data.description || '',
             sku: response.data.sku || '',
             category: response.data.category || '',
+            type: response.data.type || 'clinic',
             unit_of_measure: response.data.unit_of_measure || 'pieces',
-            unit_cost: response.data.unit_cost || 0,
             selling_price: response.data.selling_price || 0,
             min_stock_level: response.data.min_stock_level || 10,
             reorder_point: response.data.reorder_point || 5,
@@ -569,6 +562,14 @@ export default {
         errors.value.category = 'Category is required'
       }
 
+      if (!form.value.type) {
+        errors.value.type = 'Inventory type is required'
+      }
+
+      if (form.value.selling_price <= 0) {
+        errors.value.selling_price = 'Selling price must be greater than 0'
+      }
+
       return Object.keys(errors.value).length === 0
     }
 
@@ -620,8 +621,8 @@ export default {
           description: form.value.description,
           sku: form.value.sku,
           category: form.value.category,
+          type: form.value.type,
           unit_of_measure: form.value.unit_of_measure,
-          unit_cost: form.value.unit_cost,
           selling_price: form.value.selling_price,
           min_stock_level: form.value.min_stock_level,
           reorder_point: form.value.reorder_point,
@@ -631,7 +632,7 @@ export default {
           supplier_phone: form.value.supplier_phone,
           has_expiration: form.value.has_expiration,
           expiry_date: form.value.expiry_date ? new Date(form.value.expiry_date) : null,
-          branch_id: branchId
+          branch_id: form.value.type === 'clinic' ? branchId : undefined
         }
 
         if (isEditing.value) {
@@ -681,7 +682,8 @@ export default {
       loadItem,
       handleImageChange,
       handleSubmit,
-      getImageUrl
+      getImageUrl,
+      goBack
     }
   }
 }

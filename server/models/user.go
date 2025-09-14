@@ -31,7 +31,7 @@ type User struct {
 	Gender     string         `json:"gender" gorm:"size:20"`
 	AvatarPath string         `json:"avatar_path" gorm:"size:500"`
 	Password   string         `json:"-" gorm:"not null"`
-	Role       UserRole       `json:"role" gorm:"type:varchar(20);default:'secretary'"`
+	Role       UserRole       `json:"role" gorm:"type:enum('super_admin','clinic_owner','doctor','secretary','assistant');default:'secretary'"`
 	ClinicID   *uint          `json:"clinic_id" gorm:"index"`
 	Clinic     *Clinic        `json:"clinic,omitempty" gorm:"foreignKey:ClinicID"`
 	IsActive   bool           `json:"is_active" gorm:"default:true"`

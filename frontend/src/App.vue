@@ -25,11 +25,14 @@ const connectionStore = useConnectionStore()
 // Initialize WebSocket for real-time updates
 const { connect, disconnect } = useWebSocket()
 
-onMounted(() => {
+onMounted(async () => {
   // Initialize connection monitoring
   connectionStore.initialize()
 
-  authStore.initializeAuth()
+  // Auth is already initialized by router guards, but ensure it's done
+  if (!authStore.initialized) {
+    await authStore.initializeAuth()
+  }
 
   // Connect WebSocket after auth is initialized
   if (authStore.token) {

@@ -2,13 +2,7 @@ import axios from 'axios'
 
 class ApiService {
   constructor() {
-    this.baseURL = this.getApiBaseUrl()
     this.setupInterceptors()
-  }
-
-  getApiBaseUrl() {
-    // Simply use the current host
-    return `${window.location.protocol}//${window.location.host}`
   }
 
   setupInterceptors() {
@@ -66,12 +60,9 @@ class ApiService {
 
   async request(method, url, data = null, config = {}) {
     try {
-      // Check if URL is already a full URL (for uploads)
-      const fullUrl = `${this.baseURL}${url}`
-
       const response = await axios({
         method,
-        url: fullUrl,
+        url,
         data,
         ...config
       })

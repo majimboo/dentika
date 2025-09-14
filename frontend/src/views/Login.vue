@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full">
+  <div class="h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <div class="max-w-md w-full space-y-8">
       <!-- Logo and Welcome Section -->
-      <div class="text-center mb-8">
+      <div class="text-center">
         <div class="mx-auto h-16 w-16 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-xl flex items-center justify-center mb-4">
           <font-awesome-icon icon="fa-solid fa-bolt" class="h-8 w-8 text-white" />
         </div>
@@ -12,7 +12,7 @@
 
       <!-- Login Card -->
       <div class="bg-white rounded-2xl shadow-xl border-0 overflow-hidden">
-        <div class="px-8 py-8">
+        <div class="px-8 py-10">
           <form @submit.prevent="handleLogin" class="space-y-6">
             <!-- Username Field -->
             <div class="space-y-2">
@@ -105,7 +105,7 @@
       </div>
 
       <!-- Help Text -->
-      <div class="mt-6 text-center">
+      <div class="text-center">
         <p class="text-xs text-neutral-500 flex items-center justify-center">
           <font-awesome-icon icon="fa-solid fa-shield-alt" class="w-4 h-4 mr-1" />
           Secure login protected by industry-standard encryption

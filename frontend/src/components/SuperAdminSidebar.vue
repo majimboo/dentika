@@ -21,8 +21,8 @@
         </div>
       </div>
 
-      <!-- Navigation -->
-      <nav class="flex-1 p-6 space-y-2">
+       <!-- Navigation -->
+       <nav class="flex-1 p-6 space-y-2 overflow-y-auto">
         <div class="mb-6">
           <h3 class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">System Management</h3>
           <ul class="space-y-2" role="list">
@@ -34,15 +34,13 @@
                 :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.name === 'Dashboard' }"
                 :aria-current="$route.name === 'Dashboard' ? 'page' : null"
               >
-                <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
-                     :class="{ 'bg-red-200': $route.name === 'Dashboard' }">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div class="font-medium">System Dashboard</div>
-                  <div class="text-xs text-gray-400">Global system overview</div>
+                 <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
+                      :class="{ 'bg-red-200': $route.name === 'Dashboard' }">
+                   <font-awesome-icon icon="fa-solid fa-tachometer-alt" class="w-5 h-5" />
+                 </div>
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium truncate">System Dashboard</div>
+                  <div class="text-xs text-gray-400 truncate">Global system overview</div>
                 </div>
               </router-link>
             </li>
@@ -54,38 +52,70 @@
                 :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path.startsWith('/clinics') }"
                 :aria-current="$route.path.startsWith('/clinics') ? 'page' : null"
               >
-                <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
-                     :class="{ 'bg-red-200': $route.path.startsWith('/clinics') }">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                  </svg>
-                </div>
-                <div>
-                  <div class="font-medium">Clinics Management</div>
-                  <div class="text-xs text-gray-400">Manage all clinics & branches</div>
+                 <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
+                      :class="{ 'bg-red-200': $route.path.startsWith('/clinics') }">
+                   <font-awesome-icon icon="fa-solid fa-clinic-medical" class="w-5 h-5" />
+                 </div>
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium truncate">Clinics Management</div>
+                  <div class="text-xs text-gray-400 truncate">Manage all clinics & branches</div>
                 </div>
               </router-link>
             </li>
             <li role="listitem">
-              <router-link
-                to="/users"
-                @click="closeSidebarOnMobile"
-                class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
-                :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path.startsWith('/users') }"
-                :aria-current="$route.path.startsWith('/users') ? 'page' : null"
-              >
-                <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
-                     :class="{ 'bg-red-200': $route.path.startsWith('/users') }">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div class="font-medium">Global Users</div>
-                  <div class="text-xs text-gray-400">Manage all system users</div>
-                </div>
-              </router-link>
-            </li>
+               <router-link
+                 to="/users"
+                 @click="closeSidebarOnMobile"
+                 class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                 :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path.startsWith('/users') }"
+                 :aria-current="$route.path.startsWith('/users') ? 'page' : null"
+               >
+                  <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
+                       :class="{ 'bg-red-200': $route.path.startsWith('/users') }">
+                    <font-awesome-icon icon="fa-solid fa-users" class="w-5 h-5" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium truncate">Global Users</div>
+                    <div class="text-xs text-gray-400 truncate">Manage all system users</div>
+                  </div>
+               </router-link>
+             </li>
+              <li role="listitem">
+                <router-link
+                  to="/admin/orders"
+                  @click="closeSidebarOnMobile"
+                  class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path === '/admin/orders' }"
+                  :aria-current="$route.path === '/admin/orders' ? 'page' : null"
+                >
+                   <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
+                        :class="{ 'bg-red-200': $route.path === '/admin/orders' }">
+                     <font-awesome-icon icon="fa-solid fa-shopping-cart" class="w-5 h-5" />
+                   </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium truncate">Order Management</div>
+                    <div class="text-xs text-gray-400 truncate">Manage all system orders</div>
+                  </div>
+                </router-link>
+              </li>
+              <li role="listitem">
+                <router-link
+                  to="/admin/platform-inventory"
+                  @click="closeSidebarOnMobile"
+                  class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path === '/admin/platform-inventory' }"
+                  :aria-current="$route.path === '/admin/platform-inventory' ? 'page' : null"
+                >
+                   <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
+                        :class="{ 'bg-red-200': $route.path === '/admin/platform-inventory' }">
+                     <font-awesome-icon icon="fa-solid fa-boxes" class="w-5 h-5" />
+                   </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium truncate">Platform Inventory</div>
+                    <div class="text-xs text-gray-400 truncate">Manage Dentika's inventory catalog</div>
+                  </div>
+                </router-link>
+              </li>
           </ul>
         </div>
 
@@ -101,15 +131,13 @@
                 :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path.startsWith('/analytics') }"
                 :aria-current="$route.path.startsWith('/analytics') ? 'page' : null"
               >
-                <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
-                     :class="{ 'bg-red-200': $route.path.startsWith('/analytics') }">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div class="font-medium">System Analytics</div>
-                  <div class="text-xs text-gray-400">Global performance metrics</div>
+                 <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
+                      :class="{ 'bg-red-200': $route.path.startsWith('/analytics') }">
+                   <font-awesome-icon icon="fa-solid fa-chart-line" class="w-5 h-5" />
+                 </div>
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium truncate">System Analytics</div>
+                  <div class="text-xs text-gray-400 truncate">Global performance metrics</div>
                 </div>
               </router-link>
             </li>

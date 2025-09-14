@@ -97,9 +97,9 @@
                   <div class="text-2xl font-bold text-gray-600">{{ item.min_stock_level }}</div>
                   <div class="text-sm text-gray-600">Min Level</div>
                 </div>
-                <div class="text-center">
-                  <div class="text-2xl font-bold text-green-600">₱{{ item.unit_cost.toFixed(2) }}</div>
-                  <div class="text-sm text-gray-600">Unit Cost</div>
+                 <div class="text-center">
+                  <div class="text-2xl font-bold text-green-600">₱{{ (item.average_unit_cost || 0).toFixed(2) }}</div>
+                  <div class="text-sm text-gray-600">Avg Unit Cost</div>
                 </div>
                 <div class="text-center">
                   <div class="text-2xl font-bold text-purple-600">₱{{ item.selling_price.toFixed(2) }}</div>
@@ -117,15 +117,23 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
           <div class="p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Product Details</h3>
-            <dl class="space-y-3">
-              <div class="flex justify-between">
-                <dt class="text-sm font-medium text-gray-600">Category:</dt>
-                <dd class="text-sm text-gray-900">
-                  <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                    {{ item.category }}
-                  </span>
-                </dd>
-              </div>
+             <dl class="space-y-3">
+               <div class="flex justify-between">
+                 <dt class="text-sm font-medium text-gray-600">Type:</dt>
+                 <dd class="text-sm text-gray-900">
+                   <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                     {{ item.type === 'platform' ? 'Platform Inventory' : 'Clinic Inventory' }}
+                   </span>
+                 </dd>
+               </div>
+               <div class="flex justify-between">
+                 <dt class="text-sm font-medium text-gray-600">Category:</dt>
+                 <dd class="text-sm text-gray-900">
+                   <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                     {{ item.category }}
+                   </span>
+                 </dd>
+               </div>
               <div class="flex justify-between">
                 <dt class="text-sm font-medium text-gray-600">Unit of Measure:</dt>
                 <dd class="text-sm text-gray-900">{{ item.unit_of_measure }}</dd>

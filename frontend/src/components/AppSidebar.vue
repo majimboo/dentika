@@ -36,9 +36,9 @@
                       :class="{ 'bg-blue-200': $route.name === 'Dashboard' }">
                     <font-awesome-icon icon="fa-solid fa-home" class="w-5 h-5" />
                  </div>
-                  <div>
-                    <div class="font-medium">Dashboard</div>
-                    <div class="text-xs text-gray-400">Overview & stats</div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium truncate">Dashboard</div>
+                    <div class="text-xs text-gray-400 truncate">Overview & stats</div>
                   </div>
                 </router-link>
               </li>
@@ -54,10 +54,10 @@
                        :class="{ 'bg-blue-200': $route.name === 'Agenda' }">
                      <font-awesome-icon icon="fa-solid fa-check-square" class="w-5 h-5" />
                   </div>
-                  <div>
-                    <div class="font-medium">Agenda</div>
-                    <div class="text-xs text-gray-400">Daily workflow</div>
-                  </div>
+                 <div class="min-w-0 flex-1">
+                   <div class="font-medium truncate">Agenda</div>
+                   <div class="text-xs text-gray-400 truncate">Daily workflow</div>
+                 </div>
                 </router-link>
               </li>
               <li role="listitem">
@@ -72,9 +72,9 @@
                       :class="{ 'bg-blue-200': $route.path.startsWith('/patients') }">
                     <font-awesome-icon icon="fa-solid fa-users" class="w-5 h-5" />
                  </div>
-                 <div>
-                   <div class="font-medium">Patients</div>
-                   <div class="text-xs text-gray-400">Manage patient records</div>
+                 <div class="min-w-0 flex-1">
+                   <div class="font-medium truncate">Patients</div>
+                   <div class="text-xs text-gray-400 truncate">Manage patient records</div>
                  </div>
                </router-link>
              </li>
@@ -90,10 +90,10 @@
                       :class="{ 'bg-blue-200': $route.path.startsWith('/appointments') }">
                     <font-awesome-icon icon="fa-solid fa-calendar-alt" class="w-5 h-5" />
                  </div>
-                 <div>
-                   <div class="font-medium">Appointments</div>
-                   <div class="text-xs text-gray-400">Schedule & calendar</div>
-                 </div>
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium truncate">Appointments</div>
+                  <div class="text-xs text-gray-400 truncate">Schedule & calendar</div>
+                </div>
                </router-link>
              </li>
               <li role="listitem">
@@ -108,10 +108,10 @@
                        :class="{ 'bg-blue-200': $route.path.startsWith('/procedures') || $route.path.startsWith('/diagnoses') || $route.path.startsWith('/treatments') || $route.path.startsWith('/consent') || $route.path.startsWith('/prescriptions') }">
                     <font-awesome-icon icon="fa-solid fa-stethoscope" class="w-5 h-5" />
                   </div>
-                  <div>
-                    <div class="font-medium">Procedures</div>
-                    <div class="text-xs text-gray-400">Treatments & diagnoses</div>
-                  </div>
+                 <div class="min-w-0 flex-1">
+                   <div class="font-medium truncate">Procedures</div>
+                   <div class="text-xs text-gray-400 truncate">Treatments & diagnoses</div>
+                 </div>
                 </router-link>
               </li>
                <li role="listitem" v-if="isDoctor">
@@ -126,30 +126,31 @@
                         :class="{ 'bg-blue-200': $route.path.startsWith('/peer-review') }">
                      <font-awesome-icon icon="fa-solid fa-users-cog" class="w-5 h-5" />
                    </div>
-                   <div>
-                     <div class="font-medium">Peer Review</div>
-                     <div class="text-xs text-gray-400">Collaborate on cases</div>
-                   </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium truncate">Peer Review</div>
+                    <div class="text-xs text-gray-400 truncate">Collaborate on cases</div>
+                  </div>
                  </router-link>
                </li>
-               <li role="listitem">
-                 <router-link
-                   to="/inventory"
-                   @click="closeSidebarOnMobile"
-                   class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                   :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/inventory') }"
-                   :aria-current="$route.path.startsWith('/inventory') ? 'page' : null"
-                 >
-                   <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200"
-                        :class="{ 'bg-blue-200': $route.path.startsWith('/inventory') }">
-                     <font-awesome-icon icon="fa-solid fa-boxes" class="w-5 h-5" />
-                   </div>
-                   <div>
-                     <div class="font-medium">Inventory</div>
-                     <div class="text-xs text-gray-400">Manage supplies</div>
-                   </div>
-                 </router-link>
-               </li>
+                <li role="listitem">
+                  <router-link
+                    to="/inventory"
+                    @click="closeSidebarOnMobile"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/inventory') && !$route.path.includes('/platform') }"
+                    :aria-current="$route.path.startsWith('/inventory') && !$route.path.includes('/platform') ? 'page' : null"
+                  >
+                    <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200"
+                         :class="{ 'bg-blue-200': $route.path.startsWith('/inventory') && !$route.path.includes('/platform') }">
+                      <font-awesome-icon icon="fa-solid fa-boxes" class="w-5 h-5" />
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="font-medium truncate">Inventory</div>
+                      <div class="text-xs text-gray-400 truncate">Manage supplies</div>
+                    </div>
+                  </router-link>
+                </li>
+
              <li role="listitem" v-if="isClinicOwner">
                <router-link
                  to="/staff"
@@ -162,10 +163,10 @@
                       :class="{ 'bg-blue-200': $route.path.startsWith('/staff') }">
                     <font-awesome-icon icon="fa-solid fa-user-md" class="w-5 h-5" />
                  </div>
-                   <div>
-                     <div class="font-medium">Staff</div>
-                     <div class="text-xs text-gray-400">Manage your team</div>
-                   </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium truncate">Staff</div>
+                    <div class="text-xs text-gray-400 truncate">Manage your team</div>
+                  </div>
                </router-link>
              </li>
           </ul>

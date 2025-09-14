@@ -38,6 +38,15 @@ const PeerReviewCreate = () => import('../views/PeerReviewCreate.vue');
 const InventoryList = () => import('../views/InventoryList.vue');
 const InventoryForm = () => import('../views/InventoryForm.vue');
 const InventoryView = () => import('../views/InventoryView.vue');
+const InventoryItemView = () => import('../views/InventoryItemView.vue');
+const InventoryRestock = () => import('../views/InventoryRestock.vue');
+const PlatformInventory = () => import('../views/PlatformInventory.vue');
+const PlatformOrder = () => import('../views/PlatformOrder.vue');
+const OrdersList = () => import('../views/OrdersList.vue');
+const SuperAdminOrders = () => import('../views/SuperAdminOrders.vue');
+const SuperAdminPlatformInventory = () => import('../views/SuperAdminPlatformInventory.vue');
+const SuperAdminPlatformInventoryAdd = () => import('../views/SuperAdminPlatformInventoryAdd.vue');
+const SuperAdminPlatformInventoryEdit = () => import('../views/SuperAdminPlatformInventoryEdit.vue');
 
 const routes = [
     {
@@ -419,16 +428,124 @@ const routes = [
                       parent: 'InventoryList',
                   },
               },
-              {
-                  path: '/inventory/:id',
-                  name: 'InventoryView',
-                  component: InventoryView,
-                  meta: {
-                      level: 2,
-                      title: 'Inventory Item Details',
-                      parent: 'InventoryList',
+                {
+                    path: '/inventory/:id',
+                    name: 'InventoryView',
+                    component: InventoryView,
+                    meta: {
+                        level: 2,
+                        title: 'Inventory Item Details',
+                        parent: 'InventoryList',
+                    },
+                },
+                {
+                    path: '/inventory/:id/view',
+                    name: 'InventoryItemView',
+                    component: InventoryItemView,
+                    meta: {
+                        level: 2,
+                        title: 'Inventory Item Details',
+                        parent: 'InventoryList',
+                    },
+                },
+                {
+                    path: '/inventory/:id/restock',
+                    name: 'InventoryRestock',
+                    component: () => import('../views/InventoryRestock.vue'),
+                    meta: {
+                        level: 3,
+                        title: 'Restock Inventory Item',
+                        parent: 'InventoryView',
+                    },
+                },
+                {
+                    path: '/platform-inventory',
+                    name: 'PlatformInventory',
+                    component: PlatformInventory,
+                    meta: { level: 1, title: 'Platform Inventory', parent: 'Dashboard' },
+                },
+                {
+                    path: '/platform-inventory/:id/order',
+                    name: 'PlatformOrder',
+                    component: PlatformOrder,
+                    meta: {
+                        level: 2,
+                        title: 'Order Supplies',
+                        parent: 'PlatformInventory',
+                    },
+                },
+                {
+                    path: '/orders',
+                    name: 'OrdersList',
+                    component: OrdersList,
+                    meta: { level: 1, title: 'My Orders', parent: 'Dashboard' },
+                },
+                 {
+                     path: '/admin/orders',
+                     name: 'SuperAdminOrders',
+                     component: SuperAdminOrders,
+                     meta: {
+                         level: 1,
+                         title: 'Order Management',
+                         parent: 'Dashboard',
+                         requiresSuperAdmin: true
+                     },
+                 },
+                 {
+                     path: '/admin/platform-inventory',
+                     name: 'SuperAdminPlatformInventory',
+                     component: SuperAdminPlatformInventory,
+                     meta: {
+                         level: 1,
+                         title: 'Platform Inventory',
+                         parent: 'Dashboard',
+                         requiresSuperAdmin: true
+                     },
+                 },
+                 {
+                     path: '/admin/platform-inventory/add',
+                     name: 'SuperAdminPlatformInventoryAdd',
+                     component: SuperAdminPlatformInventoryAdd,
+                     meta: {
+                         level: 2,
+                         title: 'Add Platform Inventory Item',
+                         parent: 'SuperAdminPlatformInventory',
+                         requiresSuperAdmin: true
+                     },
+                 },
+                  {
+                      path: '/admin/platform-inventory/edit/:id',
+                      name: 'SuperAdminPlatformInventoryEdit',
+                      component: SuperAdminPlatformInventoryEdit,
+                      meta: {
+                          level: 2,
+                          title: 'Edit Platform Inventory Item',
+                          parent: 'SuperAdminPlatformInventory',
+                          requiresSuperAdmin: true
+                      },
                   },
-              },
+                   {
+                       path: '/admin/platform-inventory/:id/view',
+                       name: 'SuperAdminPlatformInventoryView',
+                       component: InventoryItemView,
+                       meta: {
+                           level: 2,
+                           title: 'Platform Inventory Item Details',
+                           parent: 'SuperAdminPlatformInventory',
+                           requiresSuperAdmin: true
+                       },
+                   },
+                   {
+                       path: '/admin/platform-inventory/:id/restock',
+                       name: 'SuperAdminPlatformInventoryRestock',
+                       component: InventoryRestock,
+                       meta: {
+                           level: 3,
+                           title: 'Restock Platform Inventory Item',
+                           parent: 'SuperAdminPlatformInventoryView',
+                           requiresSuperAdmin: true
+                       },
+                   },
         ],
     },
 ];

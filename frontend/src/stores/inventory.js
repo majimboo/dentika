@@ -8,6 +8,9 @@ export const useInventoryStore = defineStore('inventory', {
     stockTransactions: [],
     alerts: [],
     analytics: null,
+    platformItems: [],
+    orders: [],
+    currentOrder: null,
     loading: false,
     error: null,
     pagination: {
@@ -19,6 +22,16 @@ export const useInventoryStore = defineStore('inventory', {
       total: 0,
       page: 1,
       limit: 50
+    },
+    platformPagination: {
+      total: 0,
+      page: 1,
+      limit: 20
+    },
+    ordersPagination: {
+      total: 0,
+      page: 1,
+      limit: 20
     },
     stats: {
       total_value: 0,
@@ -42,7 +55,13 @@ export const useInventoryStore = defineStore('inventory', {
         categories[item.category].push(item)
       })
       return categories
-    }
+    },
+    getPlatformItems: (state) => state.platformItems,
+    getOrders: (state) => state.orders,
+    getCurrentOrder: (state) => state.currentOrder,
+    getPendingOrders: (state) => state.orders.filter(order => order.status === 'pending'),
+    getShippedOrders: (state) => state.orders.filter(order => order.status === 'shipped'),
+    getDeliveredOrders: (state) => state.orders.filter(order => order.status === 'delivered')
   },
 
   actions: {
@@ -348,6 +367,150 @@ export const useInventoryStore = defineStore('inventory', {
       }
     },
 
+    async fetchPlatformItems(params = {}) {
+      this.loading = true
+      this.error = null
+
+      const queryParams = new URLSearchParams({
+        page: params.page || this.platformPagination.page,
+        limit: params.limit || this.platformPagination.limit,
+        ...params
+      })
+
+      try {
+        const result = await apiService.get(`/api/inventory/platform?${queryParams}`)
+        if (result.success) {
+          this.platformItems = result.data.items
+          this.platformPagination = {
+            total: result.data.total,
+            page: result.data.page,
+            limit: result.data.limit
+          }
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to fetch platform inventory'
+        console.error('Error fetching platform inventory:', error)
+        return { success: false, error: this.error }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async createOrder(orderData) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const result = await apiService.post('/api/inventory/orders', orderData)
+        if (result.success) {
+          // Add to orders list if we're on the current page
+          if (this.orders.length < this.ordersPagination.limit) {
+            this.orders.unshift(result.data)
+            this.ordersPagination.total++
+          }
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to create order'
+        console.error('Error creating order:', error)
+        return { success: false, error: this.error }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchOrders(params = {}) {
+      this.loading = true
+      this.error = null
+
+      const queryParams = new URLSearchParams({
+        page: params.page || this.ordersPagination.page,
+        limit: params.limit || this.ordersPagination.limit,
+        ...params
+      })
+
+      try {
+        const result = await apiService.get(`/api/inventory/orders?${queryParams}`)
+        if (result.success) {
+          this.orders = result.data.orders
+          this.ordersPagination = {
+            total: result.data.total,
+            page: result.data.page,
+            limit: result.data.limit
+          }
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to fetch orders'
+        console.error('Error fetching orders:', error)
+        return { success: false, error: this.error }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchOrder(orderId) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const result = await apiService.get(`/api/inventory/orders/${orderId}`)
+        if (result.success) {
+          this.currentOrder = result.data
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to fetch order'
+        console.error('Error fetching order:', error)
+        return { success: false, error: this.error }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async updateOrderStatus(orderId, statusData) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const result = await apiService.put(`/api/inventory/orders/${orderId}/status`, statusData)
+        if (result.success) {
+          // Update order in the list
+          const index = this.orders.findIndex(order => order.id === parseInt(orderId))
+          if (index !== -1) {
+            this.orders[index] = result.data
+          }
+          // Update current order if it's the same
+          if (this.currentOrder && this.currentOrder.id === parseInt(orderId)) {
+            this.currentOrder = result.data
+          }
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to update order status'
+        console.error('Error updating order status:', error)
+        return { success: false, error: this.error }
+      } finally {
+        this.loading = false
+      }
+    },
+
     // Utility methods
     clearError() {
       this.error = null
@@ -359,6 +522,9 @@ export const useInventoryStore = defineStore('inventory', {
       this.stockTransactions = []
       this.alerts = []
       this.analytics = null
+      this.platformItems = []
+      this.orders = []
+      this.currentOrder = null
       this.loading = false
       this.error = null
       this.pagination = {
@@ -370,6 +536,16 @@ export const useInventoryStore = defineStore('inventory', {
         total: 0,
         page: 1,
         limit: 50
+      }
+      this.platformPagination = {
+        total: 0,
+        page: 1,
+        limit: 20
+      }
+      this.ordersPagination = {
+        total: 0,
+        page: 1,
+        limit: 20
       }
       this.stats = {
         total_value: 0,

@@ -64,9 +64,13 @@ import {
   faPhone,
   faPlayCircle,
   faClipboardList,
-  faFileSignature,
-  faDownload,
-  faCamera
+   faFileSignature,
+   faDownload,
+   faCamera,
+   faTachometerAlt,
+   faClinicMedical,
+   faShoppingCart,
+   faChartLine
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add all icons to library at once
@@ -131,9 +135,13 @@ library.add(
   faPhone,
   faPlayCircle,
   faClipboardList,
-  faFileSignature,
-  faDownload,
-  faCamera
+   faFileSignature,
+   faDownload,
+   faCamera,
+   faTachometerAlt,
+   faClinicMedical,
+   faShoppingCart,
+   faChartLine
 )
 
 export { FontAwesomeIcon }

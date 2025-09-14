@@ -66,16 +66,15 @@ func main() {
 		&models.DentalRecordHistory{},
 		&models.ConsentTemplate{},
 		&models.ConsentForm{},
-		&models.Prescription{},
-		&models.PrescriptionMedication{},
-		&models.Inquiry{},
+
 		&models.DailySales{},
-		&models.PatientAnalytics{},
 		// Inventory models
 		&models.InventoryItem{},
 		&models.InventoryStock{},
 		&models.InventoryRestock{},
 		&models.InventoryAlert{},
+		&models.InventoryOrder{},
+		&models.InventoryOrderItem{},
 	); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
@@ -87,6 +86,7 @@ func main() {
 	seedSampleData()
 	seedDefaultTemplates()
 	seedConsentTemplates()
+	seedPlatformInventory()
 
 	// Start notification services (inline for now)
 	go func() {
@@ -243,11 +243,18 @@ func main() {
 	api.Get("/inventory/alerts", handlers.GetInventoryAlerts)
 
 	// Inventory restock management
+	api.Post("/inventory/restock", handlers.CreateRestockOrder)
 	api.Post("/inventory/restock-orders", handlers.CreateRestockOrder)
 	api.Get("/inventory/restock-orders", handlers.GetRestockOrders)
 
 	// Inventory analytics
 	api.Get("/inventory/analytics", handlers.GetInventoryAnalytics)
+
+	// Order management (clinics ordering from platform)
+	api.Post("/inventory/orders", handlers.CreateOrder)
+	api.Get("/inventory/orders", handlers.GetOrders)
+	api.Get("/inventory/orders/:id", handlers.GetOrder)
+	api.Put("/inventory/orders/:id/status", middleware.RoleMiddleware(models.SuperAdmin), handlers.UpdateOrderStatus)
 
 	// Catch all handler for SPA (only for non-API routes)
 	app.Get("/*", func(c *fiber.Ctx) error {
@@ -567,6 +574,132 @@ func seedDefaultTemplates() {
 	}
 
 	log.Println("Default templates seeded successfully!")
+}
+
+func seedPlatformInventory() {
+	// Check if platform inventory already exists
+	var platformItemCount int64
+	if err := database.DB.Model(&models.InventoryItem{}).Where("type = ?", models.InventoryTypePlatform).Count(&platformItemCount).Error; err == nil && platformItemCount > 0 {
+		log.Println("Platform inventory already exists, skipping seed")
+		return
+	}
+
+	// Seed sample platform inventory items
+	platformItems := []models.InventoryItem{
+		{
+			Name:          "Dental Chair",
+			SKU:           "DC-001",
+			Description:   "Professional dental examination chair with adjustable positioning",
+			Category:      models.CategoryEquipment,
+			Type:          models.InventoryTypePlatform,
+			UnitOfMeasure: "unit",
+			SellingPrice:  15000.00,
+			MinStockLevel: 1,
+			ReorderPoint:  1,
+			CurrentStock:  5,
+			Status:        models.ItemStatusActive,
+		},
+		{
+			Name:          "LED Dental Light",
+			SKU:           "DL-002",
+			Description:   "High-intensity LED operating light for dental procedures",
+			Category:      models.CategoryEquipment,
+			Type:          models.InventoryTypePlatform,
+			UnitOfMeasure: "unit",
+			SellingPrice:  2500.00,
+			MinStockLevel: 2,
+			ReorderPoint:  2,
+			CurrentStock:  8,
+			Status:        models.ItemStatusActive,
+		},
+		{
+			Name:          "Sterilization Pouches",
+			SKU:           "SP-003",
+			Description:   "Self-sealing sterilization pouches for dental instruments (box of 200)",
+			Category:      models.CategorySupplies,
+			Type:          models.InventoryTypePlatform,
+			UnitOfMeasure: "box",
+			SellingPrice:  45.00,
+			MinStockLevel: 10,
+			ReorderPoint:  20,
+			CurrentStock:  25,
+			Status:        models.ItemStatusActive,
+		},
+		{
+			Name:          "Dental Gloves",
+			SKU:           "DG-004",
+			Description:   "Nitrile examination gloves, powder-free (box of 100)",
+			Category:      models.CategorySupplies,
+			Type:          models.InventoryTypePlatform,
+			UnitOfMeasure: "box",
+			SellingPrice:  12.50,
+			MinStockLevel: 20,
+			ReorderPoint:  50,
+			CurrentStock:  75,
+			Status:        models.ItemStatusActive,
+		},
+		{
+			Name:          "Composite Resin",
+			SKU:           "CR-005",
+			Description:   "Light-cured composite resin for dental restorations (4g syringe)",
+			Category:      models.CategorySupplies,
+			Type:          models.InventoryTypePlatform,
+			UnitOfMeasure: "syringe",
+			SellingPrice:  85.00,
+			MinStockLevel: 5,
+			ReorderPoint:  10,
+			CurrentStock:  15,
+			Status:        models.ItemStatusActive,
+		},
+		{
+			Name:          "Dental X-Ray Film",
+			SKU:           "DX-006",
+			Description:   "Intraoral dental X-ray film (packet of 150)",
+			Category:      models.CategorySupplies,
+			Type:          models.InventoryTypePlatform,
+			UnitOfMeasure: "packet",
+			SellingPrice:  125.00,
+			MinStockLevel: 3,
+			ReorderPoint:  5,
+			CurrentStock:  8,
+			Status:        models.ItemStatusActive,
+		},
+		{
+			Name:          "Ultrasonic Scaler",
+			SKU:           "US-007",
+			Description:   "Piezoelectric ultrasonic scaler with handpiece",
+			Category:      models.CategoryEquipment,
+			Type:          models.InventoryTypePlatform,
+			UnitOfMeasure: "unit",
+			SellingPrice:  1200.00,
+			MinStockLevel: 1,
+			ReorderPoint:  2,
+			CurrentStock:  3,
+			Status:        models.ItemStatusActive,
+		},
+		{
+			Name:          "Amalgam Separator",
+			SKU:           "AS-008",
+			Description:   "ISO 11143 compliant amalgam separator for waste management",
+			Category:      models.CategoryEquipment,
+			Type:          models.InventoryTypePlatform,
+			UnitOfMeasure: "unit",
+			SellingPrice:  450.00,
+			MinStockLevel: 1,
+			ReorderPoint:  1,
+			CurrentStock:  2,
+			Status:        models.ItemStatusActive,
+		},
+	}
+
+	for _, item := range platformItems {
+		if err := database.DB.Create(&item).Error; err != nil {
+			log.Printf("Failed to create platform inventory item %s: %v", item.Name, err)
+			continue
+		}
+	}
+
+	log.Println("Platform inventory seeded successfully!")
 }
 
 func seedConsentTemplatesForClinic(clinicID uint) {

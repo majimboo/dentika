@@ -221,6 +221,7 @@ import { useRouter } from 'vue-router'
 import { useAppointmentStore } from '../stores/appointment'
 import { useClinicStore } from '../stores/clinic'
 import { useAuthStore } from '../stores/auth'
+import { useTimezone } from '../composables/useTimezone'
 
 import DayCalendar from '../components/calendar/DayCalendar.vue'
 import WeekCalendar from '../components/calendar/WeekCalendar.vue'
@@ -232,6 +233,7 @@ const router = useRouter()
 const appointmentStore = useAppointmentStore()
 const clinicStore = useClinicStore()
 const authStore = useAuthStore()
+const { timezone } = useTimezone()
 
 // Reactive data
 const currentView = ref('week')
@@ -265,31 +267,46 @@ const filteredAppointments = computed(() => {
 
 const currentPeriodLabel = computed(() => {
   const date = currentDate.value
-  
+
   switch (currentView.value) {
     case 'day':
-      return date.toLocaleDateString('en-US', {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Manila',
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
-      })
+      }).format(date)
     case 'week':
       const startOfWeek = new Date(date)
       startOfWeek.setDate(date.getDate() - date.getDay())
       const endOfWeek = new Date(startOfWeek)
       endOfWeek.setDate(startOfWeek.getDate() + 6)
-      
+
+      const startFormatted = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Manila',
+        month: 'long',
+        day: 'numeric'
+      }).format(startOfWeek)
+
+      const endFormatted = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Manila',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      }).format(endOfWeek)
+
       if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
-        return `${startOfWeek.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - ${endOfWeek.getDate()}, ${endOfWeek.getFullYear()}`
+        return `${startFormatted} - ${endOfWeek.getDate()}, ${endOfWeek.getFullYear()}`
       } else {
-        return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${endOfWeek.getFullYear()}`
+        return `${startFormatted} - ${endFormatted}`
       }
     case 'month':
-      return date.toLocaleDateString('en-US', {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Manila',
         year: 'numeric',
         month: 'long'
-      })
+      }).format(date)
     default:
       return ''
   }
@@ -336,29 +353,39 @@ const applyFilters = () => {
 
 const loadAppointments = async () => {
   const params = {}
-  
+
   switch (currentView.value) {
     case 'day':
-      params.date = currentDate.value.toISOString().split('T')[0]
+      // Format date in Asia/Manila timezone
+      const dayDate = new Date(currentDate.value.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+      params.date = dayDate.toISOString().split('T')[0]
       break
     case 'week':
       const startOfWeek = new Date(currentDate.value)
       startOfWeek.setDate(currentDate.value.getDate() - currentDate.value.getDay())
       const endOfWeek = new Date(startOfWeek)
       endOfWeek.setDate(startOfWeek.getDate() + 6)
-      
-      params.start_date = startOfWeek.toISOString().split('T')[0]
-      params.end_date = endOfWeek.toISOString().split('T')[0]
+
+      // Format dates in Asia/Manila timezone
+      const startWeekDate = new Date(startOfWeek.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+      const endWeekDate = new Date(endOfWeek.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+
+      params.start_date = startWeekDate.toISOString().split('T')[0]
+      params.end_date = endWeekDate.toISOString().split('T')[0]
       break
     case 'month':
       const startOfMonth = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1)
       const endOfMonth = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0)
-      
-      params.start_date = startOfMonth.toISOString().split('T')[0]
-      params.end_date = endOfMonth.toISOString().split('T')[0]
+
+      // Format dates in Asia/Manila timezone
+      const startMonthDate = new Date(startOfMonth.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+      const endMonthDate = new Date(endOfMonth.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+
+      params.start_date = startMonthDate.toISOString().split('T')[0]
+      params.end_date = endMonthDate.toISOString().split('T')[0]
       break
   }
-  
+
   await appointmentStore.fetchAppointments(params)
 }
 

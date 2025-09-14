@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import apiService from '../services/api'
+import { useAuthStore } from './auth'
 
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
@@ -69,6 +70,16 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       const queryParams = new URLSearchParams({
         page: params.page || this.pagination.page,
         limit: params.limit || this.pagination.limit,
@@ -76,7 +87,7 @@ export const useInventoryStore = defineStore('inventory', {
       })
 
       try {
-        const result = await apiService.get(`/api/inventory/items?${queryParams}`)
+        const result = await apiService.get(`/api/inventory/${clinicId}/items?${queryParams}`)
         if (result.success) {
           this.items = result.data.items
           this.pagination = {
@@ -106,8 +117,18 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       try {
-        const result = await apiService.get(`/api/inventory/items/${itemId}`)
+        const result = await apiService.get(`/api/inventory/${clinicId}/items/${itemId}`)
         if (result.success) {
           this.currentItem = result.data
           return { success: true, data: result.data }
@@ -128,8 +149,18 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       try {
-        const result = await apiService.post('/api/inventory/items', itemData)
+        const result = await apiService.post(`/api/inventory/${clinicId}/items`, itemData)
         if (result.success) {
           // Add to items list if we're on the current page
           if (this.items.length < this.pagination.limit) {
@@ -154,8 +185,18 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       try {
-        const result = await apiService.put(`/api/inventory/items/${itemId}`, itemData)
+        const result = await apiService.put(`/api/inventory/${clinicId}/items/${itemId}`, itemData)
         if (result.success) {
           // Update item in the list
           const index = this.items.findIndex(item => item.id === parseInt(itemId))
@@ -184,8 +225,18 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       try {
-        const result = await apiService.delete(`/api/inventory/items/${itemId}`)
+        const result = await apiService.delete(`/api/inventory/${clinicId}/items/${itemId}`)
         if (result.success) {
           // Remove from items list
           this.items = this.items.filter(item => item.id !== parseInt(itemId))
@@ -208,8 +259,18 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       try {
-        const result = await apiService.post('/api/inventory/stock-transactions', transactionData)
+        const result = await apiService.post(`/api/inventory/${clinicId}/stock-transactions`, transactionData)
         if (result.success) {
           // Update the item's stock in the list
           const itemIndex = this.items.findIndex(item => item.id === transactionData.item_id)
@@ -238,6 +299,16 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       const queryParams = new URLSearchParams({
         page: params.page || this.stockPagination.page,
         limit: params.limit || this.stockPagination.limit,
@@ -245,7 +316,7 @@ export const useInventoryStore = defineStore('inventory', {
       })
 
       try {
-        const result = await apiService.get(`/api/inventory/items/${itemId}/stock-transactions?${queryParams}`)
+        const result = await apiService.get(`/api/inventory/${clinicId}/items/${itemId}/stock-transactions?${queryParams}`)
         if (result.success) {
           this.stockTransactions = result.data.transactions
           this.stockPagination = {
@@ -271,6 +342,16 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       const queryParams = new URLSearchParams({
         page: params.page || 1,
         limit: params.limit || 50,
@@ -278,7 +359,7 @@ export const useInventoryStore = defineStore('inventory', {
       })
 
       try {
-        const result = await apiService.get(`/api/inventory/alerts?${queryParams}`)
+        const result = await apiService.get(`/api/inventory/${clinicId}/alerts?${queryParams}`)
         if (result.success) {
           this.alerts = result.data.alerts
           return { success: true, data: result.data }
@@ -299,10 +380,20 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       const queryParams = new URLSearchParams(params)
 
       try {
-        const result = await apiService.get(`/api/inventory/analytics?${queryParams}`)
+        const result = await apiService.get(`/api/inventory/${clinicId}/analytics?${queryParams}`)
         if (result.success) {
           this.analytics = result.data.analytics
           return { success: true, data: result.data }
@@ -323,8 +414,18 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       try {
-        const result = await apiService.post('/api/inventory/restock-orders', orderData)
+        const result = await apiService.post(`/api/inventory/${clinicId}/restock-orders`, orderData)
         if (result.success) {
           return { success: true, data: result.data }
         } else {
@@ -344,6 +445,16 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       const queryParams = new URLSearchParams({
         page: params.page || 1,
         limit: params.limit || 50,
@@ -351,7 +462,7 @@ export const useInventoryStore = defineStore('inventory', {
       })
 
       try {
-        const result = await apiService.get(`/api/inventory/restock-orders?${queryParams}`)
+        const result = await apiService.get(`/api/inventory/${clinicId}/restock-orders?${queryParams}`)
         if (result.success) {
           return { success: true, data: result.data }
         } else {
@@ -378,7 +489,7 @@ export const useInventoryStore = defineStore('inventory', {
       })
 
       try {
-        const result = await apiService.get(`/api/inventory/items?${queryParams}`)
+        const result = await apiService.get(`/api/shop?${queryParams}`)
         if (result.success) {
           this.platformItems = result.data.items
           this.platformPagination = {
@@ -404,8 +515,18 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       try {
-        const result = await apiService.post('/api/inventory/orders', orderData)
+        const result = await apiService.post(`/api/inventory/${clinicId}/orders`, orderData)
         if (result.success) {
           // Add to orders list if we're on the current page
           if (this.orders.length < this.ordersPagination.limit) {
@@ -430,6 +551,16 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       const queryParams = new URLSearchParams({
         page: params.page || this.ordersPagination.page,
         limit: params.limit || this.ordersPagination.limit,
@@ -437,7 +568,7 @@ export const useInventoryStore = defineStore('inventory', {
       })
 
       try {
-        const result = await apiService.get(`/api/inventory/orders?${queryParams}`)
+        const result = await apiService.get(`/api/inventory/${clinicId}/orders?${queryParams}`)
         if (result.success) {
           this.orders = result.data.orders
           this.ordersPagination = {
@@ -463,8 +594,18 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       try {
-        const result = await apiService.get(`/api/inventory/orders/${orderId}`)
+        const result = await apiService.get(`/api/inventory/${clinicId}/orders/${orderId}`)
         if (result.success) {
           this.currentOrder = result.data
           return { success: true, data: result.data }
@@ -485,8 +626,18 @@ export const useInventoryStore = defineStore('inventory', {
       this.loading = true
       this.error = null
 
+      // Get clinic ID from auth store
+      const authStore = useAuthStore()
+      const clinicId = authStore.user?.clinic_id
+
+      if (!clinicId) {
+        this.error = 'Clinic ID not found'
+        this.loading = false
+        return { success: false, error: this.error }
+      }
+
       try {
-        const result = await apiService.put(`/api/inventory/orders/${orderId}/status`, statusData)
+        const result = await apiService.put(`/api/inventory/${clinicId}/orders/${orderId}/status`, statusData)
         if (result.success) {
           // Update order in the list
           const index = this.orders.findIndex(order => order.id === parseInt(orderId))

@@ -592,6 +592,7 @@ import { useAppointmentStore } from '../stores/appointment'
 import { useAuthStore } from '../stores/auth'
 import { useInventoryStore } from '../stores/inventory'
 import { useNavigation } from '../composables/useNavigation'
+import { useTimezone } from '../composables/useTimezone'
 
 const route = useRoute()
 const router = useRouter()
@@ -602,6 +603,7 @@ const clinicStore = useClinicStore()
 const appointmentStore = useAppointmentStore()
 const authStore = useAuthStore()
 const inventoryStore = useInventoryStore()
+const { timezone } = useTimezone()
 
 const isEditing = ref(false)
 const isSubmitting = ref(false)
@@ -639,7 +641,9 @@ const formData = ref({
 })
 
 const minDate = computed(() => {
-  return new Date().toISOString().split('T')[0]
+  const today = new Date()
+  const todayInTimezone = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  return todayInTimezone.toISOString().split('T')[0]
 })
 
 // Procedure filtering
@@ -988,7 +992,7 @@ const handleSubmit = async () => {
       patient_id: Number(patientId),
       doctor_id: Number(doctorId),
       branch_id: Number(branchId),
-      start_time: `${formData.value.date}T${formData.value.time}:00Z`,
+      start_time: `${formData.value.date}T${formData.value.time}:00+08:00`,
       end_time: calculateEndTime(),
       duration: Number(formData.value.duration) || 30,
       pre_appointment_notes: formData.value.notes || '',
@@ -1055,9 +1059,9 @@ const handleSubmit = async () => {
 }
 
 const calculateEndTime = () => {
-  const startDateTime = new Date(`${formData.value.date}T${formData.value.time}:00Z`)
+  const startDateTime = new Date(`${formData.value.date}T${formData.value.time}:00`)
   const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.value.duration) * 60000)
-  return endDateTime.toISOString()
+  return endDateTime.toISOString().replace('Z', '+08:00')
 }
 
 // Appointment title is now generated in handleSubmit based on selected procedures

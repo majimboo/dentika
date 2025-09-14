@@ -242,8 +242,17 @@ export default {
       try {
         let endpoint = `/api/inventory/items/${itemId}`
 
-        // Use the same inventory endpoint for all items
-        // The backend will handle filtering based on user permissions
+        // Check if we're in platform inventory context
+        if (route.path.includes('/admin/shop/')) {
+          // Use platform inventory endpoint for admin shop
+          endpoint = `/api/inventory/platform/items/${itemId}`
+        } else {
+          // Use clinic inventory endpoint with clinic_id
+          const clinicId = authStore.user?.clinic_id
+          if (clinicId) {
+            endpoint = `/api/inventory/${clinicId}/items/${itemId}`
+          }
+        }
 
         const response = await apiService.get(endpoint)
 
@@ -272,7 +281,19 @@ export default {
           total_cost: (restockForm.value.unit_cost || 0) * (restockForm.value.quantity_ordered || 0)
         }
 
-        const endpoint = `/api/inventory/${itemId}/restock`
+        let endpoint = `/api/inventory/${itemId}/restock`
+
+        // Check if we're in platform inventory context
+        if (route.path.includes('/admin/shop/')) {
+          // Use platform inventory endpoint for admin shop
+          endpoint = `/api/inventory/platform/restock-orders`
+        } else {
+          // Use clinic inventory endpoint with clinic_id
+          const clinicId = authStore.user?.clinic_id
+          if (clinicId) {
+            endpoint = `/api/inventory/${clinicId}/restock-orders`
+          }
+        }
 
         const response = await apiService.post(endpoint, payload)
 

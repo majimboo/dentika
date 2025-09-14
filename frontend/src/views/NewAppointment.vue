@@ -1243,6 +1243,12 @@ const handleSubmit = async () => {
       return
     }
 
+    // Additional validation for date and time
+    if (formData.value.date.trim() === '' || formData.value.time.trim() === '') {
+      alert('Date and time are required')
+      return
+    }
+
     // Generate title based on selected procedures or default
     const appointmentTitle = selectedProcedures.value.length > 0
       ? selectedProcedures.value[0].name
@@ -1252,8 +1258,8 @@ const handleSubmit = async () => {
       patient_id: Number(patientId),
       doctor_id: Number(doctorId),
       branch_id: Number(branchId),
-      start_time: `${formData.value.date}T${formData.value.time}:00Z`,
-      end_time: calculateEndTime(),
+      date: formData.value.date,
+      time: formData.value.time,
       duration: Number(formData.value.duration) || 30,
       pre_appointment_notes: formData.value.notes || '',
       title: appointmentTitle,
@@ -1261,6 +1267,7 @@ const handleSubmit = async () => {
       status: 'scheduled'
     }
 
+    console.log('Form data:', formData.value)
     console.log('Appointment data to send:', appointmentData)
 
     const result = await appointmentStore.createAppointment(appointmentData)
@@ -1302,11 +1309,7 @@ const handleSubmit = async () => {
   }
 }
 
-const calculateEndTime = () => {
-  const startDateTime = new Date(`${formData.value.date}T${formData.value.time}:00Z`)
-  const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.value.duration) * 60000)
-  return endDateTime.toISOString()
-}
+
 
 // Close dropdown when clicking outside
 const handleClickOutside = (event) => {

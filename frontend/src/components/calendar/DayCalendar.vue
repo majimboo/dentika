@@ -131,14 +131,23 @@ const dayNumber = computed(() => {
 
 const isToday = computed(() => {
   const today = new Date()
-  return props.currentDate.toDateString() === today.toDateString()
+  const todayInTimezone = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  const currentDateInTimezone = new Date(props.currentDate.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  return currentDateInTimezone.toDateString() === todayInTimezone.toDateString()
 })
 
 const dayAppointments = computed(() => {
-  const dayStr = props.currentDate.toISOString().split('T')[0]
-  return props.appointments.filter(apt => 
-    apt.start_time.startsWith(dayStr)
-  )
+  // Format date in Asia/Manila timezone for comparison
+  const dateInTimezone = new Date(props.currentDate.getTime() - (props.currentDate.getTimezoneOffset() * 60000))
+  const manilaTime = new Date(dateInTimezone.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  const dayStr = manilaTime.toISOString().split('T')[0]
+
+  return props.appointments.filter(apt => {
+    const aptDate = new Date(apt.start_time)
+    const aptDateInTimezone = new Date(aptDate.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+    const aptDayStr = aptDateInTimezone.toISOString().split('T')[0]
+    return aptDayStr === dayStr
+  })
 })
 
   const currentTimeStyle = computed(() => {
@@ -182,10 +191,11 @@ const formatHour = (hour) => {
 }
 
 const formatAppointmentTime = (timeString) => {
-  return new Date(timeString).toLocaleTimeString('en-US', {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
     hour: 'numeric',
     minute: '2-digit'
-  })
+  }).format(new Date(timeString))
 }
 
 const formatAppointmentType = (type) => {

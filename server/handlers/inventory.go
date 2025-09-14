@@ -17,7 +17,6 @@ type CreateInventoryItemRequest struct {
 	Description   string                   `json:"description"`
 	SKU           string                   `json:"sku"`
 	Category      models.InventoryCategory `json:"category"`
-	Type          models.InventoryType     `json:"type"`
 	UnitOfMeasure string                   `json:"unit_of_measure"`
 	SellingPrice  float64                  `json:"selling_price"`
 	MinStockLevel int                      `json:"min_stock_level"`
@@ -33,7 +32,6 @@ type UpdateInventoryItemRequest struct {
 	Description   string                   `json:"description"`
 	SKU           string                   `json:"sku"`
 	Category      models.InventoryCategory `json:"category"`
-	Type          models.InventoryType     `json:"type"`
 	UnitOfMeasure string                   `json:"unit_of_measure"`
 	SellingPrice  float64                  `json:"selling_price"`
 	MinStockLevel int                      `json:"min_stock_level"`
@@ -102,25 +100,23 @@ type UpdateOrderStatusRequest struct {
 func GetInventoryItems(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
-	// Get clinic and branch IDs
-	var clinicID, branchID uint
-	if user.IsSuperAdmin() {
-		if clinicIDParam := c.Query("clinic_id"); clinicIDParam != "" {
-			if id, err := strconv.ParseUint(clinicIDParam, 10, 32); err == nil {
-				clinicID = uint(id)
-			}
-		}
-		if branchIDParam := c.Query("branch_id"); branchIDParam != "" {
-			if id, err := strconv.ParseUint(branchIDParam, 10, 32); err == nil {
-				branchID = uint(id)
-			}
-		}
-	} else {
-		clinicID = user.ClinicID
-		if branchIDParam := c.Query("branch_id"); branchIDParam != "" {
-			if id, err := strconv.ParseUint(branchIDParam, 10, 32); err == nil {
-				branchID = uint(id)
-			}
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only access their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only access your clinic's inventory"})
+	}
+
+	// Get branch ID from query parameter (optional)
+	var branchID uint
+	if branchIDParam := c.Query("branch_id"); branchIDParam != "" {
+		if id, err := strconv.ParseUint(branchIDParam, 10, 32); err == nil {
+			branchID = uint(id)
 		}
 	}
 
@@ -153,14 +149,6 @@ func GetInventoryItems(c *fiber.Ctx) error {
 	if status := c.Query("status"); status != "" {
 		query = query.Where("status = ?", status)
 	}
-
-	// Add type filter
-	if typeParam := c.Query("type"); typeParam != "" {
-		query = query.Where("type = ?", typeParam)
-	}
-
-	// Note: Low stock filter is now applied after fetching items
-	// since current_stock is calculated dynamically
 
 	// Add pagination
 	page, _ := strconv.Atoi(c.Query("page", "1"))
@@ -273,6 +261,19 @@ func GetInventoryItems(c *fiber.Ctx) error {
 // GetInventoryItem - Get single inventory item
 func GetInventoryItem(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
+
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only access their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only access your clinic's inventory"})
+	}
+
 	itemID, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid item ID"})
@@ -283,7 +284,7 @@ func GetInventoryItem(c *fiber.Ctx) error {
 
 	if !user.IsSuperAdmin() {
 		// Regular users can only access clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", uint(clinicID), models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, itemID).Error; err != nil {
@@ -301,7 +302,6 @@ func GetInventoryItem(c *fiber.Ctx) error {
 		"description":       item.Description,
 		"sku":               item.SKU,
 		"category":          item.Category,
-		"type":              item.Type,
 		"unit_of_measure":   item.UnitOfMeasure,
 		"average_unit_cost": avgUnitCost,
 		"selling_price":     item.SellingPrice,
@@ -336,6 +336,18 @@ func GetInventoryItem(c *fiber.Ctx) error {
 func CreateInventoryItem(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only create items for their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only create items for your clinic"})
+	}
+
 	var req CreateInventoryItemRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
@@ -346,37 +358,30 @@ func CreateInventoryItem(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Item name is required"})
 	}
 
-	// Set default type if not provided
-	if req.Type == "" {
-		req.Type = models.InventoryTypeClinic
-	}
-
-	// Regular users can only create clinic inventory
-	if !user.IsSuperAdmin() && req.Type != models.InventoryTypeClinic {
-		return c.Status(403).JSON(fiber.Map{"error": "Access denied. Only super admins can create platform inventory"})
-	}
-
-	// For clinic inventory, branch ID is required
-	if req.Type == models.InventoryTypeClinic && req.BranchID == nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Branch ID is required for clinic inventory"})
-	}
-
-	// For platform inventory, no clinic/branch association
-	var clinicID, branchID *uint
-	if req.Type == models.InventoryTypeClinic {
-		if user.IsSuperAdmin() {
-			// For super admin, get clinic from branch
+	// Determine clinic and branch based on user role and request
+	var itemClinicID, branchID *uint
+	if user.IsSuperAdmin() {
+		if req.BranchID != nil {
+			// Super admin creating item for a specific clinic branch
 			var branch models.Branch
 			if err := database.DB.First(&branch, *req.BranchID).Error; err != nil {
 				return c.Status(400).JSON(fiber.Map{"error": "Invalid branch ID"})
 			}
-			clinicID = &branch.ClinicID
+			itemClinicID = &branch.ClinicID
 			branchID = req.BranchID
 		} else {
-			// User has clinic assigned (ClinicID is now non-nullable)
-			clinicID = &user.ClinicID
-			branchID = req.BranchID
+			// Super admin creating item for Dentika (clinic_id = 1)
+			dentikaClinicID := uint(1)
+			itemClinicID = &dentikaClinicID
+			branchID = nil
 		}
+	} else {
+		// Regular user creating item for their clinic
+		if req.BranchID == nil {
+			return c.Status(400).JSON(fiber.Map{"error": "Branch ID is required"})
+		}
+		itemClinicID = &user.ClinicID
+		branchID = req.BranchID
 	}
 
 	item := models.InventoryItem{
@@ -384,7 +389,6 @@ func CreateInventoryItem(c *fiber.Ctx) error {
 		Description:   req.Description,
 		SKU:           req.SKU,
 		Category:      req.Category,
-		Type:          req.Type,
 		UnitOfMeasure: req.UnitOfMeasure,
 		SellingPrice:  req.SellingPrice,
 		MinStockLevel: req.MinStockLevel,
@@ -392,7 +396,7 @@ func CreateInventoryItem(c *fiber.Ctx) error {
 
 		HasExpiration: req.HasExpiration,
 		ExpiryDate:    req.ExpiryDate,
-		ClinicID:      clinicID,
+		ClinicID:      itemClinicID,
 		BranchID:      branchID,
 		CreatedBy:     user.ID,
 		UpdatedBy:     user.ID,
@@ -411,6 +415,19 @@ func CreateInventoryItem(c *fiber.Ctx) error {
 // UpdateInventoryItem - Update existing inventory item
 func UpdateInventoryItem(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
+
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only update items for their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only update items for your clinic"})
+	}
+
 	itemID, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid item ID"})
@@ -425,7 +442,7 @@ func UpdateInventoryItem(c *fiber.Ctx) error {
 	query := database.DB
 	if !user.IsSuperAdmin() {
 		// Regular users can only update clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", uint(clinicID), models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, itemID).Error; err != nil {
@@ -445,9 +462,7 @@ func UpdateInventoryItem(c *fiber.Ctx) error {
 	if req.Category != "" {
 		item.Category = req.Category
 	}
-	if req.Type != "" {
-		item.Type = req.Type
-	}
+
 	if req.UnitOfMeasure != "" {
 		item.UnitOfMeasure = req.UnitOfMeasure
 	}
@@ -478,6 +493,19 @@ func UpdateInventoryItem(c *fiber.Ctx) error {
 // DeleteInventoryItem - Soft delete inventory item
 func DeleteInventoryItem(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
+
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only delete items for their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only delete items for your clinic"})
+	}
+
 	itemID, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid item ID"})
@@ -487,7 +515,7 @@ func DeleteInventoryItem(c *fiber.Ctx) error {
 	query := database.DB
 	if !user.IsSuperAdmin() {
 		// Regular users can only delete clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", uint(clinicID), models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, itemID).Error; err != nil {
@@ -504,6 +532,18 @@ func DeleteInventoryItem(c *fiber.Ctx) error {
 // CreateStockTransaction - Handle stock additions/deductions
 func CreateStockTransaction(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
+
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only create stock transactions for their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only create stock transactions for your clinic"})
+	}
 
 	var req InventoryStockTransactionRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -523,7 +563,7 @@ func CreateStockTransaction(c *fiber.Ctx) error {
 	query := database.DB
 	if !user.IsSuperAdmin() {
 		// Regular users can only create stock transactions for clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", uint(clinicID), models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, req.ItemID).Error; err != nil {
@@ -583,6 +623,19 @@ func CreateStockTransaction(c *fiber.Ctx) error {
 // GetStockTransactions - Get stock transaction history
 func GetStockTransactions(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
+
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only view stock transactions for their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only view stock transactions for your clinic"})
+	}
+
 	itemID, err := strconv.ParseUint(c.Params("itemId"), 10, 32)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid item ID"})
@@ -593,7 +646,7 @@ func GetStockTransactions(c *fiber.Ctx) error {
 
 	if !user.IsSuperAdmin() {
 		// Regular users can only view stock transactions for clinic inventory from their clinic
-		query = query.Where("clinic_id = ?", user.ClinicID)
+		query = query.Where("clinic_id = ?", uint(clinicID))
 	}
 
 	query = query.Where("item_id = ?", itemID)
@@ -627,15 +680,16 @@ func GetStockTransactions(c *fiber.Ctx) error {
 func GetInventoryAlerts(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
-	var clinicID uint
-	if user.IsSuperAdmin() {
-		if clinicIDParam := c.Query("clinic_id"); clinicIDParam != "" {
-			if id, err := strconv.ParseUint(clinicIDParam, 10, 32); err == nil {
-				clinicID = uint(id)
-			}
-		}
-	} else {
-		clinicID = user.ClinicID
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only view alerts for their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only view alerts for your clinic"})
 	}
 
 	var alerts []models.InventoryAlert
@@ -694,6 +748,18 @@ func GetInventoryAlerts(c *fiber.Ctx) error {
 func CreateRestockOrder(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only create restock orders for their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only create restock orders for your clinic"})
+	}
+
 	var req CreateRestockRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
@@ -712,7 +778,7 @@ func CreateRestockOrder(c *fiber.Ctx) error {
 	query := database.DB
 	if !user.IsSuperAdmin() {
 		// Regular users can only restock clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", uint(clinicID), models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, req.ItemID).Error; err != nil {
@@ -747,15 +813,16 @@ func CreateRestockOrder(c *fiber.Ctx) error {
 func GetRestockOrders(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
-	var clinicID uint
-	if user.IsSuperAdmin() {
-		if clinicIDParam := c.Query("clinic_id"); clinicIDParam != "" {
-			if id, err := strconv.ParseUint(clinicIDParam, 10, 32); err == nil {
-				clinicID = uint(id)
-			}
-		}
-	} else {
-		clinicID = user.ClinicID
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only view restock orders for their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only view restock orders for your clinic"})
 	}
 
 	var orders []models.InventoryRestock
@@ -802,15 +869,16 @@ func GetRestockOrders(c *fiber.Ctx) error {
 func GetInventoryAnalytics(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
-	var clinicID uint
-	if user.IsSuperAdmin() {
-		if clinicIDParam := c.Query("clinic_id"); clinicIDParam != "" {
-			if id, err := strconv.ParseUint(clinicIDParam, 10, 32); err == nil {
-				clinicID = uint(id)
-			}
-		}
-	} else {
-		clinicID = user.ClinicID
+	// Get clinic ID from URL parameter
+	clinicIDParam := c.Params("clinic_id")
+	clinicID, err := strconv.ParseUint(clinicIDParam, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
+	}
+
+	// For non-super admin users, ensure they can only view analytics for their own clinic
+	if !user.IsSuperAdmin() && uint(clinicID) != user.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied. You can only view analytics for your clinic"})
 	}
 
 	// Fetch all inventory items to calculate total value and low stock count
@@ -1187,19 +1255,21 @@ func CreatePlatformInventoryItem(c *fiber.Ctx) error {
 		req.LowStockThreshold = 10
 	}
 
+	// For platform inventory, use clinic_id = 1 (Dentika)
+	dentikaClinicID := uint(1)
+
 	item := models.InventoryItem{
 		Name:          req.Name,
 		Description:   req.Description,
 		SKU:           req.SKU,
 		Category:      category,
-		Type:          models.InventoryTypePlatform,
 		UnitOfMeasure: req.Unit,
 		SellingPrice:  req.Price,
 		MinStockLevel: req.LowStockThreshold,
 		ReorderPoint:  req.LowStockThreshold, // Use same value for reorder point
 
-		ClinicID:  nil, // No clinic association for platform inventory
-		BranchID:  nil, // No branch association for platform inventory
+		ClinicID:  &dentikaClinicID, // Dentika's clinic
+		BranchID:  nil,              // No specific branch for platform items
 		CreatedBy: user.ID,
 		UpdatedBy: user.ID,
 	}
@@ -1239,7 +1309,6 @@ func GetPlatformInventoryItem(c *fiber.Ctx) error {
 		"description":       item.Description,
 		"sku":               item.SKU,
 		"category":          item.Category,
-		"type":              item.Type,
 		"unit_of_measure":   item.UnitOfMeasure,
 		"average_unit_cost": avgUnitCost,
 		"selling_price":     item.SellingPrice,
@@ -1272,7 +1341,7 @@ func GetPlatformInventoryItem(c *fiber.Ctx) error {
 // GetPlatformInventory - Get platform inventory items available for ordering
 func GetPlatformInventory(c *fiber.Ctx) error {
 	var items []models.InventoryItem
-	query := database.DB.Where("type = ?", models.InventoryTypePlatform).Preload("Clinic").Preload("Branch")
+	query := database.DB.Where("clinic_id = ?", 1).Preload("Clinic").Preload("Branch")
 
 	// Add search functionality
 	if search := c.Query("search"); search != "" {
@@ -1301,13 +1370,16 @@ func GetPlatformInventory(c *fiber.Ctx) error {
 
 	// Get total count
 	var total int64
-	countQuery := database.DB.Model(&models.InventoryItem{}).Where("type = ?", models.InventoryTypePlatform)
+	countQuery := database.DB.Model(&models.InventoryItem{}).Where("clinic_id = ?", 1)
 	if search := c.Query("search"); search != "" {
 		countQuery = countQuery.Where("name LIKE ? OR sku LIKE ? OR description LIKE ?",
 			"%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 	if category := c.Query("category"); category != "" {
 		countQuery = countQuery.Where("category = ?", category)
+	}
+	if status := c.Query("status"); status != "" {
+		countQuery = countQuery.Where("status = ?", status)
 	}
 	countQuery.Count(&total)
 
@@ -1456,7 +1528,7 @@ func GetShopItems(c *fiber.Ctx) error {
 
 	// Add category filter
 	if category := c.Query("category"); category != "" {
-		query = query.Where("category = ?", category)
+		query = query.Where("category ILIKE ?", category)
 	}
 
 	// Add pagination

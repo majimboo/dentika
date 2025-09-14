@@ -211,8 +211,8 @@
               <div class="text-sm text-gray-900">{{ item.unit_of_measure }}</div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Type</label>
-              <div class="text-sm text-gray-900 capitalize">{{ item.type }}</div>
+              <label class="block text-sm font-medium text-gray-700">Source</label>
+              <div class="text-sm text-gray-900 capitalize">{{ item.clinic_id === 1 ? 'Dentika Shop' : 'Clinic Inventory' }}</div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Created</label>
@@ -265,9 +265,17 @@ export default {
         const itemId = route.params.id
         let endpoint = `/api/inventory/items/${itemId}`
 
-        // Use the same inventory endpoint for all items
-        // The backend will handle filtering based on user permissions
-        endpoint = `/api/inventory/items/${itemId}`
+        // Check if we're in platform inventory context
+        if (route.path.includes('/admin/shop/')) {
+          // Use platform inventory endpoint for admin shop
+          endpoint = `/api/inventory/platform/items/${itemId}`
+        } else {
+          // Use clinic inventory endpoint with clinic_id
+          const clinicId = authStore.user?.clinic_id
+          if (clinicId) {
+            endpoint = `/api/inventory/${clinicId}/items/${itemId}`
+          }
+        }
 
         const response = await apiService.get(endpoint)
 

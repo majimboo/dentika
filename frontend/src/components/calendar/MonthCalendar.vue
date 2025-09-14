@@ -148,6 +148,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useTimezone } from '../../composables/useTimezone'
 
 const props = defineProps({
   currentDate: {
@@ -162,33 +163,40 @@ const props = defineProps({
 
 const emit = defineEmits(['appointment-click', 'date-click'])
 
+const { timezone } = useTimezone()
+
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const calendarDays = computed(() => {
   const days = []
   const year = props.currentDate.getFullYear()
   const month = props.currentDate.getMonth()
-  
+
   // Get first day of the month and find the starting date (Sunday of the first week)
   const firstDayOfMonth = new Date(year, month, 1)
   const startDate = new Date(firstDayOfMonth)
   startDate.setDate(startDate.getDate() - firstDayOfMonth.getDay())
-  
+
   // Generate 42 days (6 weeks) for the calendar grid
   for (let i = 0; i < 42; i++) {
     const date = new Date(startDate)
     date.setDate(startDate.getDate() + i)
-    
+
     const isCurrentMonth = date.getMonth() === month
-    const isToday = date.toDateString() === new Date().toDateString()
-    
+
+    // Check if today in Asia/Manila timezone
+    const today = new Date()
+    const todayInTimezone = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+    const dateInTimezone = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+    const isToday = dateInTimezone.toDateString() === todayInTimezone.toDateString()
+
     days.push({
       date,
       isCurrentMonth,
       isToday
     })
   }
-  
+
   return days
 })
 
@@ -209,10 +217,17 @@ const completedAppointments = computed(() => {
 })
 
 const getDayAppointments = (date) => {
-  const dayStr = date.toISOString().split('T')[0]
-  return props.appointments.filter(apt => 
-    apt.start_time.startsWith(dayStr)
-  ).sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+  // Format date in Asia/Manila timezone for comparison
+  const dateInTimezone = new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+  const manilaTime = new Date(dateInTimezone.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  const dayStr = manilaTime.toISOString().split('T')[0]
+
+  return props.appointments.filter(apt => {
+    const aptDate = new Date(apt.start_time)
+    const aptDateInTimezone = new Date(aptDate.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+    const aptDayStr = aptDateInTimezone.toISOString().split('T')[0]
+    return aptDayStr === dayStr
+  }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
 }
 
 const getAppointmentColor = (status) => {
@@ -228,10 +243,11 @@ const getAppointmentColor = (status) => {
 }
 
 const formatTime = (timeString) => {
-  return new Date(timeString).toLocaleTimeString('en-US', {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
     hour: 'numeric',
     minute: '2-digit'
-  })
+  }).format(new Date(timeString))
 }
 
 const selectDate = (date) => {

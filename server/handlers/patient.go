@@ -64,6 +64,29 @@ func GetPatients(c *fiber.Ctx) error {
 			"%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 
+	// Add status filter
+	if status := c.Query("status"); status != "" {
+		if status == "active" {
+			query = query.Where("is_active = ?", true)
+		} else if status == "inactive" {
+			query = query.Where("is_active = ?", false)
+		}
+	}
+
+	// Add sorting
+	sortBy := c.Query("sort", "name")
+	switch sortBy {
+	case "name":
+		query = query.Order("first_name ASC, last_name ASC")
+	case "created_at":
+		query = query.Order("created_at DESC")
+	case "last_visit":
+		// For last_visit, we might need to join with appointments, but for now sort by created_at
+		query = query.Order("created_at DESC")
+	default:
+		query = query.Order("first_name ASC, last_name ASC")
+	}
+
 	// Add pagination
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
@@ -82,6 +105,13 @@ func GetPatients(c *fiber.Ctx) error {
 	if search := c.Query("search"); search != "" {
 		countQuery = countQuery.Where("first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR phone LIKE ?",
 			"%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%")
+	}
+	if status := c.Query("status"); status != "" {
+		if status == "active" {
+			countQuery = countQuery.Where("is_active = ?", true)
+		} else if status == "inactive" {
+			countQuery = countQuery.Where("is_active = ?", false)
+		}
 	}
 	countQuery.Count(&total)
 

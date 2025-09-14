@@ -569,10 +569,12 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAppointmentStore } from '../stores/appointment'
 import { useClinicStore } from '../stores/clinic'
 import { useAuthStore } from '../stores/auth'
+import { useTimezone } from '../composables/useTimezone'
 
 const appointmentStore = useAppointmentStore()
 const clinicStore = useClinicStore()
 const authStore = useAuthStore()
+const { formatDateTime, formatDate, formatTime } = useTimezone()
 
 // Reactive data
 const loading = computed(() => appointmentStore.isLoading)
@@ -746,22 +748,7 @@ const formatStatus = (status) => {
   return statusMap[status] || status
 }
 
-const formatDate = (dateTime) => {
-  const date = new Date(dateTime)
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
-
-const formatTime = (dateTime) => {
-  return new Date(dateTime).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+// Date and time formatting is now handled by useTimezone composable
 
 const formatAppointmentType = (type) => {
   return type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'General'

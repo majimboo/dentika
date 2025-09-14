@@ -160,9 +160,11 @@ const weekDays = computed(() => {
 
 const todayColumn = computed(() => {
   const today = new Date()
-  return weekDays.value.findIndex(day => 
-    day.date.toDateString() === today.toDateString()
-  )
+  const todayInTimezone = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  return weekDays.value.findIndex(day => {
+    const dayInTimezone = new Date(day.date.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+    return dayInTimezone.toDateString() === todayInTimezone.toDateString()
+  })
 })
 
 const currentTimeLabel = computed(() => {
@@ -173,9 +175,11 @@ const currentTimeLabel = computed(() => {
 })
 
  const isToday = (date) => {
-  const today = new Date()
-  return date.toDateString() === today.toDateString()
-}
+   const today = new Date()
+   const todayInTimezone = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+   const dateInTimezone = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+   return dateInTimezone.toDateString() === todayInTimezone.toDateString()
+ }
 
 const timeLabelsWidth = computed(() => {
   // Match the width of time-labels column
@@ -225,10 +229,11 @@ const formatHour = (hour) => {
 }
 
 const formatTime = (timeString) => {
-  return new Date(timeString).toLocaleTimeString('en-US', {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
     hour: 'numeric',
     minute: '2-digit'
-  })
+  }).format(new Date(timeString))
 }
 
 const formatAppointmentType = (type) => {
@@ -236,10 +241,17 @@ const formatAppointmentType = (type) => {
 }
 
 const getDayAppointments = (date) => {
-  const dayStr = date.toISOString().split('T')[0]
-  return props.appointments.filter(apt => 
-    apt.start_time.startsWith(dayStr)
-  )
+  // Format date in Asia/Manila timezone for comparison
+  const dateInTimezone = new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+  const manilaTime = new Date(dateInTimezone.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  const dayStr = manilaTime.toISOString().split('T')[0]
+
+  return props.appointments.filter(apt => {
+    const aptDate = new Date(apt.start_time)
+    const aptDateInTimezone = new Date(aptDate.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+    const aptDayStr = aptDateInTimezone.toISOString().split('T')[0]
+    return aptDayStr === dayStr
+  })
 }
 
 const getAppointmentStyle = (appointment) => {

@@ -235,29 +235,37 @@ func main() {
 	api.Put("/appointment-diagnoses/:id", middleware.RoleMiddleware(models.Doctor), handlers.UpdateAppointmentDiagnosis)
 
 	// Inventory management routes
-	api.Get("/inventory/items", handlers.GetInventoryItems)
-	api.Get("/inventory/items/:id", handlers.GetInventoryItem)
-	api.Post("/inventory/items", handlers.CreateInventoryItem)
-	api.Put("/inventory/items/:id", handlers.UpdateInventoryItem)
-	api.Delete("/inventory/items/:id", handlers.DeleteInventoryItem)
+	api.Get("/inventory/:clinic_id/items", handlers.GetInventoryItems)
+	api.Get("/inventory/:clinic_id/items/:id", handlers.GetInventoryItem)
+	api.Post("/inventory/:clinic_id/items", handlers.CreateInventoryItem)
+	api.Put("/inventory/:clinic_id/items/:id", handlers.UpdateInventoryItem)
+	api.Delete("/inventory/:clinic_id/items/:id", handlers.DeleteInventoryItem)
 
 	// Inventory stock transactions
-	api.Post("/inventory/stock-transactions", handlers.CreateStockTransaction)
-	api.Get("/inventory/items/:itemId/stock-transactions", handlers.GetStockTransactions)
+	api.Post("/inventory/:clinic_id/stock-transactions", handlers.CreateStockTransaction)
+	api.Get("/inventory/:clinic_id/items/:itemId/stock-transactions", handlers.GetStockTransactions)
 
 	// Inventory alerts and notifications
-	api.Get("/inventory/alerts", handlers.GetInventoryAlerts)
+	api.Get("/inventory/:clinic_id/alerts", handlers.GetInventoryAlerts)
 
 	// Inventory restock management
-	api.Post("/inventory/restock", handlers.CreateRestockOrder)
-	api.Post("/inventory/restock-orders", handlers.CreateRestockOrder)
-	api.Get("/inventory/restock-orders", handlers.GetRestockOrders)
+	api.Post("/inventory/:clinic_id/restock", handlers.CreateRestockOrder)
+	api.Post("/inventory/:clinic_id/restock-orders", handlers.CreateRestockOrder)
+	api.Get("/inventory/:clinic_id/restock-orders", handlers.GetRestockOrders)
 
 	// Inventory analytics
-	api.Get("/inventory/analytics", handlers.GetInventoryAnalytics)
+	api.Get("/inventory/:clinic_id/analytics", handlers.GetInventoryAnalytics)
 
 	// Shop API - Dentika's inventory that clinics can order from (clinic_id=1)
 	api.Get("/shop", handlers.GetShopItems)
+
+	// Shop inventory management (for super admin only)
+	api.Get("/inventory/shop/items", middleware.RoleMiddleware(models.SuperAdmin), handlers.GetPlatformInventory)
+	api.Get("/inventory/shop/items/:id", middleware.RoleMiddleware(models.SuperAdmin), handlers.GetPlatformInventoryItem)
+	api.Post("/inventory/shop/items", middleware.RoleMiddleware(models.SuperAdmin), handlers.CreatePlatformInventoryItem)
+	api.Put("/inventory/shop/items/:id", middleware.RoleMiddleware(models.SuperAdmin), handlers.UpdatePlatformInventoryItem)
+	api.Delete("/inventory/shop/items/:id", middleware.RoleMiddleware(models.SuperAdmin), handlers.DeletePlatformInventoryItem)
+	api.Put("/inventory/shop/items/:id/status", middleware.RoleMiddleware(models.SuperAdmin), handlers.UpdatePlatformInventoryItemStatus)
 
 	// Order management (clinics ordering from platform)
 	api.Post("/inventory/orders", handlers.CreateOrder)
@@ -608,29 +616,27 @@ func seedPlatformInventory() {
 			SKU:           "DC-001",
 			Description:   "Professional dental examination chair with adjustable positioning",
 			Category:      models.CategoryEquipment,
-			Type:          models.InventoryTypeClinic,
 			UnitOfMeasure: "unit",
 			SellingPrice:  15000.00,
 			MinStockLevel: 1,
 			ReorderPoint:  1,
 			Status:        models.ItemStatusActive,
-			ClinicID:      &[]uint{1}[0],
-			BranchID:      &[]uint{1}[0],
-			CreatedBy:     1, // Admin user
+			ClinicID:      &[]uint{1}[0], // Dentika's clinic
+			BranchID:      nil,
+			CreatedBy:     1,
 		},
 		{
 			Name:          "LED Dental Light",
 			SKU:           "DL-002",
 			Description:   "High-intensity LED operating light for dental procedures",
 			Category:      models.CategoryEquipment,
-			Type:          models.InventoryTypeClinic,
 			UnitOfMeasure: "unit",
 			SellingPrice:  2500.00,
 			MinStockLevel: 2,
 			ReorderPoint:  2,
 			Status:        models.ItemStatusActive,
-			ClinicID:      &[]uint{1}[0],
-			BranchID:      &[]uint{1}[0],
+			ClinicID:      &[]uint{1}[0], // Dentika's clinic
+			BranchID:      nil,
 			CreatedBy:     1,
 		},
 		{
@@ -638,14 +644,13 @@ func seedPlatformInventory() {
 			SKU:           "SP-003",
 			Description:   "Self-sealing sterilization pouches for dental instruments (box of 200)",
 			Category:      models.CategorySupplies,
-			Type:          models.InventoryTypeClinic,
 			UnitOfMeasure: "box",
 			SellingPrice:  45.00,
 			MinStockLevel: 10,
 			ReorderPoint:  20,
 			Status:        models.ItemStatusActive,
-			ClinicID:      &[]uint{1}[0],
-			BranchID:      &[]uint{1}[0],
+			ClinicID:      &[]uint{1}[0], // Dentika's clinic
+			BranchID:      nil,
 			CreatedBy:     1,
 		},
 		{
@@ -653,14 +658,13 @@ func seedPlatformInventory() {
 			SKU:           "DG-004",
 			Description:   "Nitrile examination gloves, powder-free (box of 100)",
 			Category:      models.CategorySupplies,
-			Type:          models.InventoryTypeClinic,
 			UnitOfMeasure: "box",
 			SellingPrice:  12.50,
 			MinStockLevel: 20,
 			ReorderPoint:  50,
 			Status:        models.ItemStatusActive,
-			ClinicID:      &[]uint{1}[0],
-			BranchID:      &[]uint{1}[0],
+			ClinicID:      &[]uint{1}[0], // Dentika's clinic
+			BranchID:      nil,
 			CreatedBy:     1,
 		},
 		{
@@ -668,14 +672,13 @@ func seedPlatformInventory() {
 			SKU:           "CR-005",
 			Description:   "Light-cured composite resin for dental restorations (4g syringe)",
 			Category:      models.CategorySupplies,
-			Type:          models.InventoryTypeClinic,
 			UnitOfMeasure: "syringe",
 			SellingPrice:  85.00,
 			MinStockLevel: 5,
 			ReorderPoint:  10,
 			Status:        models.ItemStatusActive,
-			ClinicID:      &[]uint{1}[0],
-			BranchID:      &[]uint{1}[0],
+			ClinicID:      &[]uint{1}[0], // Dentika's clinic
+			BranchID:      nil,
 			CreatedBy:     1,
 		},
 		{
@@ -683,14 +686,13 @@ func seedPlatformInventory() {
 			SKU:           "DX-006",
 			Description:   "Intraoral dental X-ray film (packet of 150)",
 			Category:      models.CategorySupplies,
-			Type:          models.InventoryTypeClinic,
 			UnitOfMeasure: "packet",
 			SellingPrice:  125.00,
 			MinStockLevel: 3,
 			ReorderPoint:  5,
 			Status:        models.ItemStatusActive,
-			ClinicID:      &[]uint{1}[0],
-			BranchID:      &[]uint{1}[0],
+			ClinicID:      &[]uint{1}[0], // Dentika's clinic
+			BranchID:      nil,
 			CreatedBy:     1,
 		},
 		{
@@ -698,14 +700,13 @@ func seedPlatformInventory() {
 			SKU:           "US-007",
 			Description:   "Piezoelectric ultrasonic scaler with handpiece",
 			Category:      models.CategoryEquipment,
-			Type:          models.InventoryTypeClinic,
 			UnitOfMeasure: "unit",
 			SellingPrice:  1200.00,
 			MinStockLevel: 1,
 			ReorderPoint:  2,
 			Status:        models.ItemStatusActive,
-			ClinicID:      &[]uint{1}[0],
-			BranchID:      &[]uint{1}[0],
+			ClinicID:      &[]uint{1}[0], // Dentika's clinic
+			BranchID:      nil,
 			CreatedBy:     1,
 		},
 		{
@@ -713,14 +714,13 @@ func seedPlatformInventory() {
 			SKU:           "AS-008",
 			Description:   "ISO 11143 compliant amalgam separator for waste management",
 			Category:      models.CategoryEquipment,
-			Type:          models.InventoryTypeClinic,
 			UnitOfMeasure: "unit",
 			SellingPrice:  450.00,
 			MinStockLevel: 1,
 			ReorderPoint:  1,
 			Status:        models.ItemStatusActive,
-			ClinicID:      &[]uint{1}[0],
-			BranchID:      &[]uint{1}[0],
+			ClinicID:      &[]uint{1}[0], // Dentika's clinic
+			BranchID:      nil,
 			CreatedBy:     1,
 		},
 	}

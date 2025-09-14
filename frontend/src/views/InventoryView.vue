@@ -118,14 +118,14 @@
           <div class="p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Product Details</h3>
              <dl class="space-y-3">
-               <div class="flex justify-between">
-                 <dt class="text-sm font-medium text-gray-600">Type:</dt>
-                 <dd class="text-sm text-gray-900">
-                   <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                     {{ item.type === 'platform' ? 'Platform Inventory' : 'Clinic Inventory' }}
-                   </span>
-                 </dd>
-               </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm font-medium text-gray-600">Source:</dt>
+                  <dd class="text-sm text-gray-900">
+                    <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                      {{ item.clinic_id === 1 ? 'Dentika Shop' : 'Clinic Inventory' }}
+                    </span>
+                  </dd>
+                </div>
                <div class="flex justify-between">
                  <dt class="text-sm font-medium text-gray-600">Category:</dt>
                  <dd class="text-sm text-gray-900">

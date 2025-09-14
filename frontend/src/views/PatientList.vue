@@ -403,20 +403,22 @@ const loadPatients = async (params = {}) => {
   const searchParams = {
     page: currentPage.value,
     limit: pageSize.value,
+    sort: sortBy.value,
     ...params
   }
-  
+
   if (statusFilter.value) {
     searchParams.status = statusFilter.value
   }
-  
+
   await patientStore.fetchPatients(searchParams)
 }
 
 const debouncedSearch = debounce(() => {
   if (searchQuery.value !== patientStore.searchQuery) {
     currentPage.value = 1
-    patientStore.searchPatients(searchQuery.value)
+    patientStore.searchQuery = searchQuery.value
+    loadPatients()
   }
 }, 300)
 

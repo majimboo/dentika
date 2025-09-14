@@ -14,8 +14,10 @@ import (
 type CreateAppointmentRequest struct {
 	Title               string                   `json:"title"`
 	Description         string                   `json:"description"`
-	StartTime           time.Time                `json:"start_time"`
-	EndTime             time.Time                `json:"end_time"`
+	Date                string                   `json:"date"` // Format: "2006-01-02"
+	Time                string                   `json:"time"` // Format: "15:04"
+	StartTime           time.Time                `json:"-"`    // Calculated from date and time
+	EndTime             time.Time                `json:"-"`    // Calculated from start_time and duration
 	Duration            int                      `json:"duration"`
 	Status              models.AppointmentStatus `json:"status"`
 	PatientID           uint                     `json:"patient_id"`
@@ -28,43 +30,67 @@ type CreateAppointmentRequest struct {
 
 // Custom time parsing for JSON
 func (t *CreateAppointmentRequest) UnmarshalJSON(data []byte) error {
+	// First, unmarshal into a map to extract date/time
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	// Extract date and time
+	if dateVal, ok := raw["date"]; ok {
+		if dateStr, ok := dateVal.(string); ok {
+			t.Date = dateStr
+		}
+	}
+	if timeVal, ok := raw["time"]; ok {
+		if timeStr, ok := timeVal.(string); ok {
+			t.Time = timeStr
+		}
+	}
+
+	// Parse date and time to create start_time in Asia/Manila timezone
+	if t.Date != "" && t.Time != "" {
+		// Load Asia/Manila timezone
+		location, err := time.LoadLocation("Asia/Manila")
+		if err != nil {
+			return err
+		}
+
+		// Parse date and time
+		dateTimeStr := t.Date + " " + t.Time
+		parsedTime, err := time.ParseInLocation("2006-01-02 15:04", dateTimeStr, location)
+		if err != nil {
+			return err
+		}
+
+		t.StartTime = parsedTime
+
+		// Calculate end time based on duration
+		if t.Duration > 0 {
+			t.EndTime = parsedTime.Add(time.Duration(t.Duration) * time.Minute)
+		}
+	}
+
+	// Now unmarshal the rest normally
 	type Alias CreateAppointmentRequest
 	aux := &struct {
-		StartTime string `json:"start_time"`
-		EndTime   string `json:"end_time"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
 	}
 
-	if err := json.Unmarshal(data, aux); err != nil {
+	// Remove date and time from raw to avoid conflict
+	delete(raw, "date")
+	delete(raw, "time")
+
+	// Marshal back and unmarshal into aux
+	data, err := json.Marshal(raw)
+	if err != nil {
 		return err
 	}
 
-	// Parse start time
-	if aux.StartTime != "" {
-		parsedStart, err := time.Parse(time.RFC3339, aux.StartTime)
-		if err != nil {
-			// Try alternative format
-			parsedStart, err = time.Parse("2006-01-02T15:04:05Z07:00", aux.StartTime)
-			if err != nil {
-				return err
-			}
-		}
-		t.StartTime = parsedStart
-	}
-
-	// Parse end time
-	if aux.EndTime != "" {
-		parsedEnd, err := time.Parse(time.RFC3339, aux.EndTime)
-		if err != nil {
-			// Try alternative format
-			parsedEnd, err = time.Parse("2006-01-02T15:04:05Z07:00", aux.EndTime)
-			if err != nil {
-				return err
-			}
-		}
-		t.EndTime = parsedEnd
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
 	}
 
 	return nil
@@ -206,8 +232,12 @@ func CreateAppointment(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Patient, doctor, and branch are required"})
 	}
 
+	if req.Date == "" || req.Time == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Date and time are required"})
+	}
+
 	if req.StartTime.IsZero() {
-		return c.Status(400).JSON(fiber.Map{"error": "Start time is required"})
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid date or time format"})
 	}
 
 	// Validate patient belongs to accessible clinic
@@ -301,16 +331,16 @@ func CreateAppointment(c *fiber.Ctx) error {
 	// Reload with relationships
 	database.DB.Preload("Patient").Preload("Doctor").Preload("Branch").First(&appointment, appointment.ID)
 
-	// Send WebSocket notification for new appointment (clinic-scoped)
-	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "scheduled", appointment.Branch.ClinicID)
+	// // Send WebSocket notification for new appointment (clinic-scoped)
+	// go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "scheduled", appointment.Branch.ClinicID)
 
-	// Send clinic-wide notification
-	go SendClinicNotification(
-		"New Appointment Scheduled",
-		"Appointment scheduled for "+appointment.Patient.FirstName+" "+appointment.Patient.LastName+" with Dr. "+appointment.Doctor.FirstName+" "+appointment.Doctor.LastName,
-		"appointment_scheduled",
-		appointment.Branch.ClinicID,
-	)
+	// // Send clinic-wide notification
+	// go SendClinicNotification(
+	// 	"New Appointment Scheduled",
+	// 	"Appointment scheduled for "+appointment.Patient.FirstName+" "+appointment.Patient.LastName+" with Dr. "+appointment.Doctor.FirstName+" "+appointment.Doctor.LastName,
+	// 	"appointment_scheduled",
+	// 	appointment.Branch.ClinicID,
+	// )
 
 	return c.Status(201).JSON(appointment)
 }

@@ -193,7 +193,7 @@ export default {
       saving.value = true
 
       try {
-        const result = await apiService.post('/api/inventory/items', itemForm.value)
+        const result = await apiService.post('/api/inventory/shop/items', itemForm.value)
         if (result.success) {
           alert('Item created successfully!')
           router.push('/admin/shop')

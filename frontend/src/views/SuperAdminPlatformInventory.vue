@@ -449,7 +449,7 @@ export default {
           status: statusFilter.value
         }
 
-        const response = await apiService.get('/api/inventory/items', { params })
+        const response = await apiService.get('/api/inventory/shop/items', { params })
         if (response.success) {
           inventoryItems.value = response.data.items || []
           totalPages.value = Math.ceil((response.data.total || 0) / limit.value)
@@ -506,7 +506,7 @@ export default {
 
       try {
         // Update the item status using the general update endpoint
-        const result = await apiService.put(`/api/inventory/items/${item.id}`, {
+        const result = await apiService.put(`/api/inventory/shop/items/${item.id}`, {
           ...item,
           status: newStatus
         })

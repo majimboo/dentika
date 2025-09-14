@@ -6,27 +6,33 @@ export const formatDate = (dateString, options = {}) => {
 
     if (options.relative) {
       const today = new Date()
-      const tomorrow = new Date(today)
+      const todayInTimezone = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+      const tomorrow = new Date(todayInTimezone)
       tomorrow.setDate(tomorrow.getDate() + 1)
-      const yesterday = new Date(today)
+      const yesterday = new Date(todayInTimezone)
       yesterday.setDate(yesterday.getDate() - 1)
 
-      if (date.toDateString() === today.toDateString()) {
+      const dateInTimezone = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+
+      if (dateInTimezone.toDateString() === todayInTimezone.toDateString()) {
         return 'today'
-      } else if (date.toDateString() === tomorrow.toDateString()) {
+      } else if (dateInTimezone.toDateString() === tomorrow.toDateString()) {
         return 'tomorrow'
-      } else if (date.toDateString() === yesterday.toDateString()) {
+      } else if (dateInTimezone.toDateString() === yesterday.toDateString()) {
         return 'yesterday'
       }
     }
 
-    const formatOptions = options.format || {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    const formatOptions = {
+      timeZone: 'Asia/Manila',
+      ...(options.format || {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
     }
 
-    return date.toLocaleDateString('en-US', formatOptions)
+    return new Intl.DateTimeFormat('en-US', formatOptions).format(date)
   } catch (error) {
     console.error('Error formatting date:', error)
     return options.fallback || 'Invalid Date'
@@ -41,7 +47,9 @@ export const formatTime = (dateTime, options = {}) => {
 
     if (options.relative) {
       const now = new Date()
-      const diffMs = now - date
+      const nowInTimezone = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+      const dateInTimezone = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+      const diffMs = nowInTimezone - dateInTimezone
       const diffMins = Math.floor(diffMs / (1000 * 60))
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
@@ -52,12 +60,15 @@ export const formatTime = (dateTime, options = {}) => {
       if (diffDays < 7) return `${diffDays}d ago`
     }
 
-    const formatOptions = options.format || {
-      hour: 'numeric',
-      minute: '2-digit'
+    const formatOptions = {
+      timeZone: 'Asia/Manila',
+      ...(options.format || {
+        hour: 'numeric',
+        minute: '2-digit'
+      })
     }
 
-    return date.toLocaleTimeString('en-US', formatOptions)
+    return new Intl.DateTimeFormat('en-US', formatOptions).format(date)
   } catch (error) {
     console.error('Error formatting time:', error)
     return options.fallback || 'Invalid Time'
@@ -90,20 +101,26 @@ export const calculateAge = (birthDate) => {
 
 export const isToday = (date) => {
   const today = new Date()
+  const todayInTimezone = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
   const checkDate = new Date(date)
-  return checkDate.toDateString() === today.toDateString()
+  const checkDateInTimezone = new Date(checkDate.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  return checkDateInTimezone.toDateString() === todayInTimezone.toDateString()
 }
 
 export const isTomorrow = (date) => {
   const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowInTimezone = new Date(tomorrow.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  tomorrowInTimezone.setDate(tomorrowInTimezone.getDate() + 1)
   const checkDate = new Date(date)
-  return checkDate.toDateString() === tomorrow.toDateString()
+  const checkDateInTimezone = new Date(checkDate.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  return checkDateInTimezone.toDateString() === tomorrowInTimezone.toDateString()
 }
 
 export const isYesterday = (date) => {
   const yesterday = new Date()
-  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayInTimezone = new Date(yesterday.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  yesterdayInTimezone.setDate(yesterdayInTimezone.getDate() - 1)
   const checkDate = new Date(date)
-  return checkDate.toDateString() === yesterday.toDateString()
+  const checkDateInTimezone = new Date(checkDate.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+  return checkDateInTimezone.toDateString() === yesterdayInTimezone.toDateString()
 }

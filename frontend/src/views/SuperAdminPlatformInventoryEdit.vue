@@ -214,7 +214,7 @@ export default {
 
       try {
         const itemId = route.params.id
-        const response = await apiService.get(`/api/inventory/items/${itemId}`)
+        const response = await apiService.get(`/api/inventory/shop/items/${itemId}`)
         if (response.success) {
           itemForm.value = response.data
         } else {
@@ -233,7 +233,7 @@ export default {
 
       try {
         const itemId = route.params.id
-        const response = await apiService.put(`/api/inventory/items/${itemId}`, itemForm.value)
+        const response = await apiService.put(`/api/inventory/shop/items/${itemId}`, itemForm.value)
         if (response.success) {
           alert('Item updated successfully!')
           router.push('/admin/shop')

@@ -38,7 +38,6 @@ type InventoryItem struct {
 	SKU         string              `json:"sku" gorm:"size:100;uniqueIndex"`
 	Category    InventoryCategory   `json:"category" gorm:"type:varchar(20);default:'consumables'"`
 	Status      InventoryItemStatus `json:"status" gorm:"type:varchar(20);default:'active'"`
-	Type        InventoryType       `json:"type" gorm:"type:varchar(20);default:'clinic'"`
 
 	// Product details
 	UnitOfMeasure string  `json:"unit_of_measure" gorm:"size:50;default:'pieces'"` // pieces, boxes, bottles, etc.
@@ -317,22 +316,8 @@ func (i *InventoryItem) IsExpiringSoon() bool {
 	return daysUntilExpiry <= 30 && daysUntilExpiry > 0 // Expiring within 30 days
 }
 
-func (i *InventoryItem) IsPlatformInventory() bool {
-	return i.Type == InventoryTypePlatform
-}
-
-func (i *InventoryItem) IsClinicInventory() bool {
-	return i.Type == InventoryTypeClinic
-}
-
 // GetAverageUnitCost calculates the average unit cost from all received restocks
 func (i *InventoryItem) GetAverageUnitCost(db *gorm.DB) float64 {
-	if i.IsPlatformInventory() {
-		// For platform inventory, return the current selling price as unit cost
-		// (this is what clinics pay when ordering)
-		return i.SellingPrice
-	}
-
 	// For clinic inventory, calculate average from received restocks
 	var result struct {
 		AvgCost float64 `json:"avg_cost"`

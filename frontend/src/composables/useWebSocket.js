@@ -119,6 +119,18 @@ export function useWebSocket() {
       case 'notification':
         handleNotification(data.payload)
         break
+      case 'clinic_notification':
+        handleClinicNotification(data.payload)
+        break
+      case 'system_notification':
+        handleSystemNotification(data.payload)
+        break
+      case 'auth_success':
+        handleAuthSuccess(data)
+        break
+      case 'auth_error':
+        handleAuthError(data)
+        break
       case 'system_alert':
         handleSystemAlert(data.payload)
         break
@@ -165,6 +177,52 @@ export function useWebSocket() {
   const handleSystemAlert = (alert) => {
     window.dispatchEvent(new CustomEvent('system-alert', {
       detail: alert
+    }))
+  }
+
+  const handleClinicNotification = (notification) => {
+    // Clinic-wide notifications (visible to all users in the clinic)
+    window.dispatchEvent(new CustomEvent('clinic-notification', {
+      detail: notification
+    }))
+
+    // Also show as regular notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(notification.title || 'Clinic Notification', {
+        body: notification.message,
+        icon: '/favicon.svg',
+        tag: `clinic-${notification.type}-${Date.now()}`
+      })
+    }
+  }
+
+  const handleSystemNotification = (notification) => {
+    // System-wide notifications (visible to all connected users)
+    window.dispatchEvent(new CustomEvent('system-notification', {
+      detail: notification
+    }))
+
+    // Show browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(notification.title || 'System Notification', {
+        body: notification.message,
+        icon: '/favicon.svg',
+        tag: `system-${notification.type}-${Date.now()}`
+      })
+    }
+  }
+
+  const handleAuthSuccess = (data) => {
+    console.log('WebSocket authenticated successfully:', data.user)
+    window.dispatchEvent(new CustomEvent('ws-auth-success', {
+      detail: data
+    }))
+  }
+
+  const handleAuthError = (data) => {
+    console.error('WebSocket authentication failed:', data.message)
+    window.dispatchEvent(new CustomEvent('ws-auth-error', {
+      detail: data
     }))
   }
 

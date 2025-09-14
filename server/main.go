@@ -121,6 +121,11 @@ func main() {
 	// WebSocket route
 	app.Get("/ws", handlers.WebSocketHandler)
 
+	// WebSocket stats endpoint (for monitoring)
+	app.Get("/api/ws/stats", func(c *fiber.Ctx) error {
+		return c.JSON(handlers.GetWSStats())
+	})
+
 	// Auth routes
 	app.Post("/api/auth/login", handlers.Login)
 	app.Post("/api/auth/register", handlers.Register)

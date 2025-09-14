@@ -6,19 +6,27 @@ import (
 	"sync"
 	"time"
 
+	"dentika/server/database"
+	"dentika/server/models"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 )
 
-// WebSocket connection manager
+// WebSocket connection manager with user tracking
 type WSManager struct {
-	clients   map[*websocket.Conn]bool
+	clients   map[*websocket.Conn]*WSClient
 	clientsMu sync.RWMutex
 }
 
+type WSClient struct {
+	UserID   uint
+	User     models.User
+	Conn     *websocket.Conn
+	JoinedAt time.Time
+}
+
 var wsManager = &WSManager{
-	clients: make(map[*websocket.Conn]bool),
+	clients: make(map[*websocket.Conn]*WSClient),
 }
 
 // WebSocket message types
@@ -44,19 +52,30 @@ type NotificationMessage struct {
 }
 
 // Add client to manager
-func (wm *WSManager) addClient(conn *websocket.Conn) {
+func (wm *WSManager) addClient(conn *websocket.Conn, userID uint, user models.User) {
 	wm.clientsMu.Lock()
 	defer wm.clientsMu.Unlock()
-	wm.clients[conn] = true
-	log.Printf("WebSocket client connected. Total clients: %d", len(wm.clients))
+
+	client := &WSClient{
+		UserID:   userID,
+		User:     user,
+		Conn:     conn,
+		JoinedAt: time.Now(),
+	}
+
+	wm.clients[conn] = client
+	log.Printf("WebSocket client connected for user %d (%s). Total clients: %d", userID, user.Username, len(wm.clients))
 }
 
 // Remove client from manager
 func (wm *WSManager) removeClient(conn *websocket.Conn) {
 	wm.clientsMu.Lock()
 	defer wm.clientsMu.Unlock()
-	delete(wm.clients, conn)
-	log.Printf("WebSocket client disconnected. Total clients: %d", len(wm.clients))
+
+	if client, exists := wm.clients[conn]; exists {
+		delete(wm.clients, conn)
+		log.Printf("WebSocket client disconnected for user %d (%s). Total clients: %d", client.UserID, client.User.Username, len(wm.clients))
+	}
 }
 
 // Broadcast message to all connected clients
@@ -70,28 +89,76 @@ func (wm *WSManager) broadcast(message WSMessage) {
 		return
 	}
 
-	for conn := range wm.clients {
+	for conn, client := range wm.clients {
 		if err := conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
-			log.Printf("Failed to send message to client: %v", err)
+			log.Printf("Failed to send message to client (user %d): %v", client.UserID, err)
 			// Remove broken connection
 			go wm.removeClient(conn)
 		}
 	}
 }
 
-// Broadcast to specific user (if we had user tracking)
+// Broadcast to specific user
 func (wm *WSManager) broadcastToUser(userID uint, message WSMessage) {
-	// For now, broadcast to all clients
-	// In a production app, you'd track which connections belong to which users
-	wm.broadcast(message)
+	wm.clientsMu.RLock()
+	defer wm.clientsMu.RUnlock()
+
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("Failed to marshal WebSocket message: %v", err)
+		return
+	}
+
+	for conn, client := range wm.clients {
+		if client.UserID == userID {
+			if err := conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
+				log.Printf("Failed to send message to user %d: %v", userID, err)
+				// Remove broken connection
+				go wm.removeClient(conn)
+			}
+		}
+	}
+}
+
+// Broadcast to users in specific clinic
+func (wm *WSManager) broadcastToClinic(clinicID uint, message WSMessage) {
+	wm.clientsMu.RLock()
+	defer wm.clientsMu.RUnlock()
+
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("Failed to marshal WebSocket message: %v", err)
+		return
+	}
+
+	for conn, client := range wm.clients {
+		if client.User.ClinicID != nil && *client.User.ClinicID == clinicID {
+			if err := conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
+				log.Printf("Failed to send message to clinic %d user %d: %v", clinicID, client.UserID, err)
+				// Remove broken connection
+				go wm.removeClient(conn)
+			}
+		}
+	}
+}
+
+// Get connected users count
+func (wm *WSManager) getConnectedUsers() map[uint]int {
+	wm.clientsMu.RLock()
+	defer wm.clientsMu.RUnlock()
+
+	userCount := make(map[uint]int)
+	for _, client := range wm.clients {
+		userCount[client.UserID]++
+	}
+	return userCount
 }
 
 // WebSocket handler
 func WebSocketHandler(c *fiber.Ctx) error {
 	return websocket.New(func(conn *websocket.Conn) {
-		// Add client to manager
-		wsManager.addClient(conn)
-		defer wsManager.removeClient(conn)
+		var authenticatedUser *models.User
+		var userID uint
 
 		// Handle incoming messages
 		for {
@@ -113,46 +180,82 @@ func WebSocketHandler(c *fiber.Ctx) error {
 				// Handle different message types
 				switch wsMsg.Type {
 				case "auth":
-					handleAuth(conn, wsMsg)
+					user, id, err := handleAuth(conn, wsMsg)
+					if err == nil && user != nil {
+						authenticatedUser = user
+						userID = id
+						// Add authenticated client to manager
+						wsManager.addClient(conn, userID, *authenticatedUser)
+						defer wsManager.removeClient(conn)
+					}
 				case "ping":
 					handlePing(conn)
 				default:
-					log.Printf("Unknown message type: %s", wsMsg.Type)
+					if authenticatedUser == nil {
+						conn.WriteJSON(fiber.Map{
+							"type":    "error",
+							"message": "Not authenticated",
+						})
+					} else {
+						log.Printf("Unknown message type: %s", wsMsg.Type)
+					}
 				}
 			}
 		}
 	})(c)
 }
 
-// Handle authentication
-func handleAuth(conn *websocket.Conn, msg WSMessage) {
+// Handle authentication - returns user and userID if successful
+func handleAuth(conn *websocket.Conn, msg WSMessage) (*models.User, uint, error) {
 	if msg.Token == "" {
 		conn.WriteJSON(fiber.Map{
 			"type":    "auth_error",
 			"message": "No token provided",
 		})
-		return
+		return nil, 0, fiber.NewError(401, "No token provided")
 	}
 
-	// Parse and validate JWT token
-	token, err := jwt.Parse(msg.Token, func(token *jwt.Token) (interface{}, error) {
-		// Use your JWT secret key here
-		return []byte("your-secret-key"), nil
-	})
-
-	if err != nil || !token.Valid {
+	// Validate token against database
+	var authToken models.AuthToken
+	if err := database.DB.Preload("User").Where("token = ?", msg.Token).First(&authToken).Error; err != nil {
 		conn.WriteJSON(fiber.Map{
 			"type":    "auth_error",
 			"message": "Invalid token",
 		})
-		return
+		return nil, 0, fiber.NewError(401, "Invalid token")
+	}
+
+	// Check if token is expired
+	if authToken.IsExpired() {
+		database.DB.Delete(&authToken)
+		conn.WriteJSON(fiber.Map{
+			"type":    "auth_error",
+			"message": "Token expired",
+		})
+		return nil, 0, fiber.NewError(401, "Token expired")
+	}
+
+	// Check if user is active
+	if !authToken.User.IsActive {
+		conn.WriteJSON(fiber.Map{
+			"type":    "auth_error",
+			"message": "Account is inactive",
+		})
+		return nil, 0, fiber.NewError(403, "Account is inactive")
 	}
 
 	// Send success response
 	conn.WriteJSON(fiber.Map{
 		"type":    "auth_success",
 		"message": "Authenticated successfully",
+		"user": fiber.Map{
+			"id":       authToken.User.ID,
+			"username": authToken.User.Username,
+			"name":     authToken.User.GetDisplayName(),
+		},
 	})
+
+	return &authToken.User, authToken.UserID, nil
 }
 
 // Handle ping messages
@@ -207,7 +310,7 @@ func SendPatientUpdate(patientID uint, patientName string, updateType string) {
 	wsManager.broadcast(message)
 }
 
-// Send general notification
+// Send general notification to specific user
 func SendNotification(title, message, notificationType string, userID uint) {
 	notification := WSMessage{
 		Type: "notification",
@@ -220,6 +323,45 @@ func SendNotification(title, message, notificationType string, userID uint) {
 		},
 	}
 	wsManager.broadcastToUser(userID, notification)
+}
+
+// Send notification to all users in a clinic
+func SendClinicNotification(title, message, notificationType string, clinicID uint) {
+	notification := WSMessage{
+		Type: "clinic_notification",
+		Payload: fiber.Map{
+			"title":     title,
+			"message":   message,
+			"type":      notificationType,
+			"clinic_id": clinicID,
+			"timestamp": time.Now(),
+		},
+	}
+	wsManager.broadcastToClinic(clinicID, notification)
+}
+
+// Send system-wide notification to all connected users
+func SendSystemNotification(title, message, notificationType string) {
+	notification := WSMessage{
+		Type: "system_notification",
+		Payload: fiber.Map{
+			"title":     title,
+			"message":   message,
+			"type":      notificationType,
+			"timestamp": time.Now(),
+		},
+	}
+	wsManager.broadcast(notification)
+}
+
+// Get WebSocket connection statistics
+func GetWSStats() fiber.Map {
+	userCount := wsManager.getConnectedUsers()
+	return fiber.Map{
+		"total_connections": len(wsManager.clients),
+		"unique_users":      len(userCount),
+		"user_connections":  userCount,
+	}
 }
 
 // Send system alert

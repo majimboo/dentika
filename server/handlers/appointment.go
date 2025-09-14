@@ -307,6 +307,14 @@ func CreateAppointment(c *fiber.Ctx) error {
 	// Send WebSocket notification for new appointment
 	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "scheduled")
 
+	// Send clinic-wide notification
+	go SendClinicNotification(
+		"New Appointment Scheduled",
+		"Appointment scheduled for "+appointment.Patient.FirstName+" "+appointment.Patient.LastName+" with Dr. "+appointment.Doctor.FirstName+" "+appointment.Doctor.LastName,
+		"appointment_scheduled",
+		appointment.Branch.ClinicID,
+	)
+
 	return c.Status(201).JSON(appointment)
 }
 
@@ -415,10 +423,27 @@ func UpdateAppointmentStatus(c *fiber.Ctx) error {
 	}
 
 	// Reload with relationships for notification
-	database.DB.Preload("Patient").First(&appointment, appointment.ID)
+	database.DB.Preload("Patient").Preload("Branch").First(&appointment, appointment.ID)
 
 	// Send WebSocket notification for status update
 	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, string(appointment.Status))
+
+	// Send clinic-wide notification for status changes
+	statusMessages := map[string]string{
+		"confirmed": "Appointment confirmed for " + appointment.Patient.FirstName + " " + appointment.Patient.LastName,
+		"completed": "Appointment completed for " + appointment.Patient.FirstName + " " + appointment.Patient.LastName,
+		"cancelled": "Appointment cancelled for " + appointment.Patient.FirstName + " " + appointment.Patient.LastName,
+		"no_show":   "Patient no-show for " + appointment.Patient.FirstName + " " + appointment.Patient.LastName,
+	}
+
+	if message, exists := statusMessages[string(appointment.Status)]; exists {
+		go SendClinicNotification(
+			"Appointment Status Update",
+			message,
+			"appointment_"+string(appointment.Status),
+			appointment.Branch.ClinicID,
+		)
+	}
 
 	return c.JSON(appointment)
 }

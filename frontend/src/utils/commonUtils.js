@@ -64,7 +64,7 @@ export const isEmpty = (value) => {
   return false
 }
 
-export const formatCurrency = (amount, currency = 'USD', locale = 'en-US') => {
+export const formatCurrency = (amount, currency = 'PHP', locale = 'en-US') => {
   if (amount == null || isNaN(amount)) return 'N/A'
   return new Intl.NumberFormat(locale, {
     style: 'currency',

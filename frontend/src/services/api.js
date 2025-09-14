@@ -255,15 +255,6 @@ class ApiService {
       params: { path: avatarPath }
     })
   }
-
-  getBackendUrl(endpoint = '') {
-    // Simply use the current host
-    return `${window.location.protocol}//${window.location.host}${endpoint}`
-  }
-
-  getUploadUrl(endpoint) {
-    return this.getBackendUrl(endpoint)
-  }
 }
 
 // Create and export a single instance

@@ -29,10 +29,8 @@ onMounted(async () => {
   // Initialize connection monitoring
   connectionStore.initialize()
 
-  // Auth is already initialized by router guards, but ensure it's done
-  if (!authStore.initialized) {
-    await authStore.initializeAuth()
-  }
+  // Auth is initialized by router guards before component mounting
+  // No redundant initialization needed here
 
   // Connect WebSocket after auth is initialized
   if (authStore.token) {

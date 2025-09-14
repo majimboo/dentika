@@ -7,7 +7,8 @@ export const useAuthStore = defineStore('auth', {
     token: localStorage.getItem('token') || null,
     loading: false,
     userLoading: false,
-    initialized: false
+    initialized: false,
+    initializing: false
   }),
 
   getters: {
@@ -58,6 +59,11 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+    async refreshCurrentUser() {
+      if (!this.token) return
+      await this.fetchCurrentUser()
+    },
+
     async login(credentials) {
       this.loading = true
       try {
@@ -182,19 +188,23 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    clearAuthState() {
-      // Silent logout without API call - for initialization
-      this.user = null
-      this.token = null
-      this.initialized = false
-      apiService.clearAuthData()
-    },
+  clearAuthState() {
+    // Silent logout without API call - for initialization
+    this.user = null
+    this.token = null
+    this.initialized = false
+    this.initializing = false
+    apiService.clearAuthData()
+  },
 
-    async initializeAuth() {
-      if (this.initialized) {
-        return // Already initialized
-      }
+  async initializeAuth() {
+    if (this.initialized || this.initializing) {
+      return // Already initialized or initializing
+    }
 
+    this.initializing = true
+
+    try {
       const storedToken = localStorage.getItem('token')
 
       if (storedToken) {
@@ -207,6 +217,9 @@ export const useAuthStore = defineStore('auth', {
       }
 
       this.initialized = true
+    } finally {
+      this.initializing = false
     }
+  }
   }
 })

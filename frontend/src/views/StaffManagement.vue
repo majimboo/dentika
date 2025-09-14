@@ -189,12 +189,10 @@
           <TransitionGroup name="list" tag="div" class="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <div v-for="member in filteredStaff" :key="member.id" class="group bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-primary-300 rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                 <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <div class="h-12 w-12 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold text-lg">
-                        {{ getInitials(member.username) }}
-                      </div>
-                    </div>
+                   <div class="flex items-center space-x-4">
+                     <div class="flex-shrink-0">
+                       <UserAvatar :user="member" size="lg" />
+                     </div>
                     <div class="flex-1">
                       <h3 class="text-lg font-semibold text-neutral-900 group-hover:text-primary-700 transition-colors">
                         {{ member.username }}
@@ -321,6 +319,7 @@ import { useAuthStore } from '../stores/auth'
 import apiService from '../services/api'
 import BaseLoading from '../components/BaseLoading.vue'
 import BaseTransition from '../components/BaseTransition.vue'
+import UserAvatar from '../components/UserAvatar.vue'
 import { getInitials, formatDate } from '@/utils'
 
 export default {
@@ -328,7 +327,8 @@ export default {
   components: {
     BaseLoading,
     BaseTransition,
-    TransitionGroup
+    TransitionGroup,
+    UserAvatar
   },
   setup() {
     const router = useRouter()

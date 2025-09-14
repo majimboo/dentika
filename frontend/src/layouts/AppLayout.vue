@@ -27,12 +27,12 @@
           <!-- Desktop Notifications -->
           <NotificationPanel />
           
-          <!-- Profile -->
-          <button class="p-1 rounded-lg hover:bg-gray-100 transition-colors">
-            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span class="text-white text-sm font-medium">{{ userInitials }}</span>
-            </div>
-          </button>
+           <!-- Profile -->
+           <UserAvatar
+             :user="authStore.user"
+             size="sm"
+             :show-status="false"
+           />
         </div>
       </template>
     </NavigationHeader>
@@ -93,6 +93,7 @@ import AssistantSidebar from '../components/AssistantSidebar.vue'
 import AppFooter from '../components/AppFooter.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import NotificationPanel from '../components/NotificationPanel.vue'
+import UserAvatar from '../components/UserAvatar.vue'
 import { useSidebar } from '../composables/useSidebar'
 import { useAuthStore } from '../stores/auth'
 
@@ -108,7 +109,8 @@ export default {
     AssistantSidebar,
     AppFooter,
     MobileBottomNav,
-    NotificationPanel
+    NotificationPanel,
+    UserAvatar
   },
   computed: {
     ...mapState(useAuthStore, ['isSuperAdmin', 'isAdmin', 'isDoctor', 'isSecretary', 'isAssistant'])
@@ -116,12 +118,6 @@ export default {
   setup() {
     const { isSidebarOpen, closeSidebar, toggleSidebar } = useSidebar()
     const authStore = useAuthStore()
-
-    const userInitials = computed(() => {
-      const user = authStore.user
-      if (!user) return 'U'
-      return `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase() || 'U'
-    })
 
     // Handle body scroll lock for mobile sidebar
     const updateBodyScroll = () => {
@@ -159,7 +155,7 @@ export default {
       isSidebarOpen,
       closeSidebar,
       toggleSidebar,
-      userInitials
+      authStore
     }
   }
 }

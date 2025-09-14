@@ -44,12 +44,12 @@
                 </p>
                 <p class="text-xs text-neutral-500">Administrator</p>
               </div>
-              <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-r from-primary-500 to-secondary-600 flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
-                <div v-if="authStore.isUserLoading" class="animate-pulse">
-                  <div class="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <span v-else>{{ getInitials(user?.username || 'U') }}</span>
-              </div>
+               <UserAvatar
+                 :user="user"
+                 size="sm"
+                 :show-status="false"
+                 v-if="user"
+               />
             </div>
             
             <div class="relative">
@@ -95,16 +95,18 @@
 </template>
 
 <script>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useSidebar } from '../composables/useSidebar'
 import NotificationPanel from './NotificationPanel.vue'
+import UserAvatar from './UserAvatar.vue'
 
 export default {
   name: 'AppHeader',
   components: {
-    NotificationPanel
+    NotificationPanel,
+    UserAvatar
   },
   setup() {
     const router = useRouter()
@@ -114,11 +116,6 @@ export default {
     const unreadNotifications = ref(2) // Mock unread count
     
     const user = computed(() => authStore.user)
-    
-    const getInitials = (username) => {
-      if (!username) return 'U'
-      return username.charAt(0).toUpperCase()
-    }
     
     const { toggleSidebar } = useSidebar()
     
@@ -137,7 +134,6 @@ export default {
       showUserMenu,
       showNotifications,
       unreadNotifications,
-      getInitials,
       toggleSidebar,
       logout,
       toggleNotifications

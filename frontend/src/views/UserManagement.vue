@@ -238,9 +238,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-4">
                     <div class="flex-shrink-0">
-                      <div class="h-12 w-12 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white font-semibold text-lg">
-                        {{ getInitials(user.username) }}
-                      </div>
+                      <UserAvatar :user="user" size="lg" />
                     </div>
                     <div class="flex-1">
                       <h3 class="text-lg font-semibold text-neutral-900 group-hover:text-red-700 transition-colors">
@@ -376,13 +374,15 @@ import { useAuthStore } from '../stores/auth'
 import apiService from '../services/api'
 import BaseLoading from '../components/BaseLoading.vue'
 import BaseTransition from '../components/BaseTransition.vue'
+import UserAvatar from '../components/UserAvatar.vue'
 
 export default {
   name: 'UserManagement',
   components: {
     BaseLoading,
     BaseTransition,
-    TransitionGroup
+    TransitionGroup,
+    UserAvatar
   },
   setup() {
     const router = useRouter()

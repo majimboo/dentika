@@ -4,12 +4,13 @@
       :class="sizeClasses"
       class="rounded-full overflow-hidden bg-gradient-to-r from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold border-2 border-white shadow-lg"
     >
-      <img 
-        v-if="user?.avatar" 
-        :src="getAvatarUrl(user.avatar)" 
+      <img
+        v-if="user?.avatar_path || user?.avatar"
+        :src="getAvatarUrl(user.avatar_path || user.avatar)"
         :alt="`${user.first_name || user.username}'s avatar`"
         class="w-full h-full object-cover"
         @error="handleImageError"
+        @load="handleImageLoad"
       />
       <span 
         v-else 
@@ -52,6 +53,7 @@ export default {
       default: false
     }
   },
+
   computed: {
     sizeClasses() {
       const sizes = {
@@ -100,8 +102,6 @@ export default {
       }
 
       // Simply use current host
-      const baseUrl = window.location.host
-
       return `/uploads/${avatarPath}`
     },
     handleImageError(event) {

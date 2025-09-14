@@ -133,7 +133,7 @@ export default defineConfig({
                 target: 'http://localhost:9483',
                 changeOrigin: true,
             },
-            '/upload': {
+            '/uploads': {
                 target: 'http://localhost:9483',
                 changeOrigin: true,
             },

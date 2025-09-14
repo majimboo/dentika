@@ -234,6 +234,14 @@ func main() {
 	api.Post("/appointments/:appointment_id/diagnoses", middleware.RoleMiddleware(models.Doctor), handlers.AddDiagnosisToAppointment)
 	api.Put("/appointment-diagnoses/:id", middleware.RoleMiddleware(models.Doctor), handlers.UpdateAppointmentDiagnosis)
 
+	// Shop inventory management (for super admin only)
+	api.Get("/inventory/shop/items", middleware.RoleMiddleware(models.SuperAdmin), handlers.GetPlatformInventory)
+	api.Get("/inventory/shop/items/:id", middleware.RoleMiddleware(models.SuperAdmin), handlers.GetPlatformInventoryItem)
+	api.Post("/inventory/shop/items", middleware.RoleMiddleware(models.SuperAdmin), handlers.CreatePlatformInventoryItem)
+	api.Put("/inventory/shop/items/:id", middleware.RoleMiddleware(models.SuperAdmin), handlers.UpdatePlatformInventoryItem)
+	api.Delete("/inventory/shop/items/:id", middleware.RoleMiddleware(models.SuperAdmin), handlers.DeletePlatformInventoryItem)
+	api.Put("/inventory/shop/items/:id/status", middleware.RoleMiddleware(models.SuperAdmin), handlers.UpdatePlatformInventoryItemStatus)
+
 	// Inventory management routes
 	api.Get("/inventory/:clinic_id/items", handlers.GetInventoryItems)
 	api.Get("/inventory/:clinic_id/items/:id", handlers.GetInventoryItem)
@@ -258,14 +266,6 @@ func main() {
 
 	// Shop API - Dentika's inventory that clinics can order from (clinic_id=1)
 	api.Get("/shop", handlers.GetShopItems)
-
-	// Shop inventory management (for super admin only)
-	api.Get("/inventory/shop/items", middleware.RoleMiddleware(models.SuperAdmin), handlers.GetPlatformInventory)
-	api.Get("/inventory/shop/items/:id", middleware.RoleMiddleware(models.SuperAdmin), handlers.GetPlatformInventoryItem)
-	api.Post("/inventory/shop/items", middleware.RoleMiddleware(models.SuperAdmin), handlers.CreatePlatformInventoryItem)
-	api.Put("/inventory/shop/items/:id", middleware.RoleMiddleware(models.SuperAdmin), handlers.UpdatePlatformInventoryItem)
-	api.Delete("/inventory/shop/items/:id", middleware.RoleMiddleware(models.SuperAdmin), handlers.DeletePlatformInventoryItem)
-	api.Put("/inventory/shop/items/:id/status", middleware.RoleMiddleware(models.SuperAdmin), handlers.UpdatePlatformInventoryItemStatus)
 
 	// Order management (clinics ordering from platform)
 	api.Post("/inventory/orders", handlers.CreateOrder)

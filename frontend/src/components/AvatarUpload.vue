@@ -85,6 +85,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useNotificationStore } from '../stores/notification'
+import { useAuthStore } from '../stores/auth'
 
 const props = defineProps({
   modelValue: {
@@ -122,6 +123,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'upload-success', 'upload-error', 'avatar-updated'])
 
 const notificationStore = useNotificationStore()
+const authStore = useAuthStore()
 
 const fileInput = ref(null)
 const uploading = ref(false)
@@ -241,7 +243,12 @@ const uploadFile = async (file) => {
     emit('upload-success', data)
     // Also emit avatar-updated for user object pattern
     emit('avatar-updated', data.path)
-    
+
+    // Refresh user data if this is a user avatar upload
+    if (props.entityType === 'user') {
+      await authStore.refreshCurrentUser()
+    }
+
     notificationStore.showSuccess('Avatar uploaded successfully')
     
     // Clear file input
@@ -284,6 +291,12 @@ const removeAvatar = async () => {
     // Clear the model value
     emit('update:modelValue', '')
     emit('avatar-updated', '')
+
+    // Refresh user data if this is a user avatar removal
+    if (props.entityType === 'user') {
+      await authStore.refreshCurrentUser()
+    }
+
     notificationStore.showSuccess('Avatar removed successfully')
     
   } catch (err) {
@@ -295,11 +308,10 @@ const removeAvatar = async () => {
   }
 }
 
-const handleImageError = () => {
-  // If image fails to load, clear the avatar path
-  emit('update:modelValue', '')
-  emit('avatar-updated', '')
-}
+    const handleImageError = (event) => {
+      // Hide the image and show initials when image fails to load
+      event.target.style.display = 'none'
+    }
 
 // Clear error when modelValue changes
 watch(() => props.modelValue, () => {

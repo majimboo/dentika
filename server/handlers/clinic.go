@@ -32,10 +32,7 @@ func GetClinics(c *fiber.Ctx) error {
 
 	// Super admin can see all clinics, others only their own
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
-		}
-		query = query.Where("id = ?", *user.ClinicID)
+		query = query.Where("id = ?", user.ClinicID)
 	}
 
 	if err := query.Find(&clinics).Error; err != nil {
@@ -124,8 +121,8 @@ func UpdateClinic(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
 	}
 
-	// Check access - super admin or clinic owner
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != uint(clinicID) || !user.HasRole(models.ClinicOwner)) {
+	// Check access - super admin or admin
+	if !user.IsSuperAdmin() && (user.ClinicID != uint(clinicID) || !user.HasRole(models.Admin)) {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -193,8 +190,8 @@ func CreateBranch(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid clinic ID"})
 	}
 
-	// Check access - super admin or clinic owner
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != uint(clinicID) || !user.HasRole(models.ClinicOwner)) {
+	// Check access - super admin or admin
+	if !user.IsSuperAdmin() && (user.ClinicID != uint(clinicID) || !user.HasRole(models.Admin)) {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -279,8 +276,8 @@ func UpdateBranch(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid branch ID"})
 	}
 
-	// Check access - super admin or clinic owner
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != uint(clinicID) || !user.HasRole(models.ClinicOwner)) {
+	// Check access - super admin or admin
+	if !user.IsSuperAdmin() && (user.ClinicID != uint(clinicID) || !user.HasRole(models.Admin)) {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -322,8 +319,8 @@ func DeleteBranch(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid branch ID"})
 	}
 
-	// Check access - super admin or clinic owner
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != uint(clinicID) || !user.HasRole(models.ClinicOwner)) {
+	// Check access - super admin or admin
+	if !user.IsSuperAdmin() && (user.ClinicID != uint(clinicID) || !user.HasRole(models.Admin)) {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 

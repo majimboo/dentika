@@ -126,7 +126,7 @@ const isSuperAdmin = computed(() => authStore.isSuperAdmin)
 
 const canManageUsers = computed(() => {
   const role = authStore.user?.role
-  return role === 'super_admin' || role === 'clinic_owner'
+  return role === 'super_admin' || role === 'admin'
 })
 
 // Methods

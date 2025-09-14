@@ -74,7 +74,7 @@
       <div class="bg-white rounded-2xl p-6 shadow-lg border border-neutral-100">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-neutral-600">Clinic Owners</p>
+            <p class="text-sm font-medium text-neutral-600">Admins</p>
             <p class="text-3xl font-bold text-neutral-900 mt-2">{{ clinicOwnersCount }}</p>
             <p class="text-xs text-orange-600 mt-1 flex items-center">
               <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +157,7 @@
           >
             <option value="">All Roles</option>
             <option value="super_admin">Super Admins</option>
-            <option value="clinic_owner">Clinic Owners</option>
+            <option value="admin">Admins</option>
             <option value="doctor">Doctors</option>
             <option value="secretary">Secretaries</option>
             <option value="assistant">Assistants</option>
@@ -446,7 +446,7 @@ export default {
       })
 
     const superAdminsCount = computed(() => users.value.filter(user => user.role === 'super_admin').length)
-    const clinicOwnersCount = computed(() => users.value.filter(user => user.role === 'clinic_owner').length)
+    const clinicOwnersCount = computed(() => users.value.filter(user => user.role === 'admin').length)
     const clinicStaffCount = computed(() => users.value.filter(user => ['doctor', 'secretary', 'assistant'].includes(user.role)).length)
     const clinicsCount = computed(() => clinics.value.length)
 
@@ -523,7 +523,7 @@ export default {
     const getRoleDisplayName = (role) => {
       const roleNames = {
         'super_admin': 'Super Admin',
-        'clinic_owner': 'Clinic Owner',
+        'admin': 'Admin',
         'doctor': 'Doctor',
         'secretary': 'Secretary',
         'assistant': 'Assistant'
@@ -534,7 +534,7 @@ export default {
     const getRoleBadgeClass = (role) => {
       const classes = {
         'super_admin': 'bg-red-100 text-red-800',
-        'clinic_owner': 'bg-orange-100 text-orange-800',
+        'admin': 'bg-orange-100 text-orange-800',
         'doctor': 'bg-blue-100 text-blue-800',
         'secretary': 'bg-green-100 text-green-800',
         'assistant': 'bg-purple-100 text-purple-800'

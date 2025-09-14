@@ -17,11 +17,7 @@ func GetUsers(c *fiber.Ctx) error {
 
 	// If user is not a super admin, scope results to their clinic
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			// This case should ideally be handled by middleware, but as a safeguard:
-			// A non-super-admin must belong to a clinic to see other users.
-			return c.JSON([]models.User{})
-		}
+		// Non-super-admin users are scoped to their clinic (ClinicID is now non-nullable)
 		db = db.Where("clinic_id = ?", user.ClinicID)
 	}
 
@@ -83,10 +79,10 @@ func CreateUser(c *fiber.Ctx) error {
 	// Authorization logic
 	if requestingUser.IsSuperAdmin() {
 		// Super admin can create users for any clinic or without clinic
-	} else if requestingUser.HasRole(models.ClinicOwner) && requestingUser.ClinicID != nil {
-		// Clinic owner can only create users for their own clinic
-		if req.ClinicID == nil || *req.ClinicID != *requestingUser.ClinicID {
-			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Clinic owners can only create users for their own clinic"})
+	} else if requestingUser.HasRole(models.Admin) {
+		// Admin can only create users for their own clinic
+		if req.ClinicID == nil || *req.ClinicID != requestingUser.ClinicID {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Admins can only create users for their own clinic"})
 		}
 	} else {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Insufficient permissions to create users"})
@@ -118,13 +114,21 @@ func CreateUser(c *fiber.Ctx) error {
 		}
 	}
 
+	// Determine ClinicID - if not provided, use requestingUser's ClinicID
+	var userClinicID uint
+	if req.ClinicID != nil {
+		userClinicID = *req.ClinicID
+	} else {
+		userClinicID = requestingUser.ClinicID
+	}
+
 	// Create user
 	user := models.User{
 		Username:   req.Username,
 		Email:      req.Email,
 		Password:   req.Password,
 		Role:       req.Role,
-		ClinicID:   req.ClinicID,
+		ClinicID:   userClinicID,
 		FirstName:  req.FirstName,
 		LastName:   req.LastName,
 		AvatarPath: req.AvatarPath,
@@ -176,13 +180,13 @@ func UpdateUser(c *fiber.Ctx) error {
 	if req.Role != "" {
 		if requestingUser.IsSuperAdmin() {
 			// Super admin can set any role
-		} else if requestingUser.HasRole(models.ClinicOwner) && requestingUser.ClinicID != nil {
-			// Clinic owner can only update roles for users in their clinic
-			if user.ClinicID == nil || *user.ClinicID != *requestingUser.ClinicID {
-				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Clinic owners can only update users in their own clinic"})
+		} else if requestingUser.HasRole(models.Admin) {
+			// Admin can only update roles for users in their clinic
+			if user.ClinicID != requestingUser.ClinicID {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Admins can only update users in their own clinic"})
 			}
 
-			// Clinic owner can only assign staff roles (not super_admin or clinic_owner)
+			// Admin can only assign staff roles (not super_admin or admin)
 			validRoles := []models.UserRole{models.Doctor, models.Secretary, models.Assistant}
 			isValidRole := false
 			for _, validRole := range validRoles {
@@ -192,7 +196,7 @@ func UpdateUser(c *fiber.Ctx) error {
 				}
 			}
 			if !isValidRole {
-				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Clinic owners can only assign Doctor, Secretary, or Assistant roles"})
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Admins can only assign Doctor, Secretary, or Assistant roles"})
 			}
 		} else {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Insufficient permissions to update user roles"})
@@ -203,10 +207,10 @@ func UpdateUser(c *fiber.Ctx) error {
 	if req.Role == "" {
 		if requestingUser.IsSuperAdmin() {
 			// Super admin can update any user
-		} else if requestingUser.HasRole(models.ClinicOwner) && requestingUser.ClinicID != nil {
-			// Clinic owner can only update users in their clinic
-			if user.ClinicID == nil || *user.ClinicID != *requestingUser.ClinicID {
-				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Clinic owners can only update users in their own clinic"})
+		} else if requestingUser.HasRole(models.Admin) {
+			// Admin can only update users in their clinic
+			if user.ClinicID != requestingUser.ClinicID {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Admins can only update users in their own clinic"})
 			}
 		} else {
 			// Users can only update their own profile

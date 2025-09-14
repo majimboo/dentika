@@ -45,10 +45,7 @@ func GetPatients(c *fiber.Ctx) error {
 			}
 		}
 	} else {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		clinicID = *user.ClinicID
+		clinicID = user.ClinicID
 	}
 
 	var patients []models.Patient
@@ -111,7 +108,7 @@ func GetPatient(c *fiber.Ctx) error {
 	}
 
 	// Check access
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -144,10 +141,7 @@ func CreatePatient(c *fiber.Ctx) error {
 			return c.Status(400).JSON(fiber.Map{"error": "Clinic ID required for super admin"})
 		}
 	} else {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		clinicID = *user.ClinicID
+		clinicID = user.ClinicID
 	}
 
 	// Check if patient with same email already exists in clinic
@@ -223,7 +217,7 @@ func UpdatePatient(c *fiber.Ctx) error {
 	}
 
 	// Check access
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -318,12 +312,12 @@ func DeactivatePatient(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Patient not found"})
 	}
 
-	// Check access - only clinic owner or super admin can deactivate
-	if !user.IsSuperAdmin() && !user.HasRole(models.ClinicOwner) {
+	// Check access - only admin or super admin can deactivate
+	if !user.IsSuperAdmin() && !user.HasRole(models.Admin) {
 		return c.Status(403).JSON(fiber.Map{"error": "Insufficient permissions"})
 	}
 
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 

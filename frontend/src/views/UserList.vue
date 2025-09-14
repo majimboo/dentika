@@ -377,7 +377,7 @@ export default {
 
       const canManageUsers = computed(() => {
         const role = authStore.user?.role
-        return ['super_admin', 'clinic_owner'].includes(role)
+        return ['super_admin', 'admin'].includes(role)
       })
 
      const loadUsers = async () => {

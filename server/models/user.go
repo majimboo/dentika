@@ -11,12 +11,12 @@ import (
 )
 
 // UserRole defines the roles a user can have in the system.
-// Possible values are: super_admin, clinic_owner, doctor, secretary, assistant.
+// Possible values are: super_admin, admin, doctor, secretary, assistant.
 type UserRole string
 
 const (
 	SuperAdmin  UserRole = "super_admin"
-	ClinicOwner UserRole = "clinic_owner"
+	Admin       UserRole = "admin"
 	Doctor      UserRole = "doctor"
 	Secretary   UserRole = "secretary"
 	Assistant   UserRole = "assistant"
@@ -31,8 +31,8 @@ type User struct {
 	Gender     string         `json:"gender" gorm:"size:20"`
 	AvatarPath string         `json:"avatar_path" gorm:"size:500"`
 	Password   string         `json:"-" gorm:"not null"`
-	Role       UserRole       `json:"role" gorm:"type:enum('super_admin','clinic_owner','doctor','secretary','assistant');default:'secretary'"`
-	ClinicID   *uint          `json:"clinic_id" gorm:"index"`
+	Role       UserRole       `json:"role" gorm:"type:enum('super_admin','admin','doctor','secretary','assistant');default:'secretary'"`
+	ClinicID   uint           `json:"clinic_id" gorm:"not null;index"`
 	Clinic     *Clinic        `json:"clinic,omitempty" gorm:"foreignKey:ClinicID"`
 	IsActive   bool           `json:"is_active" gorm:"default:true"`
 	CreatedAt  time.Time      `json:"created_at"`
@@ -101,7 +101,7 @@ func (u *User) CanAccessClinic(clinicID uint) bool {
 	if u.IsSuperAdmin() {
 		return true
 	}
-	return u.ClinicID != nil && *u.ClinicID == clinicID
+	return u.ClinicID == clinicID
 }
 
 func (u *User) HasRole(roles ...UserRole) bool {

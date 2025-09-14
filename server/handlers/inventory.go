@@ -116,10 +116,7 @@ func GetInventoryItems(c *fiber.Ctx) error {
 			}
 		}
 	} else {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		clinicID = *user.ClinicID
+		clinicID = user.ClinicID
 		if branchIDParam := c.Query("branch_id"); branchIDParam != "" {
 			if id, err := strconv.ParseUint(branchIDParam, 10, 32); err == nil {
 				branchID = uint(id)
@@ -254,11 +251,8 @@ func GetInventoryItem(c *fiber.Ctx) error {
 	query := database.DB.Preload("Clinic").Preload("Branch")
 
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
 		// Regular users can only access clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", *user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, itemID).Error; err != nil {
@@ -348,10 +342,8 @@ func CreateInventoryItem(c *fiber.Ctx) error {
 			clinicID = &branch.ClinicID
 			branchID = req.BranchID
 		} else {
-			if user.ClinicID == nil {
-				return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-			}
-			clinicID = user.ClinicID
+			// User has clinic assigned (ClinicID is now non-nullable)
+			clinicID = &user.ClinicID
 			branchID = req.BranchID
 		}
 	}
@@ -401,11 +393,8 @@ func UpdateInventoryItem(c *fiber.Ctx) error {
 	var item models.InventoryItem
 	query := database.DB
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
 		// Regular users can only update clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", *user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, itemID).Error; err != nil {
@@ -466,11 +455,8 @@ func DeleteInventoryItem(c *fiber.Ctx) error {
 	var item models.InventoryItem
 	query := database.DB
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
 		// Regular users can only delete clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", *user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, itemID).Error; err != nil {
@@ -505,11 +491,8 @@ func CreateStockTransaction(c *fiber.Ctx) error {
 	var item models.InventoryItem
 	query := database.DB
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
 		// Regular users can only create stock transactions for clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", *user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, req.ItemID).Error; err != nil {
@@ -578,11 +561,8 @@ func GetStockTransactions(c *fiber.Ctx) error {
 	query := database.DB.Preload("Item").Preload("Appointment").Preload("Procedure").Preload("User")
 
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
 		// Regular users can only view stock transactions for clinic inventory from their clinic
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	query = query.Where("item_id = ?", itemID)
@@ -600,7 +580,7 @@ func GetStockTransactions(c *fiber.Ctx) error {
 	var total int64
 	countQuery := database.DB.Model(&models.InventoryStock{}).Where("item_id = ?", itemID)
 	if !user.IsSuperAdmin() {
-		countQuery = countQuery.Where("clinic_id = ?", *user.ClinicID)
+		countQuery = countQuery.Where("clinic_id = ?", user.ClinicID)
 	}
 	countQuery.Count(&total)
 
@@ -624,10 +604,7 @@ func GetInventoryAlerts(c *fiber.Ctx) error {
 			}
 		}
 	} else {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		clinicID = *user.ClinicID
+		clinicID = user.ClinicID
 	}
 
 	var alerts []models.InventoryAlert
@@ -703,11 +680,8 @@ func CreateRestockOrder(c *fiber.Ctx) error {
 	var item models.InventoryItem
 	query := database.DB
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
 		// Regular users can only restock clinic inventory from their clinic
-		query = query.Where("clinic_id = ? AND type = ?", *user.ClinicID, models.InventoryTypeClinic)
+		query = query.Where("clinic_id = ? AND type = ?", user.ClinicID, models.InventoryTypeClinic)
 	}
 
 	if err := query.First(&item, req.ItemID).Error; err != nil {
@@ -750,10 +724,7 @@ func GetRestockOrders(c *fiber.Ctx) error {
 			}
 		}
 	} else {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		clinicID = *user.ClinicID
+		clinicID = user.ClinicID
 	}
 
 	var orders []models.InventoryRestock
@@ -808,10 +779,7 @@ func GetInventoryAnalytics(c *fiber.Ctx) error {
 			}
 		}
 	} else {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		clinicID = *user.ClinicID
+		clinicID = user.ClinicID
 	}
 
 	// Get total inventory value (this is more complex now with average costs)
@@ -887,18 +855,14 @@ func CreateOrder(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "At least one item is required"})
 	}
 
-	if user.ClinicID == nil {
-		return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-	}
-
-	// Generate order number
-	orderNumber := fmt.Sprintf("ORD-%d-%d", *user.ClinicID, time.Now().Unix())
+	// Generate order number (ClinicID is now non-nullable)
+	orderNumber := fmt.Sprintf("ORD-%d-%d", user.ClinicID, time.Now().Unix())
 
 	order := models.InventoryOrder{
 		Status:          models.OrderStatusPending,
 		OrderDate:       time.Now(),
 		OrderNumber:     orderNumber,
-		ClinicID:        *user.ClinicID,
+		ClinicID:        user.ClinicID,
 		ShippingAddress: req.ShippingAddress,
 		ShippingNotes:   req.ShippingNotes,
 		Notes:           req.Notes,
@@ -958,10 +922,7 @@ func GetOrders(c *fiber.Ctx) error {
 
 	// For non-super admin users, filter by their clinic
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	// Add status filter
@@ -982,7 +943,7 @@ func GetOrders(c *fiber.Ctx) error {
 	var total int64
 	countQuery := database.DB.Model(&models.InventoryOrder{})
 	if !user.IsSuperAdmin() {
-		countQuery = countQuery.Where("clinic_id = ?", *user.ClinicID)
+		countQuery = countQuery.Where("clinic_id = ?", user.ClinicID)
 	}
 	if status := c.Query("status"); status != "" {
 		countQuery = countQuery.Where("status = ?", status)
@@ -1009,10 +970,7 @@ func GetOrder(c *fiber.Ctx) error {
 	query := database.DB.Preload("Clinic").Preload("Branch").Preload("OrderItems.Item").Preload("User")
 
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	if err := query.First(&order, orderID).Error; err != nil {

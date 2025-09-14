@@ -15,7 +15,7 @@ export const useAuthStore = defineStore('auth', {
     isLoading: (state) => state.loading,
     isUserLoading: (state) => state.userLoading,
     isSuperAdmin: (state) => state.user?.role === 'super_admin',
-    isClinicOwner: (state) => state.user?.role === 'clinic_owner',
+    isAdmin: (state) => state.user?.role === 'admin',
     isDoctor: (state) => state.user?.role === 'doctor',
     isSecretary: (state) => state.user?.role === 'secretary',
     isAssistant: (state) => state.user?.role === 'assistant',
@@ -25,15 +25,15 @@ export const useAuthStore = defineStore('auth', {
       if (state.user?.clinic_id) {
         return state.user.clinic_id
       }
-      // If user is clinic_owner but has no clinic_id, default to clinic 1
-      if (state.user?.role === 'clinic_owner') {
+      // If user is admin but has no clinic_id, default to clinic 1
+      if (state.user?.role === 'admin') {
         return 1
       }
       return null
     },
     canManagePatients: (state) => {
       const role = state.user?.role
-      return ['super_admin', 'clinic_owner', 'doctor', 'secretary'].includes(role)
+      return ['super_admin', 'admin', 'doctor', 'secretary'].includes(role)
     },
     canManageProcedures: (state) => {
       const role = state.user?.role
@@ -45,10 +45,10 @@ export const useAuthStore = defineStore('auth', {
 
       const role = state.user.role
       const permissions = {
-        'appointments.update': ['super_admin', 'clinic_owner', 'doctor', 'secretary'],
-        'appointments.create': ['super_admin', 'clinic_owner', 'doctor', 'secretary'],
-        'appointments.delete': ['super_admin', 'clinic_owner', 'doctor'],
-        'patients.manage': ['super_admin', 'clinic_owner', 'doctor', 'secretary'],
+        'appointments.update': ['super_admin', 'admin', 'doctor', 'secretary'],
+        'appointments.create': ['super_admin', 'admin', 'doctor', 'secretary'],
+        'appointments.delete': ['super_admin', 'admin', 'doctor'],
+        'patients.manage': ['super_admin', 'admin', 'doctor', 'secretary'],
         'procedures.manage': ['super_admin', 'doctor'],
         'clinics.manage': ['super_admin']
       }

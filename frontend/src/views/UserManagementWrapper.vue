@@ -35,11 +35,11 @@ export default {
     const authStore = useAuthStore()
 
     const isSuperAdmin = computed(() => authStore.user?.role === 'super_admin')
-    const isClinicOwner = computed(() => authStore.user?.role === 'clinic_owner')
+    const isAdmin = computed(() => authStore.user?.role === 'admin')
 
     return {
       isSuperAdmin,
-      isClinicOwner
+      isAdmin
     }
   }
 }

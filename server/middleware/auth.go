@@ -63,12 +63,8 @@ func ClinicAccessMiddleware() fiber.Handler {
 			return c.Next()
 		}
 
-		// Other users must be assigned to a clinic
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-
-		c.Locals("clinic_id", *user.ClinicID)
+		// Other users must be assigned to a clinic (ClinicID is now non-nullable)
+		c.Locals("clinic_id", user.ClinicID)
 		return c.Next()
 	}
 }

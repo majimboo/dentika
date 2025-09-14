@@ -36,8 +36,8 @@ func GetProcedureTemplates(c *fiber.Ctx) error {
 func CreateProcedureTemplate(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
-	// Only super admin and clinic owners can create templates
-	if !user.IsSuperAdmin() && !user.HasRole(models.ClinicOwner) {
+	// Only super admin and admins can create templates
+	if !user.IsSuperAdmin() && !user.HasRole(models.Admin) {
 		return c.Status(403).JSON(fiber.Map{"error": "Insufficient permissions"})
 	}
 
@@ -96,8 +96,8 @@ func GetDiagnosisTemplates(c *fiber.Ctx) error {
 func CreateDiagnosisTemplate(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
-	// Only super admin and clinic owners can create templates
-	if !user.IsSuperAdmin() && !user.HasRole(models.ClinicOwner) {
+	// Only super admin and admins can create templates
+	if !user.IsSuperAdmin() && !user.HasRole(models.Admin) {
 		return c.Status(403).JSON(fiber.Map{"error": "Insufficient permissions"})
 	}
 
@@ -139,7 +139,7 @@ func GetAppointmentProcedures(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Appointment not found"})
 	}
 
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -165,7 +165,7 @@ func AddProcedureToAppointment(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Appointment not found"})
 	}
 
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -242,7 +242,7 @@ func UpdateAppointmentProcedure(c *fiber.Ctx) error {
 	}
 
 	// Check access
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != procedure.Appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != procedure.Appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -313,7 +313,7 @@ func GetAppointmentDiagnoses(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Appointment not found"})
 	}
 
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -339,7 +339,7 @@ func AddDiagnosisToAppointment(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Appointment not found"})
 	}
 
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -411,7 +411,7 @@ func UpdateAppointmentDiagnosis(c *fiber.Ctx) error {
 	}
 
 	// Check access
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != diagnosis.Appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != diagnosis.Appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 

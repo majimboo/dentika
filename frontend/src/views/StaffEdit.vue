@@ -69,8 +69,8 @@
                </div>
 
 
-               <!-- Role (for clinic owners in edit mode) -->
-                <div v-if="currentUserRole === 'clinic_owner' || currentUserRole === 'super_admin'" class="space-y-2">
+               <!-- Role (for admins in edit mode) -->
+                <div v-if="currentUserRole === 'admin' || currentUserRole === 'super_admin'" class="space-y-2">
                  <label for="role" class="block text-sm font-semibold text-gray-700 flex items-center">
                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
@@ -88,19 +88,19 @@
                    <option value="">Select role</option>
                    <!-- Super Admin can see all roles -->
                    <option v-if="currentUserRole === 'super_admin'" value="super_admin">Super Admin</option>
-                   <option v-if="currentUserRole === 'super_admin'" value="clinic_owner">Clinic Owner</option>
-                   <!-- Clinic Owner can only assign staff roles -->
-                   <option v-if="currentUserRole === 'super_admin' || currentUserRole === 'clinic_owner'" value="doctor">Doctor</option>
-                   <option v-if="currentUserRole === 'super_admin' || currentUserRole === 'clinic_owner'" value="secretary">Secretary</option>
-                   <option v-if="currentUserRole === 'super_admin' || currentUserRole === 'clinic_owner'" value="assistant">Assistant</option>
+                   <option v-if="currentUserRole === 'super_admin'" value="admin">Admin</option>
+                   <!-- Admin can only assign staff roles -->
+                   <option v-if="currentUserRole === 'super_admin' || currentUserRole === 'admin'" value="doctor">Doctor</option>
+                   <option v-if="currentUserRole === 'super_admin' || currentUserRole === 'admin'" value="secretary">Secretary</option>
+                   <option v-if="currentUserRole === 'super_admin' || currentUserRole === 'admin'" value="assistant">Assistant</option>
                  </select>
-                  <p v-if="currentUserRole === 'clinic_owner'" class="text-xs text-neutral-500 mt-1">
-                    As a Clinic Owner, you can update staff roles within your clinic.
+                  <p v-if="currentUserRole === 'admin'" class="text-xs text-neutral-500 mt-1">
+                    As an Admin, you can update staff roles within your clinic.
                   </p>
                </div>
 
-               <!-- Current Role Display (for non-clinic owners in edit mode) -->
-               <div v-if="currentUserRole !== 'clinic_owner' && currentUserRole !== 'super_admin'" class="space-y-2">
+               <!-- Current Role Display (for non-admins in edit mode) -->
+               <div v-if="currentUserRole !== 'admin' && currentUserRole !== 'super_admin'" class="space-y-2">
                  <label class="block text-sm font-semibold text-gray-700 flex items-center">
                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
@@ -331,9 +331,9 @@ export default {
         form.value.password !== ''
       )
 
-      // Check role changes (only for clinic owners and super admins)
+      // Check role changes (only for admins and super admins)
       let hasRoleChanges = false
-      if (currentUserRole.value === 'clinic_owner' || currentUserRole.value === 'super_admin') {
+      if (currentUserRole.value === 'admin' || currentUserRole.value === 'super_admin') {
         hasRoleChanges = form.value.role !== (originalUser.value.role || '')
       }
 
@@ -413,8 +413,8 @@ export default {
           updateData.password = form.value.password
         }
 
-        // Include role changes for clinic owners and super admins
-        if ((currentUserRole.value === 'clinic_owner' || currentUserRole.value === 'super_admin') &&
+        // Include role changes for admins and super admins
+        if ((currentUserRole.value === 'admin' || currentUserRole.value === 'super_admin') &&
             form.value.role !== (originalUser.value.role || '')) {
           updateData.role = form.value.role
         }

@@ -132,7 +132,7 @@ func (wm *WSManager) broadcastToClinic(clinicID uint, message WSMessage) {
 	}
 
 	for conn, client := range wm.clients {
-		if client.User.ClinicID != nil && *client.User.ClinicID == clinicID {
+		if client.User.ClinicID == clinicID {
 			if err := conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
 				log.Printf("Failed to send message to clinic %d user %d: %v", clinicID, client.UserID, err)
 				// Remove broken connection

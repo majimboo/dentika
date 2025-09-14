@@ -148,7 +148,7 @@
               >
                 <option value="">Select role</option>
                 <option value="super_admin">Super Admin</option>
-                <option value="clinic_owner">Clinic Owner</option>
+                <option value="admin">Admin</option>
                 <option value="doctor">Doctor</option>
                 <option value="secretary">Secretary</option>
                 <option value="assistant">Assistant</option>

@@ -78,10 +78,7 @@ func GetPatientDiagnoses(c *fiber.Ctx) error {
 	query := database.DB.Preload("DiagnosisTemplate").Preload("DiagnosedBy").Preload("Appointment")
 
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	query = query.Where("patient_id = ?", patientID)
@@ -120,10 +117,7 @@ func GetPatientDiagnosis(c *fiber.Ctx) error {
 	query := database.DB.Preload("DiagnosisTemplate").Preload("DiagnosedBy").Preload("Appointment")
 
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	if err := query.Where("patient_id = ?", patientID).First(&diagnosis, diagnosisID).Error; err != nil {
@@ -161,10 +155,7 @@ func CreatePatientDiagnosis(c *fiber.Ctx) error {
 		}
 		clinicID = patient.ClinicID
 	} else {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		clinicID = *user.ClinicID
+		clinicID = user.ClinicID
 	}
 
 	// Verify diagnosis template exists
@@ -217,10 +208,7 @@ func UpdatePatientDiagnosis(c *fiber.Ctx) error {
 	var diagnosis models.PatientDiagnosis
 	query := database.DB
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	if err := query.Where("patient_id = ?", patientID).First(&diagnosis, diagnosisID).Error; err != nil {
@@ -276,10 +264,7 @@ func DeletePatientDiagnosis(c *fiber.Ctx) error {
 	var diagnosis models.PatientDiagnosis
 	query := database.DB
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	if err := query.Where("patient_id = ?", patientID).First(&diagnosis, diagnosisID).Error; err != nil {
@@ -305,10 +290,7 @@ func GetPatientTreatmentPlans(c *fiber.Ctx) error {
 	query := database.DB.Preload("CreatedBy").Preload("Diagnosis").Preload("Diagnosis.DiagnosisTemplate")
 
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	query = query.Where("patient_id = ?", patientID)
@@ -347,10 +329,7 @@ func GetPatientTreatmentPlan(c *fiber.Ctx) error {
 	query := database.DB.Preload("CreatedBy").Preload("Diagnosis").Preload("Diagnosis.DiagnosisTemplate")
 
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	if err := query.Where("patient_id = ?", patientID).First(&treatmentPlan, treatmentPlanID).Error; err != nil {
@@ -388,10 +367,7 @@ func CreatePatientTreatmentPlan(c *fiber.Ctx) error {
 		}
 		clinicID = patient.ClinicID
 	} else {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		clinicID = *user.ClinicID
+		clinicID = user.ClinicID
 	}
 
 	treatmentPlan := models.PatientTreatmentPlan{
@@ -456,10 +432,7 @@ func UpdatePatientTreatmentPlan(c *fiber.Ctx) error {
 	var treatmentPlan models.PatientTreatmentPlan
 	query := database.DB
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	if err := query.Where("patient_id = ?", patientID).First(&treatmentPlan, treatmentPlanID).Error; err != nil {
@@ -533,10 +506,7 @@ func DeletePatientTreatmentPlan(c *fiber.Ctx) error {
 	var treatmentPlan models.PatientTreatmentPlan
 	query := database.DB
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	if err := query.Where("patient_id = ?", patientID).First(&treatmentPlan, treatmentPlanID).Error; err != nil {

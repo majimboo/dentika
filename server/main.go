@@ -137,7 +137,7 @@ func main() {
 	api.Get("/auth/me", handlers.GetCurrentUser)
 	api.Get("/users", handlers.GetUsers)
 	api.Get("/users/:id", handlers.GetUser)
-	api.Post("/users", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.CreateUser)
+	api.Post("/users", middleware.RoleMiddleware(models.SuperAdmin, models.Admin), handlers.CreateUser)
 	api.Put("/users/:id", handlers.UpdateUser)
 	api.Delete("/users/:id", handlers.DeleteUser)
 
@@ -202,16 +202,16 @@ func main() {
 
 	// Procedure and diagnosis templates
 	api.Get("/procedure-templates", handlers.GetProcedureTemplates)
-	api.Post("/procedure-templates", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.CreateProcedureTemplate)
+	api.Post("/procedure-templates", middleware.RoleMiddleware(models.SuperAdmin, models.Admin), handlers.CreateProcedureTemplate)
 	api.Get("/diagnosis-templates", handlers.GetDiagnosisTemplates)
-	api.Post("/diagnosis-templates", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.CreateDiagnosisTemplate)
+	api.Post("/diagnosis-templates", middleware.RoleMiddleware(models.SuperAdmin, models.Admin), handlers.CreateDiagnosisTemplate)
 
 	// Consent templates
 	api.Get("/consent-templates", handlers.GetConsentTemplates)
-	api.Post("/consent-templates", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.CreateConsentTemplate)
+	api.Post("/consent-templates", middleware.RoleMiddleware(models.SuperAdmin, models.Admin), handlers.CreateConsentTemplate)
 	api.Get("/consent-templates/:id", handlers.GetConsentTemplate)
-	api.Put("/consent-templates/:id", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.UpdateConsentTemplate)
-	api.Delete("/consent-templates/:id", middleware.RoleMiddleware(models.SuperAdmin, models.ClinicOwner), handlers.DeleteConsentTemplate)
+	api.Put("/consent-templates/:id", middleware.RoleMiddleware(models.SuperAdmin, models.Admin), handlers.UpdateConsentTemplate)
+	api.Delete("/consent-templates/:id", middleware.RoleMiddleware(models.SuperAdmin, models.Admin), handlers.DeleteConsentTemplate)
 
 	// Consent forms
 	api.Get("/consent-forms", handlers.GetConsentForms)
@@ -278,6 +278,54 @@ func main() {
 }
 
 func createDefaultAdmin() {
+	// FIRST: Check if any clinics exist, if not, create the default Dentika clinic with ID = 1
+	var clinicCount int64
+	if err := database.DB.Model(&models.Clinic{}).Count(&clinicCount).Error; err != nil {
+		log.Printf("Failed to count clinics: %v", err)
+		return
+	}
+
+	if clinicCount == 0 {
+		// Create the default Dentika clinic with ID = 1
+		dentikaClinic := models.Clinic{
+			ID:       1,
+			Name:     "Dentika",
+			Address:  "123 Main Street, City, State",
+			Phone:    "+63 917 123 4567",
+			Email:    "info@dentika.com",
+			Website:  "https://dentika.com",
+			IsActive: true,
+		}
+
+		if err := database.DB.Create(&dentikaClinic).Error; err != nil {
+			log.Printf("Failed to create Dentika clinic: %v", err)
+			return
+		} else {
+			// Create main branch for the clinic with ID = 1
+			mainBranch := models.Branch{
+				ID:           1,
+				Name:         "Main Branch",
+				Address:      dentikaClinic.Address,
+				Phone:        dentikaClinic.Phone,
+				IsMainBranch: true,
+				IsActive:     true,
+				ClinicID:     dentikaClinic.ID,
+			}
+
+			if err := database.DB.Create(&mainBranch).Error; err != nil {
+				log.Printf("Failed to create main branch: %v", err)
+				return
+			} else {
+				log.Printf("Dentika clinic created (ID: %d, Name: %s)", dentikaClinic.ID, dentikaClinic.Name)
+				// Seed consent templates for the new clinic
+				seedConsentTemplatesForClinic(dentikaClinic.ID)
+			}
+		}
+	} else {
+		log.Println("Dentika clinic already exists")
+	}
+
+	// SECOND: Create admin user now that clinic exists
 	var user models.User
 	if err := database.DB.Where("username = ?", "admin").First(&user).Error; err != nil {
 		// User doesn't exist, create it
@@ -286,7 +334,8 @@ func createDefaultAdmin() {
 			Password:  "admin",
 			FirstName: "Admin",
 			LastName:  "User",
-			Role:      models.Doctor, // Use Doctor role so admin can be used for appointments
+			Role:      models.SuperAdmin,
+			ClinicID:  1, // Assign to Dentika clinic
 			IsActive:  true,
 		}
 
@@ -303,48 +352,6 @@ func createDefaultAdmin() {
 		log.Println("Default admin user created (username: admin, password: admin)")
 	} else {
 		log.Println("Admin user already exists")
-
-	}
-
-	// Check if any clinics exist, if not, create a default one
-	var clinicCount int64
-	if err := database.DB.Model(&models.Clinic{}).Count(&clinicCount).Error; err != nil {
-		log.Printf("Failed to count clinics: %v", err)
-		return
-	}
-
-	if clinicCount == 0 {
-		// Create a default clinic
-		defaultClinic := models.Clinic{
-			Name:     "Default Clinic",
-			Address:  "123 Main Street, City, State",
-			Phone:    "+63 917 123 4567",
-			Email:    "info@defaultclinic.com",
-			Website:  "https://defaultclinic.com",
-			IsActive: true,
-		}
-
-		if err := database.DB.Create(&defaultClinic).Error; err != nil {
-			log.Printf("Failed to create default clinic: %v", err)
-		} else {
-			// Create main branch for the clinic
-			mainBranch := models.Branch{
-				Name:         "Main Branch",
-				Address:      defaultClinic.Address,
-				Phone:        defaultClinic.Phone,
-				IsMainBranch: true,
-				IsActive:     true,
-				ClinicID:     defaultClinic.ID,
-			}
-
-			if err := database.DB.Create(&mainBranch).Error; err != nil {
-				log.Printf("Failed to create main branch: %v", err)
-			} else {
-				log.Printf("Default clinic created (ID: %d, Name: %s)", defaultClinic.ID, defaultClinic.Name)
-				// Seed consent templates for the new clinic
-				seedConsentTemplatesForClinic(defaultClinic.ID)
-			}
-		}
 	}
 
 }

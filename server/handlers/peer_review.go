@@ -81,7 +81,7 @@ func CreatePeerReviewCase(c *fiber.Ctx) error {
 		}
 
 		// Verify user has access to this patient (same clinic)
-		if user.ClinicID == nil || *user.ClinicID != patient.ClinicID {
+		if user.ClinicID != patient.ClinicID {
 			return c.Status(http.StatusForbidden).JSON(fiber.Map{
 				"error": "Access denied to this patient",
 			})
@@ -115,7 +115,7 @@ func CreatePeerReviewCase(c *fiber.Ctx) error {
 		DentalChartData:    req.DentalChartData,
 		Status:             models.PeerReviewStatusOpen,
 		CreatedByID:        user.ID,
-		ClinicID:           *user.ClinicID,
+		ClinicID:           user.ClinicID,
 		OriginalPatientID:  originalPatientID,
 	}
 
@@ -190,7 +190,7 @@ func GetPeerReviewCases(c *fiber.Ctx) error {
 			OR (prc.visibility = 'in_clinic' AND prc.clinic_id = ?)
 			OR (prc.visibility = 'invite_only' AND prp.user_id IS NOT NULL)
 		)
-	`, user.ID, *user.ClinicID)
+	`, user.ID, user.ClinicID)
 
 	if status != "" {
 		query = query.Where("status = ?", status)

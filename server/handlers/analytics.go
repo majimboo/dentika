@@ -110,8 +110,8 @@ func getWeeklyStats(user models.User, period string) ([]WeeklyStatsItem, error) 
 		Order("date")
 
 	// Apply clinic filtering
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		query = query.Where("clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		query = query.Where("clinic_id = ?", user.ClinicID)
 	}
 
 	rows, err := query.Rows()
@@ -176,8 +176,8 @@ func getRevenueByType(user models.User, period string) ([]RevenueByTypeItem, err
 		Order("amount DESC")
 
 	// Apply clinic filtering
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		query = query.Where("branches.clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		query = query.Where("branches.clinic_id = ?", user.ClinicID)
 	}
 
 	rows, err := query.Rows()
@@ -268,8 +268,8 @@ func getMetrics(user models.User, period string) (DashboardMetrics, error) {
 		Where("appointments.start_time >= ? AND appointments.start_time <= ?", startDate, endDate)
 
 	// Apply clinic filtering
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		query = query.Where("branches.clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		query = query.Where("branches.clinic_id = ?", user.ClinicID)
 	}
 
 	// Get appointment counts
@@ -285,8 +285,8 @@ func getMetrics(user models.User, period string) (DashboardMetrics, error) {
 		Joins("LEFT JOIN branches ON appointments.branch_id = branches.id").
 		Where("appointments.start_time >= ? AND appointments.start_time <= ?", startDate, endDate).
 		Where("appointments.status = ?", models.StatusCompleted)
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		completedQuery = completedQuery.Where("branches.clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		completedQuery = completedQuery.Where("branches.clinic_id = ?", user.ClinicID)
 	}
 	if err := completedQuery.Count(&completedAppointments).Error; err != nil {
 		return metrics, err
@@ -299,8 +299,8 @@ func getMetrics(user models.User, period string) (DashboardMetrics, error) {
 		Joins("LEFT JOIN branches ON appointments.branch_id = branches.id").
 		Where("appointments.start_time >= ? AND appointments.start_time <= ?", startDate, endDate).
 		Where("appointments.status = ?", models.StatusCancelled)
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		cancelledQuery = cancelledQuery.Where("branches.clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		cancelledQuery = cancelledQuery.Where("branches.clinic_id = ?", user.ClinicID)
 	}
 	if err := cancelledQuery.Count(&cancelledAppointments).Error; err != nil {
 		return metrics, err
@@ -313,8 +313,8 @@ func getMetrics(user models.User, period string) (DashboardMetrics, error) {
 		Joins("LEFT JOIN branches ON appointments.branch_id = branches.id").
 		Where("appointments.start_time >= ? AND appointments.start_time <= ?", startDate, endDate).
 		Where("appointments.status = ?", models.StatusNoShow)
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		noShowQuery = noShowQuery.Where("branches.clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		noShowQuery = noShowQuery.Where("branches.clinic_id = ?", user.ClinicID)
 	}
 	if err := noShowQuery.Count(&noShowAppointments).Error; err != nil {
 		return metrics, err
@@ -328,8 +328,8 @@ func getMetrics(user models.User, period string) (DashboardMetrics, error) {
 		Where("appointments.status = ?", models.StatusCompleted)
 
 	// Apply clinic filtering
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		revenueQuery = revenueQuery.Where("branches.clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		revenueQuery = revenueQuery.Where("branches.clinic_id = ?", user.ClinicID)
 	}
 
 	// Total revenue
@@ -348,8 +348,8 @@ func getMetrics(user models.User, period string) (DashboardMetrics, error) {
 		Where("appointments.is_paid = ?", true)
 
 	// Apply clinic filtering
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		paidRevenueQuery = paidRevenueQuery.Where("branches.clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		paidRevenueQuery = paidRevenueQuery.Where("branches.clinic_id = ?", user.ClinicID)
 	}
 
 	if err := paidRevenueQuery.Select("COALESCE(SUM(appointments.actual_cost), 0)").Scan(&paidRevenue).Error; err != nil {
@@ -365,8 +365,8 @@ func getMetrics(user models.User, period string) (DashboardMetrics, error) {
 		Where("patients.created_at >= ? AND patients.created_at <= ?", startDate, endDate)
 
 	// Apply clinic filtering
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		patientQuery = patientQuery.Where("patients.clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		patientQuery = patientQuery.Where("patients.clinic_id = ?", user.ClinicID)
 	}
 
 	// New patients
@@ -384,8 +384,8 @@ func getMetrics(user models.User, period string) (DashboardMetrics, error) {
 		Group("patients.id")
 
 	// Apply clinic filtering
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		returningQuery = returningQuery.Where("branches.clinic_id = ?", *user.ClinicID)
+	if !user.IsSuperAdmin() {
+		returningQuery = returningQuery.Where("branches.clinic_id = ?", user.ClinicID)
 	}
 
 	var returningPatients int64

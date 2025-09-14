@@ -43,8 +43,8 @@ func GetConsentTemplates(c *fiber.Ctx) error {
 func CreateConsentTemplate(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
-	// Only super admin and clinic owners can create templates
-	if !user.IsSuperAdmin() && !user.HasRole(models.ClinicOwner) {
+	// Only super admin and admins can create templates
+	if !user.IsSuperAdmin() && !user.HasRole(models.Admin) {
 		return c.Status(403).JSON(fiber.Map{"error": "Insufficient permissions"})
 	}
 
@@ -58,8 +58,8 @@ func CreateConsentTemplate(c *fiber.Ctx) error {
 	}
 
 	// Set clinic ID for non-super-admin users
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		req.ClinicID = *user.ClinicID
+	if !user.IsSuperAdmin() {
+		req.ClinicID = user.ClinicID
 	}
 
 	// Check for duplicate code within the same clinic
@@ -104,8 +104,8 @@ func UpdateConsentTemplate(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 	id := c.Params("id")
 
-	// Only super admin and clinic owners can update templates
-	if !user.IsSuperAdmin() && !user.HasRole(models.ClinicOwner) {
+	// Only super admin and admins can update templates
+	if !user.IsSuperAdmin() && !user.HasRole(models.Admin) {
 		return c.Status(403).JSON(fiber.Map{"error": "Insufficient permissions"})
 	}
 
@@ -143,8 +143,8 @@ func DeleteConsentTemplate(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 	id := c.Params("id")
 
-	// Only super admin and clinic owners can delete templates
-	if !user.IsSuperAdmin() && !user.HasRole(models.ClinicOwner) {
+	// Only super admin and admins can delete templates
+	if !user.IsSuperAdmin() && !user.HasRole(models.Admin) {
 		return c.Status(403).JSON(fiber.Map{"error": "Insufficient permissions"})
 	}
 
@@ -209,8 +209,8 @@ func CreateConsentForm(c *fiber.Ctx) error {
 	}
 
 	// Set clinic ID for non-super-admin users
-	if !user.IsSuperAdmin() && user.ClinicID != nil {
-		req.ClinicID = *user.ClinicID
+	if !user.IsSuperAdmin() {
+		req.ClinicID = user.ClinicID
 	}
 
 	// Set created by

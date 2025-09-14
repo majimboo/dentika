@@ -31,7 +31,7 @@ func GetPatientDentalRecords(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Patient not found"})
 	}
 
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -151,7 +151,7 @@ func GetDentalRecord(c *fiber.Ctx) error {
 	}
 
 	// Check access
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != dentalRecord.Patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != dentalRecord.Patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -185,7 +185,7 @@ func UpdateToothCondition(c *fiber.Ctx) error {
 	}
 
 	// Check access and permissions
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != dentalRecord.Patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != dentalRecord.Patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -261,7 +261,7 @@ func GetDentalRecordHistory(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Dental record not found"})
 	}
 
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != dentalRecord.Patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != dentalRecord.Patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -293,7 +293,7 @@ func GetToothHistory(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Dental record not found"})
 	}
 
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != dentalRecord.Patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != dentalRecord.Patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -320,7 +320,7 @@ func ActivateDentalRecord(c *fiber.Ctx) error {
 	}
 
 	// Check access and permissions
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != dentalRecord.Patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != dentalRecord.Patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -357,7 +357,7 @@ func BulkUpdateTeeth(c *fiber.Ctx) error {
 	}
 
 	// Check access and permissions
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != dentalRecord.Patient.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != dentalRecord.Patient.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 

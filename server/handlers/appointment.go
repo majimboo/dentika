@@ -85,12 +85,9 @@ func GetAppointments(c *fiber.Ctx) error {
 
 	// Filter by clinic access
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
 		// Join with branches to filter by clinic
 		query = query.Joins("JOIN branches ON appointments.branch_id = branches.id").
-			Where("branches.clinic_id = ?", *user.ClinicID)
+			Where("branches.clinic_id = ?", user.ClinicID)
 	}
 
 	// Date filtering
@@ -183,7 +180,7 @@ func GetAppointment(c *fiber.Ctx) error {
 	}
 
 	// Check access
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -233,13 +230,13 @@ func CreateAppointment(c *fiber.Ctx) error {
 
 	// Check access to clinic
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil || *user.ClinicID != patient.ClinicID ||
-			*user.ClinicID != branch.ClinicID {
+		if user.ClinicID != patient.ClinicID ||
+			user.ClinicID != branch.ClinicID {
 			return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 		}
 
 		// Check if doctor belongs to same clinic (skip for super admin doctors)
-		if !doctor.IsSuperAdmin() && (doctor.ClinicID == nil || *doctor.ClinicID != *user.ClinicID) {
+		if !doctor.IsSuperAdmin() && doctor.ClinicID != user.ClinicID {
 			return c.Status(400).JSON(fiber.Map{"error": "Doctor does not belong to the same clinic"})
 		}
 	}
@@ -331,7 +328,7 @@ func UpdateAppointment(c *fiber.Ctx) error {
 	}
 
 	// Check access
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -398,7 +395,7 @@ func UpdateAppointmentStatus(c *fiber.Ctx) error {
 	}
 
 	// Check access
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -461,7 +458,7 @@ func MarkPatientArrived(c *fiber.Ctx) error {
 	}
 
 	// Check access
-	if !user.IsSuperAdmin() && (user.ClinicID == nil || *user.ClinicID != appointment.Branch.ClinicID) {
+	if !user.IsSuperAdmin() && user.ClinicID != appointment.Branch.ClinicID {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
@@ -485,11 +482,8 @@ func GetUpcomingAppointments(c *fiber.Ctx) error {
 
 	// Filter by clinic access
 	if !user.IsSuperAdmin() {
-		if user.ClinicID == nil {
-			return c.Status(403).JSON(fiber.Map{"error": "User not assigned to any clinic"})
-		}
 		query = query.Joins("JOIN branches ON appointments.branch_id = branches.id").
-			Where("branches.clinic_id = ?", *user.ClinicID)
+			Where("branches.clinic_id = ?", user.ClinicID)
 	}
 
 	// Get appointments for next 30 minutes for countdown

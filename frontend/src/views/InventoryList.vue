@@ -396,7 +396,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useInventoryStore } from '../stores/inventory'
 import { useAuthStore } from '../stores/auth'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 
 export default {
   name: 'InventoryList',

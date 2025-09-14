@@ -375,7 +375,8 @@ export default {
       getStatusText,
       isExpired,
       isExpiringSoon,
-      getTransactionTypeClass
+      getTransactionTypeClass,
+      formatDate
     }
   }
 }

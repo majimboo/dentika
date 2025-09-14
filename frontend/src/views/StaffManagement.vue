@@ -488,7 +488,8 @@ export default {
       toggleSortOrder,
       getInitials: getUserInitials,
       getRoleDisplayName,
-      getRoleBadgeClass
+      getRoleBadgeClass,
+      formatDate
     }
   }
 }

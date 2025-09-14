@@ -1,34 +1,43 @@
+// Critical components loaded immediately
 import Login from '../views/Login.vue';
 import Dashboard from '../views/Dashboard.vue';
-import UserManagementWrapper from '../views/UserManagementWrapper.vue';
-import UserList from '../views/UserList.vue'; // Keep for backward compatibility
-import UserEdit from '../views/UserEdit.vue';
-import StaffEdit from '../views/StaffEdit.vue';
-import Agenda from '../views/Agenda.vue';
-import NewStaff from '../views/NewStaff.vue';
-import NewUser from '../views/NewUser.vue';
-import PatientList from '../views/PatientList.vue';
-import PatientForm from '../views/PatientForm.vue';
-import AppointmentCalendar from '../views/AppointmentCalendar.vue';
-import AppointmentList from '../views/AppointmentList.vue';
-import NewAppointment from '../views/NewAppointment.vue';
-import EditAppointment from '../views/EditAppointment.vue';
-import ProcedureManagement from '../views/ProcedureManagement.vue';
-import ProcedureForm from '../views/ProcedureForm.vue';
-import DiagnosisForm from '../views/DiagnosisForm.vue';
-import TreatmentPlanForm from '../views/TreatmentPlanForm.vue';
-import ConsentForm from '../views/ConsentForm.vue';
-import PrescriptionForm from '../views/PrescriptionForm.vue';
-import PatientDentalChart from '../views/PatientDentalChart.vue';
-import ClinicManagement from '../views/ClinicManagement.vue';
-import ClinicForm from '../views/ClinicForm.vue';
-import PeerReviewList from '../views/PeerReviewList.vue';
-import PeerReviewCase from '../views/PeerReviewCase.vue';
-import PeerReviewCreate from '../views/PeerReviewCreate.vue';
-import InventoryList from '../views/InventoryList.vue';
-import InventoryForm from '../views/InventoryForm.vue';
-import InventoryView from '../views/InventoryView.vue';
 import AppLayout from '../layouts/AppLayout.vue';
+
+// Lazy-loaded components with chunk names for better organization
+const UserManagementWrapper = () => import('../views/UserManagementWrapper.vue');
+const UserList = () => import('../views/UserList.vue');
+const UserEdit = () => import('../views/UserEdit.vue');
+const StaffEdit = () => import('../views/StaffEdit.vue');
+const NewStaff = () => import('../views/NewStaff.vue');
+const NewUser = () => import('../views/NewUser.vue');
+
+const Agenda = () => import('../views/Agenda.vue');
+const AppointmentCalendar = () => import('../views/AppointmentCalendar.vue');
+const AppointmentList = () => import('../views/AppointmentList.vue');
+const NewAppointment = () => import('../views/NewAppointment.vue');
+const EditAppointment = () => import('../views/EditAppointment.vue');
+
+const PatientList = () => import('../views/PatientList.vue');
+const PatientForm = () => import('../views/PatientForm.vue');
+const PatientDentalChart = () => import('../views/PatientDentalChart.vue');
+
+const ProcedureManagement = () => import('../views/ProcedureManagement.vue');
+const ProcedureForm = () => import('../views/ProcedureForm.vue');
+const DiagnosisForm = () => import('../views/DiagnosisForm.vue');
+const TreatmentPlanForm = () => import('../views/TreatmentPlanForm.vue');
+const ConsentForm = () => import('../views/ConsentForm.vue');
+const PrescriptionForm = () => import('../views/PrescriptionForm.vue');
+
+const ClinicManagement = () => import('../views/ClinicManagement.vue');
+const ClinicForm = () => import('../views/ClinicForm.vue');
+
+const PeerReviewList = () => import('../views/PeerReviewList.vue');
+const PeerReviewCase = () => import('../views/PeerReviewCase.vue');
+const PeerReviewCreate = () => import('../views/PeerReviewCreate.vue');
+
+const InventoryList = () => import('../views/InventoryList.vue');
+const InventoryForm = () => import('../views/InventoryForm.vue');
+const InventoryView = () => import('../views/InventoryView.vue');
 
 const routes = [
     {

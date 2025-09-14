@@ -1,36 +1,14 @@
 import axios from 'axios'
 import { useConnectionStore } from '../stores/connection'
 
-// Initialize connection store
-let connectionStore = null
-
-// Lazy load connection store to avoid circular dependencies
-const getConnectionStore = async () => {
-  if (!connectionStore) {
-    // Import store dynamically to avoid circular dependency
-    const module = await import('../stores/connection')
-    connectionStore = module.useConnectionStore()
-  }
-  return connectionStore
-}
-
 axios.interceptors.response.use(
-  async (response) => {
+  (response) => {
     // If we get a successful response, mark server as reachable
-    if (connectionStore) {
-      connectionStore.handleNetworkRecovery()
-    } else {
-      // Try to get store and mark as recovered
-      try {
-        const store = await getConnectionStore()
-        if (store) store.handleNetworkRecovery()
-      } catch (e) {
-        // Ignore errors during store loading
-      }
-    }
+    const connectionStore = useConnectionStore()
+    connectionStore.handleNetworkRecovery()
     return response
   },
-  async (error) => {
+  (error) => {
     // Handle authentication errors
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
@@ -44,19 +22,8 @@ axios.interceptors.response.use(
 
     if (isNetworkError) {
       console.warn('Network error detected:', error.message)
-
-      // Update connection status
-      if (connectionStore) {
-        connectionStore.handleNetworkError()
-      } else {
-        // Fallback if store not loaded yet
-        try {
-          const store = await getConnectionStore()
-          if (store) store.handleNetworkError()
-        } catch (e) {
-          // Ignore errors during store loading
-        }
-      }
+      const connectionStore = useConnectionStore()
+      connectionStore.handleNetworkError()
     }
 
     return Promise.reject(error)

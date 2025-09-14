@@ -284,6 +284,7 @@ export default {
       deleteClinic,
       getInitials,
       formatDate,
+      isSuperAdmin,
     }
   }
 }

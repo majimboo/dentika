@@ -1177,7 +1177,7 @@ const getSelectedBranchId = () => {
     console.warn('No branches loaded yet, attempting to load...')
     if (authStore.userClinicId) {
       clinicStore.fetchBranches(authStore.userClinicId)
-    } else if (authStore.isClinicOwner) {
+    } else if (authStore.isAdmin) {
       clinicStore.fetchBranches(1)
     }
     return 0 // Return 0 to indicate loading in progress
@@ -1329,16 +1329,16 @@ onMounted(async () => {
      console.log('Current user data:', authStore.user)
      console.log('User clinic ID:', authStore.userClinicId)
      console.log('Is super admin:', authStore.isSuperAdmin)
-     console.log('Is clinic owner:', authStore.isClinicOwner)
+     console.log('Is admin:', authStore.isAdmin)
 
      if (authStore.userClinicId) {
        console.log('Fetching branches for clinic:', authStore.userClinicId)
        clinicStore.fetchBranches(authStore.userClinicId)
      } else if (authStore.isSuperAdmin) {
        console.warn('Super admin detected, skipping branch fetch')
-     } else if (authStore.isClinicOwner) {
-       // Clinic owner without clinic_id - try to fetch clinic 1
-       console.log('Clinic owner without clinic_id, trying clinic 1')
+     } else if (authStore.isAdmin) {
+       // Admin without clinic_id - try to fetch clinic 1
+       console.log('Admin without clinic_id, trying clinic 1')
        clinicStore.fetchBranches(1)
      } else {
        console.warn('No clinic ID available for non-super-admin user')

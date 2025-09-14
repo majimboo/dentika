@@ -42,6 +42,7 @@ const InventoryItemView = () => import('../views/InventoryItemView.vue');
 const InventoryRestock = () => import('../views/InventoryRestock.vue');
 const PlatformInventory = () => import('../views/PlatformInventory.vue');
 const PlatformOrder = () => import('../views/PlatformOrder.vue');
+const Shop = () => import('../views/Shop.vue');
 const OrdersList = () => import('../views/OrdersList.vue');
 const SuperAdminOrders = () => import('../views/SuperAdminOrders.vue');
 const SuperAdminPlatformInventory = () => import('../views/SuperAdminPlatformInventory.vue');
@@ -459,24 +460,24 @@ const routes = [
                     },
                 },
                 {
-                    path: '/platform-inventory',
-                    name: 'PlatformInventory',
-                    component: PlatformInventory,
-                    meta: { level: 1, title: 'Platform Inventory', parent: 'Dashboard' },
+                    path: '/shop',
+                    name: 'Shop',
+                    component: Shop,
+                    meta: { level: 1, title: 'Dentika Shop', parent: 'Dashboard' },
                 },
                 {
-                    path: '/platform-inventory/:id/order',
-                    name: 'PlatformOrder',
+                    path: '/shop/:id/order',
+                    name: 'ShopOrder',
                     component: PlatformOrder,
                     meta: {
                         level: 2,
                         title: 'Order Supplies',
-                        parent: 'PlatformInventory',
+                        parent: 'Shop',
                     },
                 },
                 {
-                    path: '/orders',
-                    name: 'OrdersList',
+                    path: '/shop/orders',
+                    name: 'ShopOrdersList',
                     component: OrdersList,
                     meta: { level: 1, title: 'My Orders', parent: 'Dashboard' },
                 },
@@ -492,57 +493,57 @@ const routes = [
                      },
                  },
                  {
-                     path: '/admin/platform-inventory',
-                     name: 'SuperAdminPlatformInventory',
+                     path: '/admin/shop',
+                     name: 'SuperAdminShop',
                      component: SuperAdminPlatformInventory,
                      meta: {
                          level: 1,
-                         title: 'Platform Inventory',
+                         title: 'Dentika Shop',
                          parent: 'Dashboard',
                          requiresSuperAdmin: true
                      },
                  },
                  {
-                     path: '/admin/platform-inventory/add',
-                     name: 'SuperAdminPlatformInventoryAdd',
+                     path: '/admin/shop/add',
+                     name: 'SuperAdminShopAdd',
                      component: SuperAdminPlatformInventoryAdd,
                      meta: {
                          level: 2,
-                         title: 'Add Platform Inventory Item',
-                         parent: 'SuperAdminPlatformInventory',
+                         title: 'Add Shop Item',
+                         parent: 'SuperAdminShop',
                          requiresSuperAdmin: true
                      },
                  },
                   {
-                      path: '/admin/platform-inventory/edit/:id',
-                      name: 'SuperAdminPlatformInventoryEdit',
+                      path: '/admin/shop/edit/:id',
+                      name: 'SuperAdminShopEdit',
                       component: SuperAdminPlatformInventoryEdit,
                       meta: {
                           level: 2,
-                          title: 'Edit Platform Inventory Item',
-                          parent: 'SuperAdminPlatformInventory',
+                          title: 'Edit Shop Item',
+                          parent: 'SuperAdminShop',
                           requiresSuperAdmin: true
                       },
                   },
                    {
-                       path: '/admin/platform-inventory/:id/view',
-                       name: 'SuperAdminPlatformInventoryView',
+                       path: '/admin/shop/:id/view',
+                       name: 'SuperAdminShopView',
                        component: InventoryItemView,
                        meta: {
                            level: 2,
-                           title: 'Platform Inventory Item Details',
-                           parent: 'SuperAdminPlatformInventory',
+                           title: 'Shop Item Details',
+                           parent: 'SuperAdminShop',
                            requiresSuperAdmin: true
                        },
                    },
                    {
-                       path: '/admin/platform-inventory/:id/restock',
-                       name: 'SuperAdminPlatformInventoryRestock',
+                       path: '/admin/shop/:id/restock',
+                       name: 'SuperAdminShopRestock',
                        component: InventoryRestock,
                        meta: {
                            level: 3,
-                           title: 'Restock Platform Inventory Item',
-                           parent: 'SuperAdminPlatformInventoryView',
+                           title: 'Restock Shop Item',
+                           parent: 'SuperAdminShopView',
                            requiresSuperAdmin: true
                        },
                    },

@@ -100,19 +100,19 @@
               </li>
               <li role="listitem">
                 <router-link
-                  to="/admin/platform-inventory"
+                  to="/admin/shop"
                   @click="closeSidebarOnMobile"
                   class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
-                  :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path === '/admin/platform-inventory' }"
-                  :aria-current="$route.path === '/admin/platform-inventory' ? 'page' : null"
+                  :class="{ 'bg-red-100 text-red-700 shadow-sm': $route.path === '/admin/shop' }"
+                  :aria-current="$route.path === '/admin/shop' ? 'page' : null"
                 >
                    <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-red-200 transition-colors duration-200"
-                        :class="{ 'bg-red-200': $route.path === '/admin/platform-inventory' }">
-                     <font-awesome-icon icon="fa-solid fa-boxes" class="w-5 h-5" />
+                        :class="{ 'bg-red-200': $route.path === '/admin/shop' }">
+                     <font-awesome-icon icon="fa-solid fa-store" class="w-5 h-5" />
                    </div>
                   <div class="min-w-0 flex-1">
-                    <div class="font-medium truncate">Platform Inventory</div>
-                    <div class="text-xs text-gray-400 truncate">Manage Dentika's inventory catalog</div>
+                    <div class="font-medium truncate">Dentika Shop</div>
+                    <div class="text-xs text-gray-400 truncate">Manage shop inventory catalog</div>
                   </div>
                 </router-link>
               </li>

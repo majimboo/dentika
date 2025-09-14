@@ -208,7 +208,7 @@ export default {
       error.value = ''
 
       try {
-        const response = await apiService.get(`/api/inventory/platform/${itemId}`)
+        const response = await apiService.get(`/api/inventory/items/${itemId}`)
 
         if (response.success) {
           item.value = response.data

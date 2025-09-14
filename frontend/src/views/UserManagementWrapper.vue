@@ -3,8 +3,8 @@
     <!-- Super Admin View -->
     <UserManagement v-if="isSuperAdmin" />
 
-    <!-- Clinic Owner/Staff View -->
-    <StaffManagement v-else-if="isClinicOwner" />
+    <!-- Admin/Staff View -->
+    <StaffManagement v-else-if="isAdmin" />
 
     <!-- Fallback for other roles (shouldn't happen but just in case) -->
     <div v-else class="p-12 text-center">

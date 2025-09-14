@@ -288,7 +288,8 @@ export default {
       getColumnCount,
       getAppointmentsByStatus,
       handleStatusChange,
-      cleanup
+      cleanup,
+      formatDate
     }
   },
   beforeUnmount() {

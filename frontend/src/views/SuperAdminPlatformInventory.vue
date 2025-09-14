@@ -9,7 +9,7 @@
 
       <div class="header-actions flex items-center space-x-3">
         <router-link
-          to="/admin/platform-inventory/add"
+          to="/admin/shop/add"
           class="btn btn-primary flex items-center"
         >
           <font-awesome-icon icon="fa-solid fa-plus" class="w-4 h-4 mr-2" />
@@ -211,13 +211,13 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex items-center space-x-2">
                    <router-link
-                     :to="`/admin/platform-inventory/${item.id}/view`"
+                     :to="`/admin/shop/${item.id}/view`"
                      class="text-blue-600 hover:text-blue-900"
                    >
                      View
                    </router-link>
                   <router-link
-                    :to="`/admin/platform-inventory/edit/${item.id}`"
+                    :to="`/admin/shop/edit/${item.id}`"
                     class="text-green-600 hover:text-green-900"
                   >
                     Edit
@@ -242,7 +242,7 @@
       <h3 class="text-lg font-medium text-gray-900 mb-2">No inventory items found</h3>
       <p class="text-gray-600 mb-6">There are currently no items in the platform inventory.</p>
       <router-link
-        to="/admin/platform-inventory/add"
+        to="/admin/shop/add"
         class="btn btn-primary"
       >
         Add First Item
@@ -449,7 +449,7 @@ export default {
           status: statusFilter.value
         }
 
-        const response = await apiService.get('/api/inventory/platform', { params })
+        const response = await apiService.get('/api/inventory/items', { params })
         if (response.success) {
           inventoryItems.value = response.data.items || []
           totalPages.value = Math.ceil((response.data.total || 0) / limit.value)
@@ -505,7 +505,9 @@ export default {
       }
 
       try {
-        const result = await apiService.put(`/api/inventory/platform/${item.id}/status`, {
+        // Update the item status using the general update endpoint
+        const result = await apiService.put(`/api/inventory/items/${item.id}`, {
+          ...item,
           status: newStatus
         })
         if (!result.success) {

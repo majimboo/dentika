@@ -16,7 +16,7 @@
           Back to My Inventory
         </router-link>
         <router-link
-          to="/orders"
+          to="/shop/orders"
           class="btn btn-primary flex items-center"
         >
           <font-awesome-icon icon="fa-solid fa-shopping-cart" class="w-4 h-4 mr-2" />
@@ -159,7 +159,7 @@
       <h3 class="text-lg font-medium text-gray-900 mb-2">No platform inventory items found</h3>
       <p class="text-gray-600 mb-6">There are currently no items available in the platform inventory.</p>
       <router-link
-        to="/orders"
+        to="/shop/orders"
         class="btn btn-primary inline-flex items-center"
       >
         <font-awesome-icon icon="fa-solid fa-shopping-cart" class="w-4 h-4 mr-2" />

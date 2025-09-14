@@ -159,10 +159,8 @@ func GetInventoryItems(c *fiber.Ctx) error {
 		query = query.Where("type = ?", typeParam)
 	}
 
-	// Add low stock filter
-	if lowStock := c.Query("low_stock"); lowStock == "true" {
-		query = query.Where("current_stock <= min_stock_level")
-	}
+	// Note: Low stock filter is now applied after fetching items
+	// since current_stock is calculated dynamically
 
 	// Add pagination
 	page, _ := strconv.Atoi(c.Query("page", "1"))
@@ -176,6 +174,17 @@ func GetInventoryItems(c *fiber.Ctx) error {
 	// Calculate current stock for each item
 	for i := range items {
 		items[i].CurrentStock = items[i].GetCurrentStock(database.DB)
+	}
+
+	// Apply low stock filter if requested (after calculating stock)
+	if lowStock := c.Query("low_stock"); lowStock == "true" {
+		var filteredItems []models.InventoryItem
+		for _, item := range items {
+			if item.CurrentStock <= item.MinStockLevel {
+				filteredItems = append(filteredItems, item)
+			}
+		}
+		items = filteredItems
 	}
 
 	// Get total count
@@ -197,9 +206,7 @@ func GetInventoryItems(c *fiber.Ctx) error {
 	if status := c.Query("status"); status != "" {
 		countQuery = countQuery.Where("status = ?", status)
 	}
-	if lowStock := c.Query("low_stock"); lowStock == "true" {
-		countQuery = countQuery.Where("current_stock <= min_stock_level")
-	}
+	// Note: Low stock counting needs to be done after fetching items
 	countQuery.Count(&total)
 
 	// Calculate aggregated stats for the entire inventory (ignoring pagination and filters)
@@ -215,11 +222,35 @@ func GetInventoryItems(c *fiber.Ctx) error {
 	var totalValue struct {
 		Value float64 `json:"value"`
 	}
-	statsQuery.Select("COALESCE(SUM(current_stock * unit_cost), 0) as value").Scan(&totalValue)
+	// Total value will be calculated below based on actual stock levels
 
-	// Low stock count
-	var lowStockCount int64
-	statsQuery.Where("current_stock <= min_stock_level").Count(&lowStockCount)
+	// Calculate stats based on actual items (for accurate low stock and value calculation)
+	var allItems []models.InventoryItem
+	allItemsQuery := database.DB.Model(&models.InventoryItem{})
+	if clinicID > 0 {
+		allItemsQuery = allItemsQuery.Where("clinic_id = ?", clinicID)
+	}
+	if branchID > 0 {
+		allItemsQuery = allItemsQuery.Where("branch_id = ?", branchID)
+	}
+	allItemsQuery.Find(&allItems)
+
+	// Calculate current stock and stats for all items
+	var lowStockCount int64 = 0
+	var calculatedTotalValue float64 = 0
+	for i := range allItems {
+		currentStock := allItems[i].GetCurrentStock(database.DB)
+		allItems[i].CurrentStock = currentStock
+
+		// Count low stock items
+		if currentStock <= allItems[i].MinStockLevel {
+			lowStockCount++
+		}
+
+		// Calculate total value using selling price
+		calculatedTotalValue += float64(currentStock) * allItems[i].SellingPrice
+	}
+	totalValue.Value = calculatedTotalValue
 
 	// Expiring soon count (next 30 days)
 	var expiringCount int64
@@ -782,24 +813,32 @@ func GetInventoryAnalytics(c *fiber.Ctx) error {
 		clinicID = user.ClinicID
 	}
 
-	// Get total inventory value (this is more complex now with average costs)
-	// For now, we'll use selling_price as a proxy for clinic inventory
+	// Fetch all inventory items to calculate total value and low stock count
+	var allItems []models.InventoryItem
+	itemsQuery := database.DB.Model(&models.InventoryItem{})
+	if clinicID > 0 {
+		itemsQuery = itemsQuery.Where("clinic_id = ?", clinicID)
+	}
+	itemsQuery.Find(&allItems)
+
+	// Calculate total inventory value and low stock count
 	var totalValue struct {
 		Value float64 `json:"value"`
 	}
-	valueQuery := database.DB.Model(&models.InventoryItem{}).Select("COALESCE(SUM(current_stock * selling_price), 0) as value")
-	if clinicID > 0 {
-		valueQuery = valueQuery.Where("clinic_id = ?", clinicID)
-	}
-	valueQuery.Scan(&totalValue)
+	var lowStockCount int64 = 0
 
-	// Get low stock items count
-	var lowStockCount int64
-	lowStockQuery := database.DB.Model(&models.InventoryItem{}).Where("current_stock <= min_stock_level")
-	if clinicID > 0 {
-		lowStockQuery = lowStockQuery.Where("clinic_id = ?", clinicID)
+	for i := range allItems {
+		currentStock := allItems[i].GetCurrentStock(database.DB)
+		allItems[i].CurrentStock = currentStock
+
+		// Calculate total value (current stock * selling price)
+		totalValue.Value += float64(currentStock) * allItems[i].SellingPrice
+
+		// Check for low stock
+		if currentStock <= allItems[i].ReorderPoint {
+			lowStockCount++
+		}
 	}
-	lowStockQuery.Count(&lowStockCount)
 
 	// Get expiring items count (next 30 days)
 	var expiringCount int64
@@ -810,25 +849,46 @@ func GetInventoryAnalytics(c *fiber.Ctx) error {
 	}
 	expiringQuery.Count(&expiringCount)
 
-	// Get total items count
-	var totalItems int64
-	itemsQuery := database.DB.Model(&models.InventoryItem{})
-	if clinicID > 0 {
-		itemsQuery = itemsQuery.Where("clinic_id = ?", clinicID)
-	}
-	itemsQuery.Count(&totalItems)
+	// Get total items count (we already have allItems, so just count them)
+	totalItems := int64(len(allItems))
 
-	// Get category breakdown
+	// Calculate category breakdown with actual values
+	categoryMap := make(map[string]struct {
+		Category string  `json:"category"`
+		Count    int64   `json:"count"`
+		Value    float64 `json:"value"`
+	})
+
+	for _, item := range allItems {
+		currentStock := item.GetCurrentStock(database.DB)
+		categoryKey := string(item.Category)
+
+		if stat, exists := categoryMap[categoryKey]; exists {
+			stat.Count++
+			stat.Value += float64(currentStock) * item.SellingPrice
+			categoryMap[categoryKey] = stat
+		} else {
+			categoryMap[categoryKey] = struct {
+				Category string  `json:"category"`
+				Count    int64   `json:"count"`
+				Value    float64 `json:"value"`
+			}{
+				Category: categoryKey,
+				Count:    1,
+				Value:    float64(currentStock) * item.SellingPrice,
+			}
+		}
+	}
+
+	// Convert map to slice
 	var categoryStats []struct {
 		Category string  `json:"category"`
 		Count    int64   `json:"count"`
 		Value    float64 `json:"value"`
 	}
-	categoryQuery := database.DB.Model(&models.InventoryItem{}).Select("category, COUNT(*) as count, COALESCE(SUM(current_stock * unit_cost), 0) as value").Group("category")
-	if clinicID > 0 {
-		categoryQuery = categoryQuery.Where("clinic_id = ?", clinicID)
+	for _, stat := range categoryMap {
+		categoryStats = append(categoryStats, stat)
 	}
-	categoryQuery.Scan(&categoryStats)
 
 	return c.JSON(fiber.Map{
 		"analytics": fiber.Map{
@@ -1379,4 +1439,57 @@ func UpdatePlatformInventoryItemStatus(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(item)
+}
+
+// GetShopItems - Get Dentika's shop inventory items (clinic_id=1)
+func GetShopItems(c *fiber.Ctx) error {
+	const dentikaClinicID = 1
+
+	var items []models.InventoryItem
+	query := database.DB.Model(&models.InventoryItem{}).Where("clinic_id = ? AND status = ?", dentikaClinicID, models.ItemStatusActive)
+
+	// Add search functionality
+	if search := c.Query("search"); search != "" {
+		query = query.Where("name ILIKE ? OR description ILIKE ? OR sku ILIKE ?",
+			"%"+search+"%", "%"+search+"%", "%"+search+"%")
+	}
+
+	// Add category filter
+	if category := c.Query("category"); category != "" {
+		query = query.Where("category = ?", category)
+	}
+
+	// Add pagination
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "50"))
+	offset := (page - 1) * limit
+
+	if err := query.Order("name ASC").Offset(offset).Limit(limit).Find(&items).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch shop items"})
+	}
+
+	// Calculate current stock for each item
+	for i := range items {
+		items[i].CurrentStock = items[i].GetCurrentStock(database.DB)
+	}
+
+	// Get total count for pagination
+	var total int64
+	countQuery := database.DB.Model(&models.InventoryItem{}).Where("clinic_id = ? AND status = ?", dentikaClinicID, models.ItemStatusActive)
+	if search := c.Query("search"); search != "" {
+		countQuery = countQuery.Where("name ILIKE ? OR description ILIKE ? OR sku ILIKE ?",
+			"%"+search+"%", "%"+search+"%", "%"+search+"%")
+	}
+	if category := c.Query("category"); category != "" {
+		countQuery = countQuery.Where("category = ?", category)
+	}
+	countQuery.Count(&total)
+
+	return c.JSON(fiber.Map{
+		"items":       items,
+		"total":       total,
+		"page":        page,
+		"limit":       limit,
+		"total_pages": (total + int64(limit) - 1) / int64(limit),
+	})
 }

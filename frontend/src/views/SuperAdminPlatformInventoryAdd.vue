@@ -9,7 +9,7 @@
 
       <div class="header-actions flex items-center space-x-3">
         <router-link
-          to="/admin/platform-inventory"
+          to="/admin/shop"
           class="btn btn-secondary flex items-center"
         >
           <font-awesome-icon icon="fa-solid fa-arrow-left" class="w-4 h-4 mr-2" />
@@ -147,7 +147,7 @@
         <!-- Actions -->
         <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
           <router-link
-            to="/admin/platform-inventory"
+            to="/admin/shop"
             class="btn btn-secondary"
           >
             Cancel
@@ -193,10 +193,10 @@ export default {
       saving.value = true
 
       try {
-        const result = await apiService.post('/api/inventory/platform', itemForm.value)
+        const result = await apiService.post('/api/inventory/items', itemForm.value)
         if (result.success) {
           alert('Item created successfully!')
-          router.push('/admin/platform-inventory')
+          router.push('/admin/shop')
         } else {
           alert(`Failed to create item: ${result.error}`)
         }

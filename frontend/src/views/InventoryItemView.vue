@@ -265,10 +265,9 @@ export default {
         const itemId = route.params.id
         let endpoint = `/api/inventory/items/${itemId}`
 
-        // Use platform inventory endpoint if we're in admin section
-        if (route.path.includes('/admin/platform-inventory/')) {
-          endpoint = `/api/inventory/platform/${itemId}`
-        }
+        // Use the same inventory endpoint for all items
+        // The backend will handle filtering based on user permissions
+        endpoint = `/api/inventory/items/${itemId}`
 
         const response = await apiService.get(endpoint)
 

@@ -151,7 +151,7 @@
                   </router-link>
                 </li>
 
-             <li role="listitem" v-if="isClinicOwner">
+             <li role="listitem" v-if="isAdmin">
                <router-link
                  to="/staff"
                  @click="closeSidebarOnMobile"
@@ -240,7 +240,7 @@ export default {
     BaseTooltip
   },
   computed: {
-    ...mapState(useAuthStore, ['userClinicId', 'isSuperAdmin', 'isClinicOwner', 'isDoctor'])
+    ...mapState(useAuthStore, ['userClinicId', 'isSuperAdmin', 'isAdmin', 'isDoctor'])
   },
   setup() {
     const { isSidebarOpen, closeSidebar } = useSidebar()

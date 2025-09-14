@@ -26,7 +26,7 @@ const (
 
 type ConsentTemplate struct {
 	ID          uint   `json:"id" gorm:"primarykey"`
-	Code        string `json:"code" gorm:"uniqueIndex;size:20"`
+	Code        string `json:"code" gorm:"size:20;uniqueIndex:idx_consent_templates_code_clinic"`
 	Name        string `json:"name" gorm:"size:200;not null"`
 	Description string `json:"description" gorm:"type:text"`
 
@@ -39,7 +39,7 @@ type ConsentTemplate struct {
 	IsDefault bool   `json:"is_default" gorm:"default:false"`
 
 	// Clinic scoping for multi-tenancy
-	ClinicID uint   `json:"clinic_id" gorm:"not null;index"`
+	ClinicID uint   `json:"clinic_id" gorm:"not null;uniqueIndex:idx_consent_templates_code_clinic"`
 	Clinic   Clinic `json:"clinic" gorm:"foreignKey:ClinicID"`
 
 	CreatedAt time.Time      `json:"created_at"`

@@ -9,7 +9,7 @@
 
       <div class="header-actions flex items-center space-x-3">
         <router-link
-          to="/admin/platform-inventory"
+          to="/admin/shop"
           class="btn btn-secondary flex items-center"
         >
           <font-awesome-icon icon="fa-solid fa-arrow-left" class="w-4 h-4 mr-2" />
@@ -172,7 +172,7 @@
         <!-- Actions -->
         <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
           <router-link
-            to="/admin/platform-inventory"
+            to="/admin/shop"
             class="btn btn-secondary"
           >
             Cancel
@@ -233,10 +233,10 @@ export default {
 
       try {
         const itemId = route.params.id
-        const response = await apiService.put(`/api/inventory/platform/${itemId}`, itemForm.value)
+        const response = await apiService.put(`/api/inventory/items/${itemId}`, itemForm.value)
         if (response.success) {
           alert('Item updated successfully!')
-          router.push('/admin/platform-inventory')
+          router.push('/admin/shop')
         } else {
           alert(response.error || 'Failed to update item. Please try again.')
         }

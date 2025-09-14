@@ -378,7 +378,7 @@ export const useInventoryStore = defineStore('inventory', {
       })
 
       try {
-        const result = await apiService.get(`/api/inventory/platform?${queryParams}`)
+        const result = await apiService.get(`/api/inventory/items?${queryParams}`)
         if (result.success) {
           this.platformItems = result.data.items
           this.platformPagination = {

@@ -53,6 +53,10 @@
     
     <!-- Sidebar - Slides in from left on mobile, always visible on desktop -->
     <SuperAdminSidebar v-if="isSuperAdmin" />
+    <AdminSidebar v-else-if="isAdmin" />
+    <DoctorSidebar v-else-if="isDoctor" />
+    <SecretarySidebar v-else-if="isSecretary" />
+    <AssistantSidebar v-else-if="isAssistant" />
     <AppSidebar v-else />
     
     <div class="flex flex-col min-h-screen lg:ml-64">
@@ -82,6 +86,10 @@ import { mapState } from 'pinia'
 import NavigationHeader from '../components/NavigationHeader.vue'
 import AppSidebar from '../components/AppSidebar.vue'
 import SuperAdminSidebar from '../components/SuperAdminSidebar.vue'
+import AdminSidebar from '../components/AdminSidebar.vue'
+import DoctorSidebar from '../components/DoctorSidebar.vue'
+import SecretarySidebar from '../components/SecretarySidebar.vue'
+import AssistantSidebar from '../components/AssistantSidebar.vue'
 import AppFooter from '../components/AppFooter.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import NotificationPanel from '../components/NotificationPanel.vue'
@@ -94,12 +102,16 @@ export default {
     NavigationHeader,
     AppSidebar,
     SuperAdminSidebar,
+    AdminSidebar,
+    DoctorSidebar,
+    SecretarySidebar,
+    AssistantSidebar,
     AppFooter,
     MobileBottomNav,
     NotificationPanel
   },
   computed: {
-    ...mapState(useAuthStore, ['isSuperAdmin'])
+    ...mapState(useAuthStore, ['isSuperAdmin', 'isAdmin', 'isDoctor', 'isSecretary', 'isAssistant'])
   },
   setup() {
     const { isSidebarOpen, closeSidebar, toggleSidebar } = useSidebar()

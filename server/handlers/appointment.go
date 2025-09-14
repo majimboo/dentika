@@ -304,8 +304,8 @@ func CreateAppointment(c *fiber.Ctx) error {
 	// Reload with relationships
 	database.DB.Preload("Patient").Preload("Doctor").Preload("Branch").First(&appointment, appointment.ID)
 
-	// Send WebSocket notification for new appointment
-	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "scheduled")
+	// Send WebSocket notification for new appointment (clinic-scoped)
+	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "scheduled", appointment.Branch.ClinicID)
 
 	// Send clinic-wide notification
 	go SendClinicNotification(
@@ -379,8 +379,8 @@ func UpdateAppointment(c *fiber.Ctx) error {
 	// Reload with relationships
 	database.DB.Preload("Patient").Preload("Doctor").Preload("Branch").First(&appointment, appointment.ID)
 
-	// Send WebSocket notification for appointment update
-	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "updated")
+	// Send WebSocket notification for appointment update (clinic-scoped)
+	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "updated", appointment.Branch.ClinicID)
 
 	return c.JSON(appointment)
 }
@@ -425,8 +425,8 @@ func UpdateAppointmentStatus(c *fiber.Ctx) error {
 	// Reload with relationships for notification
 	database.DB.Preload("Patient").Preload("Branch").First(&appointment, appointment.ID)
 
-	// Send WebSocket notification for status update
-	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, string(appointment.Status))
+	// Send WebSocket notification for status update (clinic-scoped)
+	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, string(appointment.Status), appointment.Branch.ClinicID)
 
 	// Send clinic-wide notification for status changes
 	statusMessages := map[string]string{

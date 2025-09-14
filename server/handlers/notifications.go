@@ -32,7 +32,7 @@ func checkAndSendReminders() {
 
 	// Find appointments starting in 15-30 minutes
 	var upcomingAppointments []models.Appointment
-	err := database.DB.Preload("Patient").
+	err := database.DB.Preload("Patient").Preload("Branch").
 		Where("start_time > ? AND start_time <= ? AND status IN (?, ?)",
 			fifteenMinutesFromNow, thirtyMinutesFromNow,
 			models.StatusScheduled, models.StatusConfirmed).
@@ -46,14 +46,15 @@ func checkAndSendReminders() {
 	for _, appointment := range upcomingAppointments {
 		minutesUntil := int(appointment.StartTime.Sub(now).Minutes())
 
-		// Send reminder via WebSocket
+		// Send reminder via WebSocket (clinic-scoped)
 		go SendAppointmentReminder(
 			appointment.ID,
 			appointment.Patient.FirstName+" "+appointment.Patient.LastName,
 			minutesUntil,
+			appointment.Branch.ClinicID,
 		)
 
-		log.Printf("Sent reminder for appointment %d (%d minutes until start)", appointment.ID, minutesUntil)
+		log.Printf("Sent reminder for appointment %d in clinic %d (%d minutes until start)", appointment.ID, appointment.Branch.ClinicID, minutesUntil)
 	}
 }
 
@@ -94,13 +95,15 @@ func SendAppointmentCancellationAlert(appointmentID uint, patientName string, re
 }
 
 // SendPatientCreatedNotification notifies clinic users about new patient
-func SendPatientCreatedNotification(patientName string, clinicID uint) {
+func SendPatientCreatedNotification(patientID uint, patientName string, clinicID uint) {
+	// Send both clinic notification and patient update
 	go SendClinicNotification(
 		"New Patient Added",
 		"Patient "+patientName+" has been added to the system.",
 		"patient_created",
 		clinicID,
 	)
+	go SendPatientUpdate(patientID, patientName, "created", clinicID)
 }
 
 // SendInventoryRestockAlert notifies when items need restocking

@@ -268,8 +268,8 @@ func handlePing(conn *websocket.Conn) {
 
 // Public functions for sending notifications
 
-// Send appointment reminder notification
-func SendAppointmentReminder(appointmentID uint, patientName string, minutesUntil int) {
+// Send appointment reminder notification to clinic users
+func SendAppointmentReminder(appointmentID uint, patientName string, minutesUntil int, clinicID uint) {
 	message := WSMessage{
 		Type: "appointment_reminder",
 		Payload: fiber.Map{
@@ -279,11 +279,11 @@ func SendAppointmentReminder(appointmentID uint, patientName string, minutesUnti
 			"timestamp":      time.Now(),
 		},
 	}
-	wsManager.broadcast(message)
+	wsManager.broadcastToClinic(clinicID, message)
 }
 
-// Send appointment update notification
-func SendAppointmentUpdate(appointmentID uint, patientName string, updateType string) {
+// Send appointment update notification to clinic users
+func SendAppointmentUpdate(appointmentID uint, patientName string, updateType string, clinicID uint) {
 	message := WSMessage{
 		Type: "appointment_update",
 		Payload: fiber.Map{
@@ -293,11 +293,11 @@ func SendAppointmentUpdate(appointmentID uint, patientName string, updateType st
 			"timestamp":      time.Now(),
 		},
 	}
-	wsManager.broadcast(message)
+	wsManager.broadcastToClinic(clinicID, message)
 }
 
-// Send patient update notification
-func SendPatientUpdate(patientID uint, patientName string, updateType string) {
+// Send patient update notification to clinic users
+func SendPatientUpdate(patientID uint, patientName string, updateType string, clinicID uint) {
 	message := WSMessage{
 		Type: "patient_update",
 		Payload: fiber.Map{
@@ -307,7 +307,7 @@ func SendPatientUpdate(patientID uint, patientName string, updateType string) {
 			"timestamp":    time.Now(),
 		},
 	}
-	wsManager.broadcast(message)
+	wsManager.broadcastToClinic(clinicID, message)
 }
 
 // Send general notification to specific user

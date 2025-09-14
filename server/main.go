@@ -88,6 +88,12 @@ func main() {
 	seedDefaultTemplates()
 	seedConsentTemplates()
 
+	// Start notification services (inline for now)
+	go func() {
+		log.Println("Appointment reminder service started")
+		// Reminder service will be implemented here
+	}()
+
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
 		AppName:      "CDK Engine",
@@ -108,9 +114,12 @@ func main() {
 	app.Use(recover.New())
 
 	// Serve static files
-	app.Static("/", "../frontend/public")
-	app.Static("/assets", "../frontend/dist/assets")
+	app.Static("/", "../frontend/dist")
+	// app.Static("/assets", "../frontend/dist/assets")
 	app.Static("/uploads", "./uploads")
+
+	// WebSocket route
+	app.Get("/ws", handlers.WebSocketHandler)
 
 	// Auth routes
 	app.Post("/api/auth/login", handlers.Login)

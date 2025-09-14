@@ -304,6 +304,9 @@ func CreateAppointment(c *fiber.Ctx) error {
 	// Reload with relationships
 	database.DB.Preload("Patient").Preload("Doctor").Preload("Branch").First(&appointment, appointment.ID)
 
+	// Send WebSocket notification for new appointment
+	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "scheduled")
+
 	return c.Status(201).JSON(appointment)
 }
 
@@ -368,6 +371,9 @@ func UpdateAppointment(c *fiber.Ctx) error {
 	// Reload with relationships
 	database.DB.Preload("Patient").Preload("Doctor").Preload("Branch").First(&appointment, appointment.ID)
 
+	// Send WebSocket notification for appointment update
+	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "updated")
+
 	return c.JSON(appointment)
 }
 
@@ -407,6 +413,12 @@ func UpdateAppointmentStatus(c *fiber.Ctx) error {
 	if err := database.DB.Save(&appointment).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to update appointment status"})
 	}
+
+	// Reload with relationships for notification
+	database.DB.Preload("Patient").First(&appointment, appointment.ID)
+
+	// Send WebSocket notification for status update
+	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, string(appointment.Status))
 
 	return c.JSON(appointment)
 }

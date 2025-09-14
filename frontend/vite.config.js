@@ -1,10 +1,46 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig({
-    plugins: [vue(), tailwindcss()],
+    plugins: [
+        vue(),
+        tailwindcss(),
+        VitePWA({
+            registerType: 'autoUpdate',
+            workbox: {
+                globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+            },
+            includeAssets: ['favicon.svg', 'icon-192.svg', 'icon-512.svg'],
+            manifest: {
+                name: 'Dentika - Dental Practice Management',
+                short_name: 'Dentika',
+                description: 'Comprehensive dental practice management application',
+                theme_color: '#2563eb',
+                background_color: '#ffffff',
+                display: 'standalone',
+                orientation: 'portrait-primary',
+                scope: '/',
+                start_url: '/',
+                icons: [
+                    {
+                        src: '/icon-192.svg',
+                        sizes: '192x192',
+                        type: 'image/svg+xml',
+                        purpose: 'any maskable'
+                    },
+                    {
+                        src: '/icon-512.svg',
+                        sizes: '512x512',
+                        type: 'image/svg+xml',
+                        purpose: 'any maskable'
+                    }
+                ]
+            }
+        })
+    ],
     resolve: {
         alias: {
             '@': path.resolve(__dirname, 'src'),

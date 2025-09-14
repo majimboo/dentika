@@ -108,6 +108,7 @@ func main() {
 	app.Use(recover.New())
 
 	// Serve static files
+	app.Static("/", "../frontend/public")
 	app.Static("/assets", "../frontend/dist/assets")
 	app.Static("/uploads", "./uploads")
 

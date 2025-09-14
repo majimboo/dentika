@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -45,9 +44,6 @@ func main() {
 
 	// Connect to database
 	database.ConnectDatabase()
-
-	// Update existing appointments before migration
-	updateExistingAppointments()
 
 	// Auto-migrate the models
 	if err := database.DB.AutoMigrate(
@@ -423,102 +419,6 @@ func seedSampleData() {
 		return
 	}
 
-	// Define common variables
-	now := time.Now()
-	todayStartTime := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.UTC)
-
-	statuses := []models.AppointmentStatus{
-		models.StatusCompleted,
-		models.StatusScheduled,
-		models.StatusConfirmed,
-	}
-
-	// Create today's appointments if they don't exist
-	if todayAppointmentCount == 0 {
-		log.Println("Creating today's appointments...")
-
-		// Create some appointments for today to ensure dashboard has data
-		for i := 0; i < 5; i++ {
-			todayAppointment := models.Appointment{
-				Title:       "Today's Appointment " + string(rune(i+65)),
-				Description: "Sample appointment for today",
-				StartTime:   todayStartTime.Add(time.Duration(i) * time.Hour), // 9 AM, 10 AM, 11 AM, etc.
-				EndTime:     todayStartTime.Add(time.Duration(i+1) * time.Hour),
-				Duration:    60,
-				Status:      statuses[rand.Intn(len(statuses))],
-
-				PatientID:     createdPatients[rand.Intn(len(createdPatients))].ID,
-				DoctorID:      adminUser.ID,
-				BranchID:      branch.ID,
-				ClinicID:      clinic.ID,
-				EstimatedCost: float64(50 + rand.Intn(200)),
-				ActualCost:    float64(50 + rand.Intn(200)),
-				IsPaid:        rand.Intn(2) == 1,
-			}
-
-			if err := database.DB.Create(&todayAppointment).Error; err != nil {
-				log.Printf("Failed to create today's appointment %d: %v", i+1, err)
-			}
-		}
-	} else {
-		log.Println("Today's appointments already exist, skipping creation")
-	}
-
-	// Create historical appointments
-	for i := 0; i < 15; i++ {
-		appointmentDate := now.AddDate(0, 0, rand.Intn(30)-15) // Random date within ±15 days
-
-		appointment := models.Appointment{
-			Title:       "Sample Appointment " + string(rune(i+70)), // F, G, H...
-			Description: "Sample appointment description",
-			StartTime:   appointmentDate,
-			EndTime:     appointmentDate.Add(time.Hour),
-			Duration:    60,
-			Status:      statuses[rand.Intn(len(statuses))],
-			// Procedures will be added separately via API after appointment creation
-			PatientID:     createdPatients[rand.Intn(len(createdPatients))].ID,
-			DoctorID:      adminUser.ID,
-			BranchID:      branch.ID,
-			ClinicID:      clinic.ID,
-			EstimatedCost: float64(50 + rand.Intn(200)), // $50-$250
-			ActualCost:    float64(50 + rand.Intn(200)),
-			IsPaid:        rand.Intn(2) == 1,
-		}
-
-		if err := database.DB.Create(&appointment).Error; err != nil {
-			log.Printf("Failed to create appointment %d: %v", i+1, err)
-			continue
-		}
-	}
-
-	// Create sample daily sales data for the last 30 days
-	for i := 0; i < 30; i++ {
-		saleDate := now.AddDate(0, 0, -i)
-
-		dailySales := models.DailySales{
-			Date:                  saleDate,
-			TotalAppointments:     rand.Intn(10) + 5,              // 5-15 appointments
-			CompletedAppointments: rand.Intn(8) + 3,               // 3-11 completed
-			CancelledAppointments: rand.Intn(3),                   // 0-3 cancelled
-			NoShowAppointments:    rand.Intn(2),                   // 0-2 no-shows
-			TotalRevenue:          float64(rand.Intn(2000) + 500), // $500-$2500
-			PaidRevenue:           float64(rand.Intn(1800) + 400),
-			PendingRevenue:        float64(rand.Intn(300)),
-			NewPatients:           rand.Intn(3),     // 0-3 new patients
-			ReturningPatients:     rand.Intn(8) + 2, // 2-10 returning
-			TotalInquiries:        rand.Intn(5) + 1, // 1-6 inquiries
-			ConvertedInquiries:    rand.Intn(4),     // 0-4 converted
-			ClinicID:              clinic.ID,
-		}
-
-		// Calculate conversion rate
-		dailySales.CalculateConversionRate()
-
-		if err := database.DB.Create(&dailySales).Error; err != nil {
-			log.Printf("Failed to create daily sales for %s: %v", saleDate.Format("2006-01-02"), err)
-		}
-	}
-
 	log.Println("Sample data seeded successfully!")
 }
 
@@ -866,31 +766,5 @@ func seedConsentTemplates() {
 
 	for _, clinic := range clinics {
 		seedConsentTemplatesForClinic(clinic.ID)
-	}
-}
-
-func updateExistingAppointments() {
-	// Update existing appointments that don't have ClinicID set
-	result := database.DB.Model(&models.Appointment{}).
-		Joins("JOIN branches ON appointments.branch_id = branches.id").
-		Where("appointments.clinic_id IS NULL OR appointments.clinic_id = 0").
-		Update("clinic_id", database.DB.Table("branches").Select("clinic_id").Where("branches.id = appointments.branch_id"))
-
-	if result.Error != nil {
-		log.Printf("Failed to update existing appointments: %v", result.Error)
-	} else if result.RowsAffected > 0 {
-		log.Printf("Updated %d existing appointments with ClinicID", result.RowsAffected)
-	}
-
-	// Update existing dental records that don't have ClinicID set
-	dentalResult := database.DB.Model(&models.DentalRecord{}).
-		Joins("JOIN patients ON dental_records.patient_id = patients.id").
-		Where("dental_records.clinic_id IS NULL OR dental_records.clinic_id = 0").
-		Update("clinic_id", database.DB.Table("patients").Select("clinic_id").Where("patients.id = dental_records.patient_id"))
-
-	if dentalResult.Error != nil {
-		log.Printf("Failed to update existing dental records: %v", dentalResult.Error)
-	} else if dentalResult.RowsAffected > 0 {
-		log.Printf("Updated %d existing dental records with ClinicID", dentalResult.RowsAffected)
 	}
 }

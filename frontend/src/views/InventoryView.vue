@@ -251,6 +251,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useInventoryStore } from '../stores/inventory'
+import { formatDate, getInventoryStatusClass } from '@/utils'
 
 export default {
   name: 'InventoryView',
@@ -309,16 +310,10 @@ export default {
       return `/uploads/${cleanPath}`
     }
 
-    const formatDate = (dateString) => {
-      if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleDateString()
-    }
 
     const getStatusBadgeClass = (item) => {
-      if (item.current_stock <= item.min_stock_level) {
-        return 'bg-red-100 text-red-800'
-      }
-      return 'bg-green-100 text-green-800'
+      const status = item.current_stock <= item.min_stock_level ? 'low_stock' : 'in_stock'
+      return getInventoryStatusClass(status)
     }
 
     const getStatusText = (item) => {
@@ -376,7 +371,6 @@ export default {
       loadItem,
       loadStockTransactions,
       getImageUrl,
-      formatDate,
       getStatusBadgeClass,
       getStatusText,
       isExpired,

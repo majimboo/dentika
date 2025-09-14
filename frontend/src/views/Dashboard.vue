@@ -113,7 +113,7 @@
             </div>
             <div class="metric-content">
               <div class="metric-value text-2xl font-bold text-gray-900">
-                {{ formatPercentage(dashboardData.completionRate) }}%
+                {{ formatPercentage(dashboardData.completionRate / 100) }}
               </div>
               <div class="metric-label text-sm text-gray-600">Completion Rate</div>
               <div class="metric-change text-xs mt-1" :class="getChangeClass(dashboardData.completionChange)">
@@ -355,6 +355,7 @@ import { useAuthStore } from '../stores/auth'
 import { useAppointmentStore } from '../stores/appointment'
 import { usePatientStore } from '../stores/patient'
 import apiService from '../services/api'
+import { formatTime, formatCurrency, formatPercentage, getAppointmentStatusClass, formatStatus, getInitials } from '@/utils'
 
 const authStore = useAuthStore()
 const appointmentStore = useAppointmentStore()
@@ -529,16 +530,7 @@ const dismissAlert = (alertId) => {
 }
 
 // Utility functions
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount || 0)
-}
 
-const formatPercentage = (value) => {
-  return (value || 0).toFixed(1)
-}
 
 const formatChange = (change) => {
   const sign = change >= 0 ? '+' : ''
@@ -549,39 +541,14 @@ const getChangeClass = (change) => {
   return change >= 0 ? 'text-green-600' : 'text-red-600'
 }
 
-const formatTime = (timeString) => {
-  return new Date(timeString).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit'
-  })
-}
 
 const formatAppointmentType = (type) => {
   return type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || ''
 }
 
-const formatStatus = (status) => {
-  const statusMap = {
-    scheduled: 'Scheduled',
-    confirmed: 'Confirmed',
-    in_progress: 'In Progress',
-    completed: 'Completed',
-    cancelled: 'Cancelled',
-    no_show: 'No Show'
-  }
-  return statusMap[status] || status
-}
 
 const getStatusBadgeClass = (status) => {
-  const classes = {
-    scheduled: 'bg-blue-100 text-blue-800',
-    confirmed: 'bg-green-100 text-green-800',
-    in_progress: 'bg-yellow-100 text-yellow-800',
-    completed: 'bg-gray-100 text-gray-800',
-    cancelled: 'bg-red-100 text-red-800',
-    no_show: 'bg-red-200 text-red-900'
-  }
-  return classes[status] || classes.scheduled
+  return getAppointmentStatusClass(status)
 }
 
 const calculateDuration = (startTime, endTime) => {
@@ -591,7 +558,7 @@ const calculateDuration = (startTime, endTime) => {
 }
 
 const getPatientInitials = (patient) => {
-  return `${patient.first_name?.[0] || ''}${patient.last_name?.[0] || ''}`.toUpperCase()
+  return getInitials(patient)
 }
 
 const formatRelativeTime = (dateString) => {

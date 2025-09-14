@@ -711,6 +711,7 @@ import BaseTransition from '../components/BaseTransition.vue'
 import TagInput from '../components/TagInput.vue'
 import AvatarUpload from '../components/AvatarUpload.vue'
 import { useNavigation } from '../composables/useNavigation'
+import { formatDate, validateForm, validateRequired, validateEmail, validatePhone, getDiagnosisStatusClass, getTreatmentStatusClass } from '@/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -921,45 +922,23 @@ const handleAvatarUpdated = (avatarPath) => {
   form.avatar_path = avatarPath || ''
 }
 
-const validateForm = () => {
-  errors.value = {}
-  
-  // Required fields
-  if (!form.first_name.trim()) {
-    errors.value.first_name = 'First name is required'
+const validatePatientForm = () => {
+  const validationRules = {
+    first_name: [value => validateRequired(value, 'First name')],
+    last_name: [value => validateRequired(value, 'Last name')],
+    date_of_birth: [value => validateRequired(value, 'Date of birth')],
+    gender: [value => validateRequired(value, 'Gender')],
+    phone: [value => validateRequired(value, 'Phone number'), value => validatePhone(value)],
+    email: [value => value ? validateEmail(value) : null]
   }
-  
-  if (!form.last_name.trim()) {
-    errors.value.last_name = 'Last name is required'
-  }
-  
-  if (!form.date_of_birth) {
-    errors.value.date_of_birth = 'Date of birth is required'
-  }
-  
-  if (!form.gender) {
-    errors.value.gender = 'Gender is required'
-  }
-  
-  if (!form.phone.trim()) {
-    errors.value.phone = 'Phone number is required'
-  }
-  
-  // Email validation
-  if (form.email && !/\S+@\S+\.\S+/.test(form.email)) {
-    errors.value.email = 'Please enter a valid email address'
-  }
-  
-  // Phone validation (basic)
-  if (form.phone && !/^[\d\s\-\+\(\)]+$/.test(form.phone)) {
-    errors.value.phone = 'Please enter a valid phone number'
-  }
-  
-  return Object.keys(errors.value).length === 0
+
+  const result = validateForm(form, validationRules)
+  errors.value = result.errors
+  return result.isValid
 }
 
 const handleSubmit = async () => {
-  if (!validateForm()) {
+  if (!validatePatientForm()) {
     submitError.value = 'Please fix the form errors before submitting'
     return
   }
@@ -1086,32 +1065,9 @@ const editTreatmentPlan = (plan) => {
 }
 
 // Helper methods for styling
-const getDiagnosisStatusClass = (status) => {
-  switch (status) {
-    case 'active':
-      return 'bg-blue-100 text-blue-800'
-    case 'resolved':
-      return 'bg-green-100 text-green-800'
-    case 'inactive':
-      return 'bg-gray-100 text-gray-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
-  }
-}
 
 const getTreatmentPlanStatusClass = (status) => {
-  switch (status) {
-    case 'active':
-      return 'bg-blue-100 text-blue-800'
-    case 'completed':
-      return 'bg-green-100 text-green-800'
-    case 'cancelled':
-      return 'bg-red-100 text-red-800'
-    case 'on_hold':
-      return 'bg-yellow-100 text-yellow-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
-  }
+  return getTreatmentStatusClass(status)
 }
 
 const getPriorityClass = (priority) => {
@@ -1129,14 +1085,6 @@ const getPriorityClass = (priority) => {
   }
 }
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
 
 const viewConsentForm = (consentForm) => {
   // Open consent form in new window for viewing

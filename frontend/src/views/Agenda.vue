@@ -178,7 +178,7 @@
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">No appointments for {{ formatDate(selectedDate) }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">No appointments for {{ formatDate(selectedDate, { relative: true, fallback: 'today' }) }}</h3>
         <p class="text-gray-600">There are no appointments scheduled for this date.</p>
       </div>
     </BaseTransition>
@@ -191,6 +191,7 @@ import { useAuthStore } from '../stores/auth'
 import { useAppointmentStore } from '../stores/appointment'
 import BaseTransition from '../components/BaseTransition.vue'
 import AppointmentCard from '../components/AppointmentCard.vue'
+import { formatDate } from '@/utils'
 
 export default {
   name: 'Agenda',
@@ -257,29 +258,6 @@ export default {
       }
     }
 
-    const formatDate = (dateString) => {
-      if (!dateString) return 'today'
-      try {
-        const date = new Date(dateString)
-        const today = new Date()
-        const tomorrow = new Date(today)
-        tomorrow.setDate(today.getDate() + 1)
-        const yesterday = new Date(today)
-        yesterday.setDate(today.getDate() - 1)
-
-        if (date.toDateString() === today.toDateString()) {
-          return 'today'
-        } else if (date.toDateString() === tomorrow.toDateString()) {
-          return 'tomorrow'
-        } else if (date.toDateString() === yesterday.toDateString()) {
-          return 'yesterday'
-        } else {
-          return date.toLocaleDateString()
-        }
-      } catch {
-        return dateString
-      }
-    }
 
     // Auto-refresh every 30 seconds
     const autoRefreshInterval = setInterval(() => {
@@ -310,7 +288,6 @@ export default {
       getColumnCount,
       getAppointmentsByStatus,
       handleStatusChange,
-      formatDate,
       cleanup
     }
   },

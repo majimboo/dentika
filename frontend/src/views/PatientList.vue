@@ -353,6 +353,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { usePatientStore } from '../stores/patient'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
+import { formatDate, calculateAge, debounce, getInitials } from '@/utils'
 
 const patientStore = usePatientStore()
 const authStore = useAuthStore()
@@ -440,9 +441,7 @@ const goToPage = (page) => {
 }
 
 const getPatientInitials = (patient) => {
-  const first = patient.first_name?.charAt(0) || ''
-  const last = patient.last_name?.charAt(0) || ''
-  return (first + last).toUpperCase() || '?'
+  return getInitials(patient, '?')
 }
 
 const getPatientAvatarUrl = (patient) => {
@@ -458,25 +457,9 @@ const handleAvatarError = (patient) => {
 
 const getPatientAge = (patient) => {
   if (!patient.date_of_birth) return 'N/A'
-  const birthDate = new Date(patient.date_of_birth)
-  const today = new Date()
-  let age = today.getFullYear() - birthDate.getFullYear()
-  const monthDiff = today.getMonth() - birthDate.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--
-  }
-  return age
+  return calculateAge(patient.date_of_birth)
 }
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
 
 const getLastVisit = (patient) => {
   // This would come from appointments data
@@ -501,18 +484,6 @@ const scheduleAppointment = (patient) => {
 }
 
 
-// Utility function
-function debounce(func, wait) {
-  let timeout
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout)
-      func(...args)
-    }
-    clearTimeout(timeout)
-    timeout = setTimeout(later, wait)
-  }
-}
 
 // Lifecycle
 onMounted(() => {

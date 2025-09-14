@@ -321,6 +321,7 @@ import { useAuthStore } from '../stores/auth'
 import apiService from '../services/api'
 import BaseLoading from '../components/BaseLoading.vue'
 import BaseTransition from '../components/BaseTransition.vue'
+import { getInitials, formatDate } from '@/utils'
 
 export default {
   name: 'StaffManagement',
@@ -439,9 +440,8 @@ export default {
       sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
     }
 
-    const getInitials = (username) => {
-      if (!username) return 'U'
-      return username.charAt(0).toUpperCase()
+    const getUserInitials = (username) => {
+      return getInitials({ username }, 'U')
     }
 
     const getRoleDisplayName = (role) => {
@@ -462,14 +462,6 @@ export default {
       return classes[role] || 'bg-gray-100 text-gray-800'
     }
 
-    const formatDate = (dateString) => {
-      if (!dateString) return 'Unknown'
-      try {
-        return new Date(dateString).toLocaleDateString()
-      } catch {
-        return 'Unknown'
-      }
-    }
 
     onMounted(() => {
       loadStaff()
@@ -494,10 +486,9 @@ export default {
       confirmDelete,
       removeStaff,
       toggleSortOrder,
-      getInitials,
+      getInitials: getUserInitials,
       getRoleDisplayName,
-      getRoleBadgeClass,
-      formatDate
+      getRoleBadgeClass
     }
   }
 }

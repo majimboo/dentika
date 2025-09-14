@@ -82,7 +82,7 @@
                 <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
-                {{ formatDateTime(appointment.start_time) }}
+                {{ formatDateTime(appointment.start_time, { dateFormat: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }, timeFormat: { hour: '2-digit', minute: '2-digit' } }) }}
               </div>
               <div class="duration text-xs text-gray-500 mt-1 ml-6">
                 Duration: {{ calculateDuration(appointment.start_time, appointment.end_time) }} minutes
@@ -253,6 +253,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { formatTime, formatDateTime, calculateAge, getAppointmentStatusClass, formatStatus } from '@/utils'
 
 const props = defineProps({
   appointment: {
@@ -272,60 +273,16 @@ const canMarkArrival = computed(() => {
 })
 
 const getStatusBadgeClass = (status) => {
-  const classes = {
-    scheduled: 'bg-blue-100 text-blue-800',
-    confirmed: 'bg-green-100 text-green-800',
-    in_progress: 'bg-yellow-100 text-yellow-800',
-    completed: 'bg-gray-100 text-gray-800',
-    cancelled: 'bg-red-100 text-red-800',
-    no_show: 'bg-red-200 text-red-900'
-  }
-  return classes[status] || classes.scheduled
+  return getAppointmentStatusClass(status)
 }
 
-const formatStatus = (status) => {
-  const statusMap = {
-    scheduled: 'Scheduled',
-    confirmed: 'Confirmed',
-    in_progress: 'In Progress',
-    completed: 'Completed',
-    cancelled: 'Cancelled',
-    no_show: 'No Show'
-  }
-  return statusMap[status] || status
-}
 
 const formatAge = (dateOfBirth) => {
   if (!dateOfBirth) return 'N/A'
-  const today = new Date()
-  const birth = new Date(dateOfBirth)
-  const age = today.getFullYear() - birth.getFullYear()
-  const monthDiff = today.getMonth() - birth.getMonth()
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    return age - 1
-  }
-  return age
+  return calculateAge(dateOfBirth)
 }
 
-const formatDateTime = (dateTime) => {
-  const date = new Date(dateTime)
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
 
-const formatTime = (dateTime) => {
-  return new Date(dateTime).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
 
 const calculateDuration = (startTime, endTime) => {
   const start = new Date(startTime)

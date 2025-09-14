@@ -29,6 +29,8 @@
 </template>
 
 <script>
+import { getInitials } from '@/utils'
+
 export default {
   name: 'UserAvatar',
   props: {
@@ -87,20 +89,7 @@ export default {
   },
   methods: {
     getInitials(user) {
-      if (!user) return 'U'
-      
-      const firstName = user.first_name || ''
-      const lastName = user.last_name || ''
-      
-      if (firstName && lastName) {
-        return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase()
-      } else if (firstName) {
-        return firstName.charAt(0).toUpperCase()
-      } else if (user.username) {
-        return user.username.charAt(0).toUpperCase()
-      }
-      
-      return 'U'
+      return getInitials(user, 'U')
     },
     getAvatarUrl(avatarPath) {
       if (!avatarPath) return ''

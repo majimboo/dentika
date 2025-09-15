@@ -3,7 +3,7 @@
     <router-view />
 
     <!-- Real-time notifications -->
-    <!-- <NotificationToast /> -->
+    <NotificationToast />
 
     <!-- Connection status overlay -->
     <ConnectionOverlay />
@@ -14,16 +14,18 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 import { useConnectionStore } from './stores/connection'
-import { useWebSocket } from './composables/useWebSocket'
-// import NotificationToast from './components/NotificationToast.vue'
+import { useNotificationStore } from './stores/notification'
+import { useNats } from './composables/useNats'
+import NotificationToast from './components/NotificationToast.vue'
 import ConnectionOverlay from './components/ConnectionOverlay.vue'
 import './api/axios'
 
 const authStore = useAuthStore()
 const connectionStore = useConnectionStore()
+const notificationStore = useNotificationStore()
 
-// Initialize WebSocket for real-time updates
-const { connect, disconnect } = useWebSocket()
+// Initialize NATS for real-time updates
+const { connect, disconnect } = useNats()
 
 onMounted(async () => {
   // Initialize connection monitoring
@@ -32,17 +34,21 @@ onMounted(async () => {
   // Auth is initialized by router guards before component mounting
   // No redundant initialization needed here
 
-  // Connect WebSocket after auth is initialized
+  // Initialize notifications after auth is ready
   if (authStore.token) {
+    await notificationStore.initialize()
     connect()
   }
 
-  // Watch for auth changes to connect/disconnect WebSocket
-  authStore.$subscribe((mutation, state) => {
+  // Watch for auth changes to connect/disconnect NATS and initialize notifications
+  authStore.$subscribe(async (mutation, state) => {
     if (state.token && !state.isConnected) {
+      await notificationStore.initialize()
       connect()
     } else if (!state.token) {
       disconnect()
+      // Clear notifications when logged out
+      notificationStore.clearAll()
     }
   })
 })

@@ -46,13 +46,10 @@ func checkAndSendReminders() {
 	for _, appointment := range upcomingAppointments {
 		minutesUntil := int(appointment.StartTime.Sub(now).Minutes())
 
-		// Send reminder via WebSocket (clinic-scoped)
-		go SendAppointmentReminder(
-			appointment.ID,
-			appointment.Patient.FirstName+" "+appointment.Patient.LastName,
-			minutesUntil,
-			appointment.Branch.ClinicID,
-		)
+		// Send reminder via notification service
+		if notificationService != nil {
+			go notificationService.CreateAppointmentReminder(appointment, minutesUntil)
+		}
 
 		log.Printf("Sent reminder for appointment %d in clinic %d (%d minutes until start)", appointment.ID, appointment.Branch.ClinicID, minutesUntil)
 	}

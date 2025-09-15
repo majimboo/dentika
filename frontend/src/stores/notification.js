@@ -1,10 +1,24 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
+import apiService from '../services/api.js'
 
 export const useNotificationStore = defineStore('notification', () => {
   // State
   const notifications = ref([])
   const unreadCount = ref(0)
+  const isLoading = ref(false)
+  const isInitialized = ref(false)
+  const error = ref(null)
+
+  // Settings for different display areas
+  const toastSettings = ref({
+    autoRemoveDelay: 5000,
+    maxVisible: 5,
+    position: 'top-right'
+  })
+
+  // Event listeners for real-time updates
+  const eventListeners = ref(new Set())
 
   // Getters
   const recentNotifications = computed(() => {
@@ -13,52 +27,189 @@ export const useNotificationStore = defineStore('notification', () => {
 
   const hasUnread = computed(() => unreadCount.value > 0)
 
-  // Actions
-  const addNotification = (notification) => {
+  const unreadNotifications = computed(() => {
+    return notifications.value.filter(n => !n.is_read && !n.read)
+  })
+
+  const readNotifications = computed(() => {
+    return notifications.value.filter(n => n.is_read || n.read)
+  })
+
+  const notificationsByType = computed(() => {
+    const grouped = {}
+    notifications.value.forEach(notification => {
+      const type = notification.type || 'info'
+      if (!grouped[type]) grouped[type] = []
+      grouped[type].push(notification)
+    })
+    return grouped
+  })
+
+  const toastNotifications = computed(() => {
+    return notifications.value
+      .filter(n => n.showAsToast && !n.dismissedFromToast)
+      .slice(0, toastSettings.value.maxVisible)
+  })
+
+  // Actions - Central notification management
+  const addNotification = (notification, options = {}) => {
+    const {
+      source = 'local', // 'local', 'api', 'nats'
+      showAsToast = true,
+      persistInList = true,
+      autoRemove = true
+    } = options
+
+    // Normalize notification structure
     const newNotification = {
-      id: Date.now() + Math.random(),
-      timestamp: new Date(),
-      read: false,
+      // Core properties
+      id: notification.id || Date.now() + Math.random(),
+      title: notification.title || 'Notification',
+      message: notification.message || '',
+      type: notification.type || 'info',
+
+      // Timing
+      timestamp: notification.created_at ? new Date(notification.created_at) : new Date(),
+      created_at: notification.created_at || new Date().toISOString(),
+
+      // Status
+      read: notification.read || false,
+      is_read: notification.is_read || false,
+      is_dismissed: notification.is_dismissed || false,
+
+      // Display settings
+      showAsToast,
+      persistInList,
+      dismissedFromToast: false,
+      autoRemove, // Store the auto-remove setting
+
+      // Data
+      icon: notification.icon,
+      color: notification.color,
+      data: notification.data || {},
+      actions: notification.actions || [],
+
+      // Source tracking
+      source,
+
+      // Original notification data
       ...notification
     }
 
-    notifications.value.unshift(newNotification)
-    unreadCount.value++
+    // Check for duplicates (especially important for NATS messages)
+    const existingIndex = notifications.value.findIndex(n =>
+      n.id === newNotification.id ||
+      (n.title === newNotification.title && n.message === newNotification.message &&
+       Math.abs(new Date(n.created_at) - new Date(newNotification.created_at)) < 1000)
+    )
 
-    // Auto-remove after 5 seconds if it's a temporary notification
-    if (notification.temporary !== false) {
-      setTimeout(() => {
-        removeNotification(newNotification.id)
-      }, 5000)
+    if (existingIndex !== -1) {
+      // Update existing notification instead of creating duplicate
+      notifications.value[existingIndex] = { ...notifications.value[existingIndex], ...newNotification }
+      emitNotificationEvent('updated', notifications.value[existingIndex])
+      return notifications.value[existingIndex]
     }
+
+    // Add to notifications list
+    if (persistInList) {
+      notifications.value.unshift(newNotification)
+
+      // Limit total notifications in memory
+      if (notifications.value.length > 100) {
+        notifications.value = notifications.value.slice(0, 100)
+      }
+    }
+
+    // Update unread count
+    if (!newNotification.is_read && !newNotification.read) {
+      unreadCount.value++
+    }
+
+    // Auto-remove logic
+    if (autoRemove && newNotification.showAsToast) {
+      setTimeout(() => {
+        dismissFromToast(newNotification.id)
+      }, toastSettings.value.autoRemoveDelay)
+    }
+
+    // Emit events for components to react
+    emitNotificationEvent('added', newNotification)
 
     return newNotification
   }
 
+  // Event system for components to react to changes
+  const emitNotificationEvent = (eventType, notification) => {
+    nextTick(() => {
+      eventListeners.value.forEach(callback => {
+        try {
+          callback(eventType, notification)
+        } catch (error) {
+          console.error('Error in notification event listener:', error)
+        }
+      })
+    })
+  }
+
+  const subscribe = (callback) => {
+    eventListeners.value.add(callback)
+    return () => eventListeners.value.delete(callback)
+  }
+
+  // Enhanced management methods
   const removeNotification = (id) => {
     const index = notifications.value.findIndex(n => n.id === id)
     if (index > -1) {
       const notification = notifications.value[index]
-      if (!notification.read) {
+      if (!notification.read && !notification.is_read) {
         unreadCount.value = Math.max(0, unreadCount.value - 1)
       }
       notifications.value.splice(index, 1)
+      emitNotificationEvent('removed', notification)
+    }
+  }
+
+  const dismissFromToast = (id) => {
+    const notification = notifications.value.find(n => n.id === id)
+    if (notification) {
+      notification.dismissedFromToast = true
+      emitNotificationEvent('dismissedFromToast', notification)
+    }
+  }
+
+  const showInToast = (id) => {
+    const notification = notifications.value.find(n => n.id === id)
+    if (notification) {
+      notification.dismissedFromToast = false
+      notification.showAsToast = true
+      emitNotificationEvent('showInToast', notification)
     }
   }
 
   const markAsRead = (id) => {
     const notification = notifications.value.find(n => n.id === id)
-    if (notification && !notification.read) {
+    if (notification && !notification.read && !notification.is_read) {
       notification.read = true
+      notification.is_read = true
       unreadCount.value = Math.max(0, unreadCount.value - 1)
+      emitNotificationEvent('read', notification)
     }
   }
 
   const markAllAsRead = () => {
+    let changedCount = 0
     notifications.value.forEach(notification => {
-      notification.read = true
+      if (!notification.read && !notification.is_read) {
+        notification.read = true
+        notification.is_read = true
+        changedCount++
+        emitNotificationEvent('read', notification)
+      }
     })
     unreadCount.value = 0
+    if (changedCount > 0) {
+      emitNotificationEvent('allRead', { count: changedCount })
+    }
   }
 
   const clearAll = () => {
@@ -66,7 +217,182 @@ export const useNotificationStore = defineStore('notification', () => {
     unreadCount.value = 0
   }
 
-  // Notification types with default styling
+  // API integration methods
+  const fetchNotifications = async (page = 1, limit = 10, filter = 'all') => {
+    try {
+      isLoading.value = true
+      console.log('Fetching notifications from API:', { page, limit, filter })
+      const result = await apiService.get(`/api/notifications?page=${page}&limit=${limit}&filter=${filter}`)
+      console.log('API response:', result)
+
+      if (result.success && result.data?.success) {
+        const fetchedNotifications = result.data.data?.notifications || []
+        notifications.value = fetchedNotifications
+        console.log('Loaded notifications:', fetchedNotifications.length)
+        // Update unread count based on fetched notifications
+        updateUnreadCount()
+      } else {
+        console.error('API request failed:', result)
+      }
+
+      return result
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const fetchUnreadCount = async () => {
+    try {
+      const result = await apiService.get('/api/notifications/unread-count')
+
+      if (result.success && result.data?.success) {
+        unreadCount.value = result.data.data?.count || 0
+      }
+
+      return result
+    } catch (error) {
+      console.error('Failed to fetch unread count:', error)
+      throw error
+    }
+  }
+
+  const markAsReadAPI = async (notificationId) => {
+    try {
+      const result = await apiService.put(`/api/notifications/${notificationId}/read`)
+
+      if (result.success && result.data?.success) {
+        // Update local state
+        markAsRead(notificationId)
+      }
+
+      return result
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error)
+      throw error
+    }
+  }
+
+  const markAllAsReadAPI = async () => {
+    try {
+      const result = await apiService.put('/api/notifications/mark-all-read')
+
+      if (result.success && result.data?.success) {
+        // Update local state
+        markAllAsRead()
+      }
+
+      return result
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error)
+      throw error
+    }
+  }
+
+  const dismissNotification = async (notificationId) => {
+    try {
+      const result = await apiService.put(`/api/notifications/${notificationId}/dismiss`)
+
+      if (result.success && result.data?.success) {
+        // Remove from local state
+        removeNotification(notificationId)
+      }
+
+      return result
+    } catch (error) {
+      console.error('Failed to dismiss notification:', error)
+      throw error
+    }
+  }
+
+  const createTestNotification = async () => {
+    try {
+      const result = await apiService.post('/api/notifications/test')
+
+      if (result.success && result.data?.success) {
+        // The notification will be delivered via NATS
+        console.log('Test notification created')
+      }
+
+      return result
+    } catch (error) {
+      console.error('Failed to create test notification:', error)
+      throw error
+    }
+  }
+
+  // Helper method to update unread count from current notifications
+  const updateUnreadCount = () => {
+    unreadCount.value = notifications.value.filter(n => !n.is_read).length
+  }
+
+  // NATS Integration - Use centralized addNotification
+  const addNotificationFromNATS = (notification) => {
+    return addNotification(notification, {
+      source: 'nats',
+      showAsToast: true,
+      persistInList: true,
+      autoRemove: true
+    })
+  }
+
+  // API Integration - Use centralized addNotification
+  const addNotificationFromAPI = (notification) => {
+    return addNotification(notification, {
+      source: 'api',
+      showAsToast: false, // API notifications usually don't show as toast
+      persistInList: true,
+      autoRemove: false
+    })
+  }
+
+  // Initialize store (fetch initial data)
+  const initialize = async () => {
+    if (isInitialized.value) return
+
+    console.log('Initializing notification store...')
+    try {
+      isLoading.value = true
+      error.value = null
+
+      console.log('Fetching notifications and unread count...')
+      const [notificationsResult] = await Promise.all([
+        fetchNotifications(1, 50), // Load more initially
+        fetchUnreadCount()
+      ])
+
+      console.log('Notifications result:', notificationsResult)
+
+      // Process fetched notifications through centralized manager
+      if (notificationsResult?.success && notificationsResult.data?.success) {
+        const fetchedNotifications = notificationsResult.data.data?.notifications || []
+        console.log('Processing fetched notifications:', fetchedNotifications.length)
+
+        // Clear existing and add from API
+        notifications.value = []
+        unreadCount.value = 0
+
+        if (Array.isArray(fetchedNotifications)) {
+          fetchedNotifications.forEach(notification => {
+            addNotificationFromAPI(notification)
+          })
+        }
+      } else {
+        console.error('Failed to fetch notifications:', notificationsResult)
+      }
+
+      isInitialized.value = true
+    } catch (error) {
+      console.error('Failed to initialize notification store:', error)
+      error.value = error.message || 'Failed to initialize notifications'
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Notification types with default styling - All use centralized manager
   const showSuccess = (message, options = {}) => {
     return addNotification({
       type: 'success',
@@ -75,6 +401,11 @@ export const useNotificationStore = defineStore('notification', () => {
       icon: 'check-circle',
       color: 'green',
       ...options
+    }, {
+      source: 'local',
+      showAsToast: true,
+      persistInList: true,
+      autoRemove: true
     })
   }
 
@@ -85,8 +416,12 @@ export const useNotificationStore = defineStore('notification', () => {
       message,
       icon: 'x-circle',
       color: 'red',
-      temporary: false, // Keep error notifications until manually dismissed
       ...options
+    }, {
+      source: 'local',
+      showAsToast: true,
+      persistInList: true,
+      autoRemove: false // Keep error notifications until manually dismissed
     })
   }
 
@@ -98,6 +433,11 @@ export const useNotificationStore = defineStore('notification', () => {
       icon: 'exclamation-triangle',
       color: 'yellow',
       ...options
+    }, {
+      source: 'local',
+      showAsToast: true,
+      persistInList: true,
+      autoRemove: true
     })
   }
 
@@ -109,6 +449,11 @@ export const useNotificationStore = defineStore('notification', () => {
       icon: 'information-circle',
       color: 'blue',
       ...options
+    }, {
+      source: 'local',
+      showAsToast: true,
+      persistInList: true,
+      autoRemove: true
     })
   }
 
@@ -189,19 +534,49 @@ export const useNotificationStore = defineStore('notification', () => {
     // State
     notifications,
     unreadCount,
-    
-    // Getters
+    isLoading,
+    isInitialized,
+    error,
+    toastSettings,
+
+    // Getters (computed)
     recentNotifications,
     hasUnread,
-    
-    // Actions
+    unreadNotifications,
+    readNotifications,
+    notificationsByType,
+    toastNotifications,
+
+    // Core Management (centralized)
     addNotification,
     removeNotification,
     markAsRead,
     markAllAsRead,
     clearAll,
-    
-    // Convenience methods
+
+    // Display Control
+    dismissFromToast,
+    showInToast,
+
+    // Event System
+    subscribe,
+    emitNotificationEvent,
+
+    // API Integration
+    fetchNotifications,
+    fetchUnreadCount,
+    markAsReadAPI,
+    markAllAsReadAPI,
+    dismissNotification,
+    createTestNotification,
+    initialize,
+
+    // Real-time Integration
+    addNotificationFromNATS,
+    addNotificationFromAPI,
+    updateUnreadCount,
+
+    // Convenience Methods (all use centralized addNotification)
     showSuccess,
     showError,
     showWarning,

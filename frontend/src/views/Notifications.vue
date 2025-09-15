@@ -8,6 +8,13 @@
           <p class="text-gray-600 mt-1">Manage your notifications and updates</p>
         </div>
         <div class="flex items-center space-x-2 md:space-x-3">
+          <!-- Test Manager button hidden for production -->
+          <!-- <button
+            @click="showTestManager = !showTestManager"
+            class="px-3 py-2 md:px-4 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            {{ showTestManager ? 'Hide' : 'Show' }} Test Manager
+          </button> -->
           <button
             v-if="hasUnread"
             @click="markAllAsRead"
@@ -27,6 +34,11 @@
         </div>
       </div>
     </div>
+
+    <!-- Test Manager (hidden for production) -->
+    <!-- <div v-if="showTestManager" class="mb-6">
+      <NotificationTestManager />
+    </div> -->
 
     <!-- Filter Tabs -->
     <div class="bg-white rounded-lg shadow-sm border border-neutral-200 mb-6">
@@ -193,9 +205,13 @@
 import { ref, computed, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
+import NotificationTestManager from '../components/NotificationTestManager.vue'
 
 const router = useRouter()
 const notificationStore = useNotificationStore()
+
+// Test manager toggle
+const showTestManager = ref(false)
 
 // State
 const activeFilter = ref('all')
@@ -289,7 +305,11 @@ const handleNotificationClick = (notification) => {
 const handleActionClick = (action, notification) => {
   switch (action.action) {
     case 'view-appointment':
-      router.push(`/appointments/${action.appointmentId}`)
+      if (action.url) {
+        router.push(action.url)
+      } else {
+        console.error('No URL found in action')
+      }
       break
     case 'view-patient':
       router.push(`/patients/${action.patientId}`)

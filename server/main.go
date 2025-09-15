@@ -18,6 +18,9 @@ import (
 	"dentika/server/handlers"
 	"dentika/server/middleware"
 	"dentika/server/models"
+	"dentika/server/services"
+
+	"github.com/nats-io/nats.go"
 )
 
 func main() {
@@ -80,12 +83,23 @@ func main() {
 		&models.PeerReviewCase{},
 		&models.PeerReviewComment{},
 		&models.PeerReviewParticipant{},
+		// Notification models
+		&models.Notification{},
+		&models.NotificationRecipient{},
 	); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
 	// Create default admin user if it doesn't exist
 	createDefaultAdmin()
+
+	// Initialize NATS connection
+	natsConn := initNATS()
+	defer natsConn.Close()
+
+	// Initialize notification service
+	notificationService := services.NewNotificationService(natsConn)
+	handlers.SetNotificationService(notificationService)
 
 	// Seed sample data for testing
 	seedSampleData()
@@ -128,10 +142,8 @@ func main() {
 	// app.Static("/assets", "../frontend/dist/assets")
 	app.Static("/uploads", "./uploads")
 
-	// WebSocket route
-	app.Get("/ws", handlers.WebSocketHandler)
-
-	// WebSocket stats endpoint (for monitoring)
+	// WebSocket routes removed - now using NATS for real-time communication
+	// Legacy stats endpoint kept for backward compatibility
 	app.Get("/api/ws/stats", func(c *fiber.Ctx) error {
 		return c.JSON(handlers.GetWSStats())
 	})
@@ -236,6 +248,16 @@ func main() {
 	api.Get("/peer-review/cases/:id", middleware.RoleMiddleware(models.Doctor), handlers.GetPeerReviewCase)
 	api.Post("/peer-review/cases/:id/comments", middleware.RoleMiddleware(models.Doctor), handlers.AddPeerReviewComment)
 	api.Put("/peer-review/cases/:id/status", middleware.RoleMiddleware(models.Doctor), handlers.UpdatePeerReviewCaseStatus)
+
+	// Notification routes
+	api.Get("/notifications", handlers.GetUserNotifications)
+	api.Get("/notifications/unread-count", handlers.GetUnreadNotificationCount)
+	api.Put("/notifications/:id/read", handlers.MarkNotificationAsRead)
+	api.Put("/notifications/mark-all-read", handlers.MarkAllNotificationsAsRead)
+	api.Put("/notifications/:id/dismiss", handlers.DismissNotification)
+	api.Post("/notifications", middleware.RoleMiddleware(models.Admin, models.SuperAdmin), handlers.CreateNotification)
+	api.Post("/notifications/test", handlers.TestNotification)
+	api.Get("/notifications/stats", middleware.RoleMiddleware(models.Admin, models.SuperAdmin), handlers.NotificationStats)
 
 	// Appointment procedures and diagnoses
 	api.Get("/appointments/:appointment_id/procedures", handlers.GetAppointmentProcedures)
@@ -1395,4 +1417,44 @@ func seedPatientsForClinic(clinicID uint, clinicName string) {
 	}
 
 	log.Printf("Successfully seeded %d patients for clinic %d (%s)", len(filipinoPatients), clinicID, clinicName)
+}
+
+// initNATS initializes the NATS connection
+func initNATS() *nats.Conn {
+	// Get NATS URL from environment
+	natsURL := os.Getenv("NATS_URL")
+	if natsURL == "" {
+		natsURL = "nats://localhost:4222"
+	}
+
+	// Connect to NATS server
+	nc, err := nats.Connect(natsURL,
+		nats.Name("dentika-server"),
+		nats.ReconnectWait(time.Second),
+		nats.MaxReconnects(-1),
+		nats.PingInterval(20*time.Second),
+		nats.MaxPingsOutstanding(3),
+		nats.Timeout(5*time.Second),
+	)
+
+	if err != nil {
+		log.Fatalf("Failed to connect to NATS server at %s: %v", natsURL, err)
+	}
+
+	log.Printf("Connected to NATS server at %s", natsURL)
+
+	// Setup connection event handlers
+	nc.SetDisconnectErrHandler(func(nc *nats.Conn, err error) {
+		log.Printf("NATS disconnected: %v", err)
+	})
+
+	nc.SetReconnectHandler(func(nc *nats.Conn) {
+		log.Printf("NATS reconnected to %s", nc.ConnectedUrl())
+	})
+
+	nc.SetClosedHandler(func(nc *nats.Conn) {
+		log.Printf("NATS connection closed")
+	})
+
+	return nc
 }

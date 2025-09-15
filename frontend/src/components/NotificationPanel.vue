@@ -46,7 +46,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9zM13.73 21a2 2 0 01-3.46 0"></path>
           </svg>
           <p class="text-sm">No notifications yet</p>
-          <p class="text-xs mt-1 text-gray-400">You'll see updates here</p>
+          <p class="text-xs mt-1 text-gray-400">You'll see updates here when they arrive</p>
         </div>
 
         <div v-else>
@@ -93,19 +93,21 @@
       </div>
 
       <!-- Desktop Footer -->
-      <div v-if="notifications.length > 0" class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+      <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
         <div class="flex items-center justify-between">
           <button
+            v-if="notifications.length > 0"
             @click="clearAll"
             class="text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             Clear all
           </button>
+          <div v-else></div> <!-- Spacer when no clear button -->
           <button
             @click="viewAllNotifications"
             class="text-sm text-blue-600 hover:text-blue-800 transition-colors"
           >
-            View all
+            View all notifications
           </button>
         </div>
       </div>
@@ -271,19 +273,7 @@ const handleClickOutside = (event) => {
   }
 }
 
-// Add sample notifications
 onMounted(() => {
-  if (notifications.value.length === 0) {
-    notificationStore.showAppointmentUpdate(
-      { id: 1, patient_name: 'John Doe' },
-      'scheduled'
-    )
-
-    notificationStore.showInfo('System maintenance scheduled for tonight', {
-      title: 'System Update'
-    })
-  }
-
   window.addEventListener('resize', handleResize)
   document.addEventListener('click', handleClickOutside)
 })

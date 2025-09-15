@@ -55,45 +55,14 @@
 
 <script>
 import { ref, computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useNotificationStore } from '../stores/notification.js'
 
 export default {
   name: 'NotificationList',
   setup() {
-    // Mock notifications - replace with actual data
-    const notifications = ref([
-      {
-        id: 1,
-        title: 'System Update',
-        message: 'The system has been successfully updated to version 2.1.0. New features include improved performance and bug fixes.',
-        type: 'info',
-        read: false,
-        createdAt: new Date(Date.now() - 5 * 60 * 1000) // 5 minutes ago
-      },
-      {
-        id: 2,
-        title: 'New User Registered',
-        message: 'John Doe has registered and is pending approval.',
-        type: 'success',
-        read: false,
-        createdAt: new Date(Date.now() - 30 * 60 * 1000) // 30 minutes ago
-      },
-      {
-        id: 3,
-        title: 'Storage Warning',
-        message: 'Your storage usage is at 85%. Consider cleaning up old files.',
-        type: 'warning',
-        read: true,
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
-      },
-      {
-        id: 4,
-        title: 'Failed Login Attempt',
-        message: 'Multiple failed login attempts detected from IP 192.168.1.100.',
-        type: 'error',
-        read: true,
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) // 24 hours ago
-      }
-    ])
+    const notificationStore = useNotificationStore()
+    const { notifications } = storeToRefs(notificationStore)
 
     const unreadCount = computed(() => {
       return notifications.value.filter(n => !n.read).length

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,21 +26,13 @@ func CreatePeerReviewCase(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		CaseNumber         string `json:"case_number"` // Unique case identifier
-		Title              string `json:"title"`
-		Description        string `json:"description"`
-		Visibility         string `json:"visibility"`           // public, in_clinic, invite_only
-		PatientID          *uint  `json:"patient_id,omitempty"` // Optional: link to existing patient
-		PatientAge         int    `json:"patient_age"`
-		PatientGender      string `json:"patient_gender"`
-		PatientBloodType   string `json:"patient_blood_type"`
-		ChiefComplaint     string `json:"chief_complaint"`
-		MedicalHistory     string `json:"medical_history"`
-		DentalHistory      string `json:"dental_history"`
-		CurrentMedications string `json:"current_medications"`
-		Allergies          string `json:"allergies"`
-		DentalChartData    string `json:"dental_chart_data"`
-		ShareWith          []uint `json:"share_with,omitempty"` // User IDs to invite (for invite_only)
+		CaseNumber    string `json:"case_number"` // Unique case identifier
+		Title         string `json:"title"`
+		Description   string `json:"description"`
+		Visibility    string `json:"visibility"`     // public, in_clinic, invite_only
+		PatientID     *uint  `json:"patient_id"`     // Required: patient ID
+		AppointmentID *uint  `json:"appointment_id"` // Required: appointment ID
+		ShareWith     []uint `json:"share_with,omitempty"` // User IDs to invite (for invite_only)
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -49,9 +42,9 @@ func CreatePeerReviewCase(c *fiber.Ctx) error {
 	}
 
 	// Validate required fields
-	if req.CaseNumber == "" || req.Title == "" {
+	if req.CaseNumber == "" || req.Title == "" || req.PatientID == nil || req.AppointmentID == nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "Case number and title are required",
+			"error": "Case number, title, patient ID, and appointment ID are required",
 		})
 	}
 
@@ -70,53 +63,55 @@ func CreatePeerReviewCase(c *fiber.Ctx) error {
 		})
 	}
 
-	// If patient_id is provided, verify access and get anonymized data
-	var originalPatientID *uint
-	if req.PatientID != nil {
-		var patient models.Patient
-		if err := database.DB.Preload("Clinic").First(&patient, *req.PatientID).Error; err != nil {
-			return c.Status(http.StatusNotFound).JSON(fiber.Map{
-				"error": "Patient not found",
-			})
-		}
+	// Validate patient and appointment access
+	var patient models.Patient
+	if err := database.DB.Preload("Clinic").First(&patient, *req.PatientID).Error; err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error": "Patient not found",
+		})
+	}
 
-		// Verify user has access to this patient (same clinic)
-		if user.ClinicID != patient.ClinicID {
-			return c.Status(http.StatusForbidden).JSON(fiber.Map{
-				"error": "Access denied to this patient",
-			})
-		}
+	// Verify user has access to this patient (same clinic)
+	if user.ClinicID != patient.ClinicID {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"error": "Access denied to this patient",
+		})
+	}
 
-		originalPatientID = req.PatientID
+	// Validate appointment exists and belongs to the patient
+	var appointment models.Appointment
+	if err := database.DB.Preload("Patient").Preload("Procedures").Preload("Diagnoses").
+		First(&appointment, *req.AppointmentID).Error; err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error": "Appointment not found",
+		})
+	}
 
-		// If dental chart data not provided, get from patient
-		if req.DentalChartData == "" {
-			var dentalRecords []models.DentalRecord
-			database.DB.Where("patient_id = ? AND is_active = ?", patient.ID, true).Find(&dentalRecords)
-			anonymizedData := createAnonymizedPatientData(patient, dentalRecords)
-			req.DentalChartData = anonymizedData.DentalChart
-		}
+	// Verify appointment belongs to the selected patient
+	if appointment.PatientID != *req.PatientID {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Appointment does not belong to the selected patient",
+		})
+	}
+
+	// Verify appointment belongs to user's clinic
+	if appointment.Patient.ClinicID != user.ClinicID {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"error": "Access denied to this appointment",
+		})
 	}
 
 	// Create peer review case
 	peerReviewCase := models.PeerReviewCase{
-		CaseNumber:         req.CaseNumber,
-		Title:              req.Title,
-		Description:        req.Description,
-		Visibility:         visibility,
-		PatientAge:         req.PatientAge,
-		PatientGender:      req.PatientGender,
-		PatientBloodType:   req.PatientBloodType,
-		ChiefComplaint:     req.ChiefComplaint,
-		MedicalHistory:     req.MedicalHistory,
-		DentalHistory:      req.DentalHistory,
-		CurrentMedications: req.CurrentMedications,
-		Allergies:          req.Allergies,
-		DentalChartData:    req.DentalChartData,
-		Status:             models.PeerReviewStatusOpen,
-		CreatedByID:        user.ID,
-		ClinicID:           user.ClinicID,
-		OriginalPatientID:  originalPatientID,
+		CaseNumber:            req.CaseNumber,
+		Title:                 req.Title,
+		Description:           req.Description,
+		Visibility:            visibility,
+		Status:                models.PeerReviewStatusOpen,
+		CreatedByID:           user.ID,
+		ClinicID:              user.ClinicID,
+		OriginalPatientID:     req.PatientID,
+		OriginalAppointmentID: req.AppointmentID,
 	}
 
 	if err := database.DB.Create(&peerReviewCase).Error; err != nil {
@@ -181,16 +176,19 @@ func GetPeerReviewCases(c *fiber.Ctx) error {
 
 	var cases []models.PeerReviewCase
 
-	// Combine all accessible cases
-	query := database.DB.Raw(`
-		SELECT DISTINCT prc.* FROM peer_review_cases prc
-		LEFT JOIN peer_review_participants prp ON prc.id = prp.case_id AND prp.user_id = ?
-		WHERE (
-			prc.visibility = 'public'
-			OR (prc.visibility = 'in_clinic' AND prc.clinic_id = ?)
-			OR (prc.visibility = 'invite_only' AND prp.user_id IS NOT NULL)
-		)
-	`, user.ID, user.ClinicID)
+	// Build query using GORM instead of raw SQL
+	query := database.DB.Model(&models.PeerReviewCase{})
+
+	// Access control: combine all accessible cases
+	query = query.Where(
+		database.DB.Where("visibility = ?", "public").
+			Or(database.DB.Where("visibility = ? AND clinic_id = ?", "in_clinic", user.ClinicID)).
+			Or(database.DB.Where("visibility = ? AND id IN (?)", "invite_only",
+				database.DB.Table("peer_review_participants").
+					Select("case_id").
+					Where("user_id = ?", user.ID),
+			)),
+	)
 
 	if status != "" {
 		query = query.Where("status = ?", status)
@@ -201,13 +199,22 @@ func GetPeerReviewCases(c *fiber.Ctx) error {
 	}
 
 	var total int64
-	query.Model(&models.PeerReviewCase{}).Count(&total)
+	query.Count(&total)
 
-	if err := query.Preload("CreatedBy").Preload("Clinic").
+	if err := query.Preload("CreatedBy").Preload("Clinic").Preload("Comments").
 		Offset(offset).Limit(limit).Find(&cases).Error; err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch peer review cases",
 		})
+	}
+
+	// Anonymize case creators for non-case-makers
+	for i := range cases {
+		if cases[i].CreatedByID != user.ID {
+			cases[i].CreatedBy.FirstName = "Case"
+			cases[i].CreatedBy.LastName = "Creator"
+			cases[i].CreatedBy.Email = ""
+		}
 	}
 
 	return c.JSON(fiber.Map{
@@ -231,29 +238,121 @@ func GetPeerReviewCase(c *fiber.Ctx) error {
 		})
 	}
 
-	// Check if user has access to this case
-	var participant models.PeerReviewParticipant
-	if err := database.DB.Where("case_id = ? AND user_id = ?", caseID, user.ID).First(&participant).Error; err != nil {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{
-			"error": "Access denied to this case",
-		})
-	}
-
+	// First, load the case to check its visibility
 	var peerCase models.PeerReviewCase
-	if err := database.DB.Preload("CreatedBy").Preload("Clinic").
-		Preload("Comments", func(db *gorm.DB) *gorm.DB {
-			return db.Preload("Author").Order("created_at ASC")
-		}).
-		Preload("Participants", func(db *gorm.DB) *gorm.DB {
-			return db.Preload("User")
-		}).
-		First(&peerCase, caseID).Error; err != nil {
+	if err := database.DB.First(&peerCase, caseID).Error; err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error": "Peer review case not found",
 		})
 	}
 
-	return c.JSON(peerCase)
+	// Check if user has access based on visibility rules
+	hasAccess := false
+
+	switch peerCase.Visibility {
+	case models.VisibilityPublic:
+		// Public cases are accessible to all users
+		hasAccess = true
+	case models.VisibilityInClinic:
+		// In-clinic cases are accessible to users in the same clinic
+		hasAccess = (user.ClinicID == peerCase.ClinicID)
+	case models.VisibilityInviteOnly:
+		// Invite-only cases require explicit participation
+		var participant models.PeerReviewParticipant
+		err := database.DB.Where("case_id = ? AND user_id = ?", caseID, user.ID).First(&participant).Error
+		hasAccess = (err == nil)
+	}
+
+	if !hasAccess {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"error": "Access denied to this case",
+		})
+	}
+
+	// Now load the full case with all relationships
+	if err := database.DB.Preload("CreatedBy").Preload("Clinic").
+		Preload("OriginalPatient").
+		Preload("OriginalAppointment.Procedures").
+		Preload("OriginalAppointment.Diagnoses").
+		Preload("Comments", func(db *gorm.DB) *gorm.DB {
+			return db.Where("parent_id IS NULL").Preload("Author").Preload("Replies", func(db *gorm.DB) *gorm.DB {
+				return db.Preload("Author").Order("created_at ASC")
+			}).Order("created_at ASC")
+		}).
+		Preload("Participants", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("User")
+		}).
+		Where("id = ?", caseID).First(&peerCase).Error; err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error": "Peer review case not found",
+		})
+	}
+
+	// Check if current user is the case maker (creator)
+	isCaseMaker := peerCase.CreatedByID == user.ID
+
+	// Anonymize data if user is not the case maker
+	if !isCaseMaker {
+		// Hide original patient name information
+		peerCase.CreatedBy.FirstName = "Case"
+		peerCase.CreatedBy.LastName = "Creator"
+		peerCase.CreatedBy.Email = ""
+
+		// Anonymize comments authors (except case maker's own comments)
+		for i := range peerCase.Comments {
+			if peerCase.Comments[i].AuthorID != peerCase.CreatedByID && peerCase.Comments[i].AuthorID != user.ID {
+				peerCase.Comments[i].Author.FirstName = "Dr."
+				peerCase.Comments[i].Author.LastName = getAnonymousName(peerCase.Comments[i].AuthorID)
+				peerCase.Comments[i].Author.Email = ""
+			} else if peerCase.Comments[i].AuthorID == peerCase.CreatedByID {
+				// Case maker's comments show as "Case Creator"
+				peerCase.Comments[i].Author.FirstName = "Case"
+				peerCase.Comments[i].Author.LastName = "Creator"
+				peerCase.Comments[i].Author.Email = ""
+			}
+
+			// Also anonymize replies
+			for j := range peerCase.Comments[i].Replies {
+				if peerCase.Comments[i].Replies[j].AuthorID != peerCase.CreatedByID && peerCase.Comments[i].Replies[j].AuthorID != user.ID {
+					peerCase.Comments[i].Replies[j].Author.FirstName = "Dr."
+					peerCase.Comments[i].Replies[j].Author.LastName = getAnonymousName(peerCase.Comments[i].Replies[j].AuthorID)
+					peerCase.Comments[i].Replies[j].Author.Email = ""
+				} else if peerCase.Comments[i].Replies[j].AuthorID == peerCase.CreatedByID {
+					// Case maker's replies show as "Case Creator"
+					peerCase.Comments[i].Replies[j].Author.FirstName = "Case"
+					peerCase.Comments[i].Replies[j].Author.LastName = "Creator"
+					peerCase.Comments[i].Replies[j].Author.Email = ""
+				}
+			}
+		}
+
+		// Anonymize participants (except case maker and current user)
+		for i := range peerCase.Participants {
+			if peerCase.Participants[i].UserID != peerCase.CreatedByID && peerCase.Participants[i].UserID != user.ID {
+				peerCase.Participants[i].User.FirstName = "Dr."
+				peerCase.Participants[i].User.LastName = getAnonymousName(peerCase.Participants[i].UserID)
+				peerCase.Participants[i].User.Email = ""
+			} else if peerCase.Participants[i].UserID == peerCase.CreatedByID {
+				// Case maker shows as "Case Creator"
+				peerCase.Participants[i].User.FirstName = "Case"
+				peerCase.Participants[i].User.LastName = "Creator"
+				peerCase.Participants[i].User.Email = ""
+			}
+		}
+	}
+
+	// Include anonymized patient data from appointment
+	response := fiber.Map{
+		"case":          peerCase,
+		"is_case_maker": isCaseMaker,
+	}
+
+	// Add anonymized patient/appointment data if available
+	if peerCase.OriginalPatient != nil && peerCase.OriginalAppointment != nil {
+		response["patient_data"] = peerCase.GetAnonymizedPatientData()
+	}
+
+	return c.JSON(response)
 }
 
 // AddPeerReviewComment adds a comment to a peer review case
@@ -285,17 +384,42 @@ func AddPeerReviewComment(c *fiber.Ctx) error {
 		})
 	}
 
-	// Check if user has access and comment permission
-	var participant models.PeerReviewParticipant
-	if err := database.DB.Where("case_id = ? AND user_id = ?", caseID, user.ID).First(&participant).Error; err != nil {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{
-			"error": "Access denied to this case",
+	// First, load the case to check visibility and access
+	var peerCase models.PeerReviewCase
+	if err := database.DB.First(&peerCase, caseID).Error; err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error": "Peer review case not found",
 		})
 	}
 
-	if participant.Permission == models.PermissionView {
+	// Check if user has access based on visibility rules
+	hasAccess := false
+
+	switch peerCase.Visibility {
+	case models.VisibilityPublic:
+		// Public cases are accessible to all users
+		hasAccess = true
+	case models.VisibilityInClinic:
+		// In-clinic cases are accessible to users in the same clinic
+		hasAccess = (user.ClinicID == peerCase.ClinicID)
+	case models.VisibilityInviteOnly:
+		// Invite-only cases require explicit participation
+		var participant models.PeerReviewParticipant
+		err := database.DB.Where("case_id = ? AND user_id = ?", caseID, user.ID).First(&participant).Error
+		if err == nil {
+			hasAccess = true
+			// For invite-only cases, check if user has comment permission
+			if participant.Permission == models.PermissionView {
+				return c.Status(http.StatusForbidden).JSON(fiber.Map{
+					"error": "You don't have permission to comment on this case",
+				})
+			}
+		}
+	}
+
+	if !hasAccess {
 		return c.Status(http.StatusForbidden).JSON(fiber.Map{
-			"error": "You don't have permission to comment on this case",
+			"error": "Access denied to this case",
 		})
 	}
 
@@ -390,38 +514,11 @@ func UpdatePeerReviewCaseStatus(c *fiber.Ctx) error {
 
 // Helper functions
 
-func createAnonymizedPatientData(patient models.Patient, dentalRecords []models.DentalRecord) models.AnonymizedPatientData {
-	// Calculate age
-	age := 0
-	if patient.DateOfBirth != nil {
-		age = calculateAge(*patient.DateOfBirth)
-	}
-
-	// Get dental chart data (simplified for sharing)
-	dentalChart := ""
-	if len(dentalRecords) > 0 {
-		// Use the most recent dental record
-		dentalChart = dentalRecords[0].TeethData
-	}
-
-	return models.AnonymizedPatientData{
-		Age:            age,
-		Gender:         patient.Gender,
-		BloodType:      string(patient.BloodType),
-		ChiefComplaint: "", // Would need to be filled from appointment data
-		MedicalHistory: patient.MedicalConditions,
-		DentalHistory:  "", // Would need to be filled from appointment history
-		Medications:    patient.CurrentMedications,
-		Allergies:      patient.Allergies,
-		DentalChart:    dentalChart,
-	}
-}
-
-func calculateAge(birthDate time.Time) int {
-	now := time.Now()
-	age := now.Year() - birthDate.Year()
-	if now.YearDay() < birthDate.YearDay() {
-		age--
-	}
-	return age
+// getAnonymousName generates a consistent anonymous name based on user ID
+func getAnonymousName(userID uint) string {
+	// Generate anonymous names like "Anonymous A", "Anonymous B", etc.
+	// This provides consistent anonymization per user within a case
+	letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	index := (userID % uint(len(letters)))
+	return fmt.Sprintf("Anonymous %c", letters[index])
 }

@@ -73,6 +73,7 @@ import {
     faChartLine,
     faStore,
     faCartPlus,
+    faUsersCog,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Add all icons to library at once
@@ -146,6 +147,7 @@ library.add(
     faChartLine,
     faStore,
     faCartPlus,
+    faUsersCog,
 );
 
 export { FontAwesomeIcon };

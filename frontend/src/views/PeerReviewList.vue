@@ -14,14 +14,14 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+    <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
           <select
             v-model="filters.status"
             @change="fetchCases"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border border-neutral-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Status</option>
             <option value="open">Open</option>
@@ -35,7 +35,7 @@
           <select
             v-model="filters.visibility"
             @change="fetchCases"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border border-neutral-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Visibility</option>
             <option value="public">Public</option>
@@ -51,7 +51,7 @@
             @input="debounceSearch"
             type="text"
             placeholder="Search cases..."
-            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border border-neutral-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -63,7 +63,7 @@
         v-for="caseItem in cases"
         :key="caseItem.id"
         @click="viewCase(caseItem.id)"
-        class="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow cursor-pointer"
+        class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
       >
         <div class="flex justify-between items-start mb-4">
           <div>
@@ -104,7 +104,7 @@
         <button
           @click="changePage(pagination.page - 1)"
           :disabled="pagination.page <= 1"
-          class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-3 py-2 text-sm border border-neutral-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Previous
         </button>
@@ -116,7 +116,7 @@
         <button
           @click="changePage(pagination.page + 1)"
           :disabled="pagination.page >= Math.ceil(pagination.total / pagination.limit)"
-          class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-3 py-2 text-sm border border-neutral-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next
         </button>
@@ -129,7 +129,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import apiService from '../services/api.js'
 
+const router = useRouter()
 const cases = ref([])
 const pagination = ref({
   page: 1,
@@ -151,16 +154,11 @@ const fetchCases = async () => {
       ...filters.value
     })
 
-    const response = await fetch(`/api/peer-review/cases?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    })
+    const result = await apiService.get(`/api/peer-review/cases?${params}`)
 
-    if (response.ok) {
-      const data = await response.json()
-      cases.value = data.cases
-      pagination.value = data.pagination
+    if (result.success) {
+      cases.value = result.data.cases
+      pagination.value = result.data.pagination
     }
   } catch (error) {
     console.error('Failed to fetch cases:', error)

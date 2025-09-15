@@ -255,6 +255,7 @@ class ApiService {
       params: { path: avatarPath }
     })
   }
+
 }
 
 // Create and export a single instance

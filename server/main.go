@@ -76,6 +76,10 @@ func main() {
 		&models.InventoryAlert{},
 		&models.InventoryOrder{},
 		&models.InventoryOrderItem{},
+		// Peer Review models
+		&models.PeerReviewCase{},
+		&models.PeerReviewComment{},
+		&models.PeerReviewParticipant{},
 	); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
@@ -225,6 +229,13 @@ func main() {
 	api.Get("/consent-forms/:id", handlers.GetConsentForm)
 	api.Put("/consent-forms/:id", handlers.UpdateConsentForm)
 	api.Post("/consent-forms/:id/sign", handlers.SignConsentForm)
+
+	// Peer Review routes (doctors only)
+	api.Get("/peer-review/cases", middleware.RoleMiddleware(models.Doctor), handlers.GetPeerReviewCases)
+	api.Post("/peer-review/cases", middleware.RoleMiddleware(models.Doctor), handlers.CreatePeerReviewCase)
+	api.Get("/peer-review/cases/:id", middleware.RoleMiddleware(models.Doctor), handlers.GetPeerReviewCase)
+	api.Post("/peer-review/cases/:id/comments", middleware.RoleMiddleware(models.Doctor), handlers.AddPeerReviewComment)
+	api.Put("/peer-review/cases/:id/status", middleware.RoleMiddleware(models.Doctor), handlers.UpdatePeerReviewCaseStatus)
 
 	// Appointment procedures and diagnoses
 	api.Get("/appointments/:appointment_id/procedures", handlers.GetAppointmentProcedures)

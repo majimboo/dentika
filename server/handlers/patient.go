@@ -45,17 +45,25 @@ func GetPatients(c *fiber.Ctx) error {
 			}
 		}
 	} else {
+		// For non-super-admin users, ALWAYS use their clinic ID - no exceptions
 		clinicID = user.ClinicID
+
+		// Additional security check: ensure user has a valid clinic ID
+		if clinicID == 0 {
+			return c.Status(403).JSON(fiber.Map{"error": "Invalid clinic access"})
+		}
 	}
 
 	var patients []models.Patient
 	query := database.DB.Preload("Clinic")
 
-	if clinicID > 0 {
+	// CRITICAL: Always apply clinic filter for non-super-admin users
+	if !user.IsSuperAdmin() {
+		// Force clinic restriction regardless of clinicID value
+		query = query.Where("clinic_id = ?", user.ClinicID)
+	} else if clinicID > 0 {
+		// Super admin with optional clinic filter
 		query = query.Where("clinic_id = ?", clinicID)
-	} else if !user.IsSuperAdmin() {
-		// Non-super admin must have clinic restriction
-		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
 	// Add search functionality

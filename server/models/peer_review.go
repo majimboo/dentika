@@ -16,21 +16,6 @@ type PeerReviewCase struct {
 	// Case visibility
 	Visibility PeerReviewVisibility `json:"visibility" gorm:"type:varchar(20);default:'invite_only'"`
 
-	// Original patient data (anonymized)
-	PatientAge       int    `json:"patient_age"`
-	PatientGender    string `json:"patient_gender" gorm:"size:20"`
-	PatientBloodType string `json:"patient_blood_type" gorm:"size:10"`
-
-	// Case details
-	ChiefComplaint     string `json:"chief_complaint" gorm:"type:text"`
-	MedicalHistory     string `json:"medical_history" gorm:"type:text"`
-	DentalHistory      string `json:"dental_history" gorm:"type:text"`
-	CurrentMedications string `json:"current_medications" gorm:"type:text"`
-	Allergies          string `json:"allergies" gorm:"type:text"`
-
-	// Dental chart data (anonymized - no patient identifiers)
-	DentalChartData string `json:"dental_chart_data" gorm:"type:text"` // JSON of tooth conditions
-
 	// Case status
 	Status PeerReviewStatus `json:"status" gorm:"type:varchar(20);default:'open'"`
 
@@ -40,8 +25,11 @@ type PeerReviewCase struct {
 	ClinicID    uint   `json:"clinic_id" gorm:"not null;index"`
 	Clinic      Clinic `json:"clinic" gorm:"foreignKey:ClinicID"`
 
-	// Original patient reference (for internal use only, not exposed in API)
-	OriginalPatientID *uint `json:"-" gorm:"index"`
+	// Reference to the original patient and appointment (for internal use only, not exposed in API)
+	OriginalPatientID     *uint        `json:"-" gorm:"index"`
+	OriginalPatient       *Patient     `json:"-" gorm:"foreignKey:OriginalPatientID"`
+	OriginalAppointmentID *uint        `json:"appointment_id" gorm:"index"` // Expose this for frontend use
+	OriginalAppointment   *Appointment `json:"appointment,omitempty" gorm:"foreignKey:OriginalAppointmentID"`
 
 	// Relationships
 	Comments     []PeerReviewComment     `json:"comments,omitempty" gorm:"foreignKey:CaseID"`
@@ -139,15 +127,39 @@ const (
 	PermissionEdit    PeerReviewPermission = "edit"
 )
 
-// AnonymizedPatientData represents the anonymized patient information for sharing
-type AnonymizedPatientData struct {
-	Age            int    `json:"age"`
-	Gender         string `json:"gender"`
-	BloodType      string `json:"blood_type"`
-	ChiefComplaint string `json:"chief_complaint"`
-	MedicalHistory string `json:"medical_history"`
-	DentalHistory  string `json:"dental_history"`
-	Medications    string `json:"medications"`
-	Allergies      string `json:"allergies"`
-	DentalChart    string `json:"dental_chart"` // JSON string of tooth data
+// GetAnonymizedPatientData retrieves anonymized patient and appointment data for sharing
+func (prc *PeerReviewCase) GetAnonymizedPatientData() map[string]interface{} {
+	if prc.OriginalPatient == nil || prc.OriginalAppointment == nil {
+		return map[string]interface{}{}
+	}
+
+	patient := prc.OriginalPatient
+	appointment := prc.OriginalAppointment
+
+	// Calculate age
+	age := 0
+	if patient.DateOfBirth != nil {
+		now := time.Now()
+		birthYear := patient.DateOfBirth.Year()
+		age = now.Year() - birthYear
+		if now.YearDay() < patient.DateOfBirth.YearDay() {
+			age--
+		}
+	}
+
+	return map[string]interface{}{
+		"patient_age":         age,
+		"patient_gender":      patient.Gender,
+		"patient_blood_type":  patient.BloodType,
+		"medical_history":     patient.MedicalConditions,
+		"current_medications": patient.CurrentMedications,
+		"allergies":           patient.Allergies,
+		"chief_complaint":     appointment.Description, // Use Description as chief complaint
+		"appointment_date":    appointment.StartTime,   // Use StartTime as appointment date
+		"procedures":          appointment.Procedures,
+		"diagnoses":           appointment.Diagnoses,
+		"pre_notes":           appointment.PreAppointmentNotes,
+		"post_notes":          appointment.PostAppointmentNotes,
+		"title":               appointment.Title,
+	}
 }

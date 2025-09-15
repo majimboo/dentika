@@ -198,10 +198,10 @@
 
           <!-- Contact Info -->
           <div class="space-y-2">
-            <div class="flex items-center text-sm text-gray-600">
-              <font-awesome-icon icon="fa-solid fa-phone" class="w-4 h-4 mr-3 text-gray-400" />
-              <span class="truncate">{{ patient.phone || 'No phone' }}</span>
-            </div>
+             <div class="flex items-center text-sm text-gray-600">
+               <font-awesome-icon icon="fa-solid fa-phone" class="w-4 h-4 mr-3 text-gray-400" />
+               <span class="truncate">{{ patient.phone ? formatPhoneNumber(patient.phone) : 'No phone' }}</span>
+             </div>
             <div class="flex items-center text-sm text-gray-600">
               <font-awesome-icon icon="fa-solid fa-envelope" class="w-4 h-4 mr-3 text-gray-400" />
               <span class="truncate">{{ patient.email || 'No email' }}</span>
@@ -272,10 +272,10 @@
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4">
-                <div class="text-sm text-gray-900">{{ patient.phone || 'No phone' }}</div>
-                <div class="text-sm text-gray-500">{{ patient.email || 'No email' }}</div>
-              </td>
+               <td class="px-6 py-4">
+                 <div class="text-sm text-gray-900">{{ patient.phone ? formatPhoneNumber(patient.phone) : 'No phone' }}</div>
+                 <div class="text-sm text-gray-500">{{ patient.email || 'No email' }}</div>
+               </td>
               <td class="px-6 py-4">
                 <div class="text-sm text-gray-900">{{ getPatientAge(patient) }} years</div>
                 <div class="text-sm text-gray-500">{{ patient.gender || 'Not specified' }}</div>
@@ -353,7 +353,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { usePatientStore } from '../stores/patient'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
-import { formatDate, calculateAge, debounce, getInitials } from '@/utils'
+import { formatDate, calculateAge, debounce, getInitials, formatPhoneNumber } from '@/utils'
 
 const patientStore = usePatientStore()
 const authStore = useAuthStore()

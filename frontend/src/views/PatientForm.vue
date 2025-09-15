@@ -164,16 +164,17 @@
                     Phone Number
                     <span class="text-danger-500 ml-1">*</span>
                   </label>
-                  <input
-                    id="phone"
-                    v-model="form.phone"
-                    type="tel"
-                    required
-                    :readonly="isViewMode"
-                    class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                    :class="{ 'border-red-500': errors.phone, 'bg-gray-100 cursor-not-allowed': isViewMode }"
-                    placeholder="Enter phone number"
-                  />
+                   <input
+                     id="phone"
+                     v-model="formattedPhone"
+                     type="tel"
+                     required
+                     :readonly="isViewMode"
+                     class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
+                     :class="{ 'border-red-500': errors.phone, 'bg-gray-100 cursor-not-allowed': isViewMode }"
+                     placeholder="Enter phone number"
+                     @input="handlePhoneInput"
+                   />
                   <span v-if="errors.phone" class="text-red-500 text-sm mt-1">{{ errors.phone }}</span>
                 </div>
 
@@ -247,13 +248,14 @@
                     </svg>
                     Contact Phone
                   </label>
-                  <input
-                    id="emergency_contact_phone"
-                    v-model="form.emergency_contact_phone"
-                    type="tel"
-                    class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
-                    placeholder="Enter contact phone"
-                  />
+                   <input
+                     id="emergency_contact_phone"
+                     v-model="formattedEmergencyPhone"
+                     type="tel"
+                     class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
+                     placeholder="Enter contact phone"
+                     @input="handleEmergencyPhoneInput"
+                   />
                 </div>
 
                 <div class="space-y-2">
@@ -711,7 +713,7 @@ import BaseTransition from '../components/BaseTransition.vue'
 import TagInput from '../components/TagInput.vue'
 import AvatarUpload from '../components/AvatarUpload.vue'
 import { useNavigation } from '../composables/useNavigation'
-import { formatDate, validateForm, validateRequired, validateEmail, validatePhone, getDiagnosisStatusClass, getTreatmentStatusClass } from '@/utils'
+import { formatDate, validateForm, validateRequired, validateEmail, validatePhone, getDiagnosisStatusClass, getTreatmentStatusClass, formatPhoneNumber } from '@/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -760,6 +762,10 @@ const isViewMode = computed(() => isEditing.value && route.path.includes('/patie
 const isEditMode = computed(() => isEditing.value && route.path.includes('/edit'))
 const isCreateMode = computed(() => !isEditing.value)
 
+// Computed properties for formatted display
+const formattedPhone = computed(() => formatPhoneNumber(form.phone))
+const formattedEmergencyPhone = computed(() => formatPhoneNumber(form.emergency_contact_phone))
+
 const hasChanges = computed(() => {
   if (!isEditing.value) {
     // In create mode, check if required fields are filled
@@ -786,11 +792,11 @@ const hasChanges = computed(() => {
     allergiesChanged ||
     form.current_medications !== (originalPatient.value.current_medications || '') ||
      form.insurance_provider !== (originalPatient.value.insurance_provider || '') ||
-     form.insurance_number !== (originalPatient.value.insurance_number || '') ||
-     form.notes !== (originalPatient.value.notes || '') ||
-     form.avatar_path !== (originalPatient.value.avatar_path || '') ||
-     form.blood_type !== (originalPatient.value.blood_type || '') ||
-     form.preferred_language !== (originalPatient.value.preferred_language || 'English')
+      form.insurance_number !== (originalPatient.value.insurance_number || '') ||
+      form.notes !== (originalPatient.value.notes || '') ||
+      form.avatar_path !== (originalPatient.value.avatar_path || '') ||
+      form.blood_type !== (originalPatient.value.blood_type || '') ||
+      form.preferred_language !== (originalPatient.value.preferred_language || 'English')
   )
 })
 
@@ -920,6 +926,16 @@ const loadPatient = async (patientId) => {
 
 const handleAvatarUpdated = (avatarPath) => {
   form.avatar_path = avatarPath || ''
+}
+
+const handlePhoneInput = (event) => {
+  // Store the raw input value (without formatting) in the form
+  form.phone = event.target.value.replace(/\s+/g, '')
+}
+
+const handleEmergencyPhoneInput = (event) => {
+  // Store the raw input value (without formatting) in the form
+  form.emergency_contact_phone = event.target.value.replace(/\s+/g, '')
 }
 
 const cleanPhoneNumbers = () => {

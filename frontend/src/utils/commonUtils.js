@@ -105,6 +105,41 @@ export const removeFromArray = (array, item) => {
   return array
 }
 
+export const formatPhoneNumber = (phoneNumber) => {
+  if (!phoneNumber) return ''
+
+  // Remove any existing spaces and normalize
+  const cleaned = phoneNumber.replace(/\s+/g, '')
+
+  // Handle Philippine phone numbers (+63xxxxxxxxx format)
+  if (cleaned.startsWith('+63') && cleaned.length === 13) {
+    // Format as: +63 917 123 4567
+    const numberPart = cleaned.substring(3) // Remove +63
+    return `+63 ${numberPart.substring(0, 3)} ${numberPart.substring(3, 6)} ${numberPart.substring(6)}`
+  }
+
+  // Handle other international formats (keep +XX format with spaces)
+  if (cleaned.startsWith('+')) {
+    const countryCode = cleaned.substring(0, cleaned.length - 10) // Extract country code
+    const numberPart = cleaned.substring(cleaned.length - 10) // Last 10 digits
+    return `${countryCode} ${numberPart.substring(0, 3)} ${numberPart.substring(3, 6)} ${numberPart.substring(6)}`
+  }
+
+  // Handle local formats without country code
+  if (cleaned.length === 10 && cleaned.startsWith('9')) {
+    // Format as: 917 123 4567
+    return `${cleaned.substring(0, 3)} ${cleaned.substring(3, 6)} ${cleaned.substring(6)}`
+  }
+
+  if (cleaned.length === 11 && cleaned.startsWith('09')) {
+    // Format as: 0917 123 4567
+    return `${cleaned.substring(0, 4)} ${cleaned.substring(4, 7)} ${cleaned.substring(7)}`
+  }
+
+  // Return as-is for other formats
+  return phoneNumber
+}
+
 export const handleAsyncError = async (operation, errorCallback = null) => {
   try {
     return await operation()

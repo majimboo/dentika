@@ -54,13 +54,35 @@
             </span>
           </h3>
         </div>
-        <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard v-for="appointment in getAppointmentsByStatus('scheduled')" :key="appointment.id"
-            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
-          <div v-if="getAppointmentsByStatus('scheduled').length === 0"
-            class="text-center py-8 text-gray-500 text-sm">
-            No appointments
-          </div>
+        <div class="p-3 min-h-[300px] max-h-[500px] overflow-y-auto">
+          <draggable
+            v-model="scheduledAppointments"
+            group="appointments"
+            item-key="id"
+            @change="handleDragChange"
+            class="space-y-2 min-h-[250px]"
+            :animation="200"
+            ghost-class="dragging-ghost"
+            chosen-class="dragging-chosen"
+            drag-class="dragging-active"
+            :touch-start-threshold="10"
+            :force-fallback="false"
+            :fallback-tolerance="3"
+          >
+            <template #item="{ element }">
+              <AppointmentCard
+                :appointment="element"
+                @status-changed="handleStatusChange"
+                class="mb-2 cursor-move"
+              />
+            </template>
+            <template #footer>
+              <div v-if="scheduledAppointments.length === 0"
+                class="text-center py-8 text-gray-500 text-sm">
+                No appointments
+              </div>
+            </template>
+          </draggable>
         </div>
       </div>
 
@@ -80,13 +102,35 @@
             </span>
           </h3>
         </div>
-        <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard v-for="appointment in getAppointmentsByStatus('confirmed')" :key="appointment.id"
-            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
-          <div v-if="getAppointmentsByStatus('confirmed').length === 0"
-            class="text-center py-8 text-gray-500 text-sm">
-            No appointments
-          </div>
+        <div class="p-3 min-h-[300px] max-h-[500px] overflow-y-auto">
+          <draggable
+            v-model="confirmedAppointments"
+            group="appointments"
+            item-key="id"
+            @change="handleDragChange"
+            class="space-y-2 min-h-[250px]"
+            :animation="200"
+            ghost-class="dragging-ghost"
+            chosen-class="dragging-chosen"
+            drag-class="dragging-active"
+            :touch-start-threshold="10"
+            :force-fallback="false"
+            :fallback-tolerance="3"
+          >
+            <template #item="{ element }">
+              <AppointmentCard
+                :appointment="element"
+                @status-changed="handleStatusChange"
+                class="mb-2 cursor-move"
+              />
+            </template>
+            <template #footer>
+              <div v-if="confirmedAppointments.length === 0"
+                class="text-center py-8 text-gray-500 text-sm">
+                No appointments
+              </div>
+            </template>
+          </draggable>
         </div>
       </div>
 
@@ -106,13 +150,35 @@
             </span>
           </h3>
         </div>
-        <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard v-for="appointment in getAppointmentsByStatus('in_progress')" :key="appointment.id"
-            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
-          <div v-if="getAppointmentsByStatus('in_progress').length === 0"
-            class="text-center py-8 text-gray-500 text-sm">
-            No appointments
-          </div>
+        <div class="p-3 min-h-[300px] max-h-[500px] overflow-y-auto">
+          <draggable
+            v-model="inProgressAppointments"
+            group="appointments"
+            item-key="id"
+            @change="handleDragChange"
+            class="space-y-2 min-h-[250px]"
+            :animation="200"
+            ghost-class="dragging-ghost"
+            chosen-class="dragging-chosen"
+            drag-class="dragging-active"
+            :touch-start-threshold="10"
+            :force-fallback="false"
+            :fallback-tolerance="3"
+          >
+            <template #item="{ element }">
+              <AppointmentCard
+                :appointment="element"
+                @status-changed="handleStatusChange"
+                class="mb-2 cursor-move"
+              />
+            </template>
+            <template #footer>
+              <div v-if="inProgressAppointments.length === 0"
+                class="text-center py-8 text-gray-500 text-sm">
+                No appointments
+              </div>
+            </template>
+          </draggable>
         </div>
       </div>
 
@@ -132,13 +198,35 @@
             </span>
           </h3>
         </div>
-        <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard v-for="appointment in getAppointmentsByStatus('completed')" :key="appointment.id"
-            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
-          <div v-if="getAppointmentsByStatus('completed').length === 0"
-            class="text-center py-8 text-gray-500 text-sm">
-            No appointments
-          </div>
+        <div class="p-3 min-h-[300px] max-h-[500px] overflow-y-auto">
+          <draggable
+            v-model="completedAppointments"
+            group="appointments"
+            item-key="id"
+            @change="handleDragChange"
+            class="space-y-2 min-h-[250px]"
+            :animation="200"
+            ghost-class="dragging-ghost"
+            chosen-class="dragging-chosen"
+            drag-class="dragging-active"
+            :touch-start-threshold="10"
+            :force-fallback="false"
+            :fallback-tolerance="3"
+          >
+            <template #item="{ element }">
+              <AppointmentCard
+                :appointment="element"
+                @status-changed="handleStatusChange"
+                class="mb-2 cursor-move"
+              />
+            </template>
+            <template #footer>
+              <div v-if="completedAppointments.length === 0"
+                class="text-center py-8 text-gray-500 text-sm">
+                No appointments
+              </div>
+            </template>
+          </draggable>
         </div>
       </div>
 
@@ -157,13 +245,35 @@
             </span>
           </h3>
         </div>
-        <div class="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
-          <AppointmentCard v-for="appointment in getAppointmentsByStatus('cancelled')" :key="appointment.id"
-            :appointment="appointment" @status-changed="handleStatusChange" class="mb-2" />
-          <div v-if="getAppointmentsByStatus('cancelled').length === 0"
-            class="text-center py-8 text-gray-500 text-sm">
-            No appointments
-          </div>
+        <div class="p-3 min-h-[300px] max-h-[500px] overflow-y-auto">
+          <draggable
+            v-model="cancelledAppointments"
+            group="appointments"
+            item-key="id"
+            @change="handleDragChange"
+            class="space-y-2 min-h-[250px]"
+            :animation="200"
+            ghost-class="dragging-ghost"
+            chosen-class="dragging-chosen"
+            drag-class="dragging-active"
+            :touch-start-threshold="10"
+            :force-fallback="false"
+            :fallback-tolerance="3"
+          >
+            <template #item="{ element }">
+              <AppointmentCard
+                :appointment="element"
+                @status-changed="handleStatusChange"
+                class="mb-2 cursor-move"
+              />
+            </template>
+            <template #footer>
+              <div v-if="cancelledAppointments.length === 0"
+                class="text-center py-8 text-gray-500 text-sm">
+                No appointments
+              </div>
+            </template>
+          </draggable>
         </div>
       </div>
     </div>
@@ -192,12 +302,14 @@ import { useAppointmentStore } from '../stores/appointment'
 import BaseTransition from '../components/BaseTransition.vue'
 import AppointmentCard from '../components/AppointmentCard.vue'
 import { formatDate } from '@/utils'
+import draggable from 'vuedraggable'
 
 export default {
   name: 'Agenda',
   components: {
     BaseTransition,
-    AppointmentCard
+    AppointmentCard,
+    draggable
   },
   setup() {
     const authStore = useAuthStore()
@@ -235,6 +347,51 @@ export default {
       return appointments.value.filter(apt => apt.status === status)
     }
 
+    // Computed properties for each column
+    const scheduledAppointments = computed({
+      get: () => appointments.value.filter(apt => apt.status === 'scheduled'),
+      set: (value) => {
+        updateAppointmentsStatus(value, 'scheduled')
+      }
+    })
+
+    const confirmedAppointments = computed({
+      get: () => appointments.value.filter(apt => apt.status === 'confirmed'),
+      set: (value) => {
+        updateAppointmentsStatus(value, 'confirmed')
+      }
+    })
+
+    const inProgressAppointments = computed({
+      get: () => appointments.value.filter(apt => apt.status === 'in_progress'),
+      set: (value) => {
+        updateAppointmentsStatus(value, 'in_progress')
+      }
+    })
+
+    const completedAppointments = computed({
+      get: () => appointments.value.filter(apt => apt.status === 'completed'),
+      set: (value) => {
+        updateAppointmentsStatus(value, 'completed')
+      }
+    })
+
+    const cancelledAppointments = computed({
+      get: () => appointments.value.filter(apt => apt.status === 'cancelled'),
+      set: (value) => {
+        updateAppointmentsStatus(value, 'cancelled')
+      }
+    })
+
+    // Helper function to update appointment status when dragged
+    const updateAppointmentsStatus = (appointments, newStatus) => {
+      appointments.forEach(appointment => {
+        if (appointment.status !== newStatus) {
+          appointment.status = newStatus
+        }
+      })
+    }
+
     const setToday = () => {
       selectedDate.value = getLocalDateString()
       loadAppointments()
@@ -255,6 +412,32 @@ export default {
         }
       } catch (err) {
         console.error('Error updating appointment status:', err)
+      }
+    }
+
+    // Handle drag and drop changes
+    const handleDragChange = async (evt) => {
+      if (evt.added) {
+        // An appointment was dropped into this column
+        const appointment = evt.added.element
+
+        // The appointment status is already updated by the computed setter
+        // We just need to sync it with the backend
+        try {
+          const result = await appointmentStore.updateAppointmentStatus(appointment.id, {
+            status: appointment.status
+          })
+
+          if (!result.success) {
+            console.error('Failed to update appointment status:', result.error)
+            // Refresh to revert the change
+            await loadAppointments()
+          }
+        } catch (err) {
+          console.error('Error updating appointment status:', err)
+          // Refresh to revert the change
+          await loadAppointments()
+        }
       }
     }
 
@@ -288,6 +471,12 @@ export default {
       getColumnCount,
       getAppointmentsByStatus,
       handleStatusChange,
+      handleDragChange,
+      scheduledAppointments,
+      confirmedAppointments,
+      inProgressAppointments,
+      completedAppointments,
+      cancelledAppointments,
       cleanup,
       formatDate
     }
@@ -297,3 +486,19 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@import "../styles/main.css";
+
+.dragging-chosen {
+  @apply shadow-lg transform rotate-2 z-10;
+}
+
+.dragging-ghost {
+  @apply opacity-50;
+}
+
+.dragging-active {
+  @apply opacity-75;
+}
+</style>

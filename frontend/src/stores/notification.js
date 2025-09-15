@@ -28,11 +28,11 @@ export const useNotificationStore = defineStore('notification', () => {
   const hasUnread = computed(() => unreadCount.value > 0)
 
   const unreadNotifications = computed(() => {
-    return notifications.value.filter(n => !n.is_read && !n.read)
+    return notifications.value.filter(n => !n.is_read)
   })
 
   const readNotifications = computed(() => {
-    return notifications.value.filter(n => n.is_read || n.read)
+    return notifications.value.filter(n => n.is_read)
   })
 
   const notificationsByType = computed(() => {
@@ -72,10 +72,8 @@ export const useNotificationStore = defineStore('notification', () => {
       timestamp: notification.created_at ? new Date(notification.created_at) : new Date(),
       created_at: notification.created_at || new Date().toISOString(),
 
-      // Status
-      read: notification.read || false,
+      // Status - use is_read from backend (from notification_recipients join)
       is_read: notification.is_read || false,
-      is_dismissed: notification.is_dismissed || false,
 
       // Display settings
       showAsToast,
@@ -121,7 +119,7 @@ export const useNotificationStore = defineStore('notification', () => {
     }
 
     // Update unread count
-    if (!newNotification.is_read && !newNotification.read) {
+    if (!newNotification.is_read) {
       unreadCount.value++
     }
 
@@ -161,7 +159,7 @@ export const useNotificationStore = defineStore('notification', () => {
     const index = notifications.value.findIndex(n => n.id === id)
     if (index > -1) {
       const notification = notifications.value[index]
-      if (!notification.read && !notification.is_read) {
+      if (!notification.is_read) {
         unreadCount.value = Math.max(0, unreadCount.value - 1)
       }
       notifications.value.splice(index, 1)
@@ -188,8 +186,7 @@ export const useNotificationStore = defineStore('notification', () => {
 
   const markAsRead = (id) => {
     const notification = notifications.value.find(n => n.id === id)
-    if (notification && !notification.read && !notification.is_read) {
-      notification.read = true
+    if (notification && !notification.is_read) {
       notification.is_read = true
       unreadCount.value = Math.max(0, unreadCount.value - 1)
       emitNotificationEvent('read', notification)
@@ -199,8 +196,7 @@ export const useNotificationStore = defineStore('notification', () => {
   const markAllAsRead = () => {
     let changedCount = 0
     notifications.value.forEach(notification => {
-      if (!notification.read && !notification.is_read) {
-        notification.read = true
+      if (!notification.is_read) {
         notification.is_read = true
         changedCount++
         emitNotificationEvent('read', notification)
@@ -260,50 +256,48 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   const markAsReadAPI = async (notificationId) => {
+    // Update frontend state immediately for snappy UI
+    markAsRead(notificationId)
+
+    // Send to API for persistence in background
     try {
       const result = await apiService.put(`/api/notifications/${notificationId}/read`)
-
-      if (result.success && result.data?.success) {
-        // Update local state
-        markAsRead(notificationId)
-      }
-
       return result
     } catch (error) {
-      console.error('Failed to mark notification as read:', error)
-      throw error
+      console.error('Failed to persist mark as read to server:', error)
+      // Optionally revert frontend state if API call fails
+      // For now, we'll keep the frontend state as-is since it improves UX
+      return { success: false, error: error.message }
     }
   }
 
   const markAllAsReadAPI = async () => {
+    // Update frontend state immediately for snappy UI
+    markAllAsRead()
+
+    // Send to API for persistence in background
     try {
       const result = await apiService.put('/api/notifications/mark-all-read')
-
-      if (result.success && result.data?.success) {
-        // Update local state
-        markAllAsRead()
-      }
-
       return result
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error)
-      throw error
+      console.error('Failed to persist mark all as read to server:', error)
+      // Keep frontend state as-is for better UX
+      return { success: false, error: error.message }
     }
   }
 
   const dismissNotification = async (notificationId) => {
+    // Remove from frontend state immediately for snappy UI
+    removeNotification(notificationId)
+
+    // Send to API for persistence in background
     try {
       const result = await apiService.put(`/api/notifications/${notificationId}/dismiss`)
-
-      if (result.success && result.data?.success) {
-        // Remove from local state
-        removeNotification(notificationId)
-      }
-
       return result
     } catch (error) {
-      console.error('Failed to dismiss notification:', error)
-      throw error
+      console.error('Failed to persist notification dismissal to server:', error)
+      // Keep frontend state as-is for better UX
+      return { success: false, error: error.message }
     }
   }
 

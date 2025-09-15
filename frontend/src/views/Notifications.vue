@@ -96,7 +96,7 @@
           v-for="notification in paginatedNotifications"
           :key="notification.id"
           class="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
-          :class="{ 'bg-blue-50': !notification.read }"
+          :class="{ 'bg-blue-50': !notification.is_read }"
           @click="handleNotificationClick(notification)"
         >
           <div class="flex items-start space-x-4">
@@ -131,7 +131,7 @@
                     {{ formatDateTime(notification.timestamp) }}
                   </span>
                   <div
-                    v-if="!notification.read"
+                    v-if="!notification.is_read"
                     class="w-3 h-3 bg-blue-500 rounded-full"
                   ></div>
                 </div>
@@ -152,7 +152,7 @@
               <!-- Individual actions -->
               <div class="mt-3 flex items-center space-x-4 text-sm">
                 <button
-                  v-if="!notification.read"
+                  v-if="!notification.is_read"
                   @click.stop="markAsRead(notification.id)"
                   class="text-blue-600 hover:text-blue-800 transition-colors"
                 >
@@ -231,7 +231,7 @@ const filterTabs = computed(() => [
   {
     key: 'unread',
     label: 'Unread',
-    count: notifications.value.filter(n => !n.read).length
+    count: notifications.value.filter(n => !n.is_read).length
   },
   {
     key: 'appointment_reminder',
@@ -254,7 +254,7 @@ const filteredNotifications = computed(() => {
   let filtered = notifications.value
 
   if (activeFilter.value === 'unread') {
-    filtered = filtered.filter(n => !n.read)
+    filtered = filtered.filter(n => !n.is_read)
   } else if (activeFilter.value !== 'all') {
     filtered = filtered.filter(n => n.type === activeFilter.value)
   }
@@ -271,27 +271,51 @@ const paginatedNotifications = computed(() => {
 })
 
 // Methods
-const markAllAsRead = () => {
-  notificationStore.markAllAsRead()
-}
-
-const clearAll = () => {
-  if (confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) {
-    notificationStore.clearAll()
+const markAllAsRead = async () => {
+  try {
+    await notificationStore.markAllAsReadAPI()
+  } catch (error) {
+    console.error('Failed to mark all as read:', error)
   }
 }
 
-const markAsRead = (id) => {
-  notificationStore.markAsRead(id)
+const clearAll = async () => {
+  if (confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) {
+    try {
+      // Dismiss each notification individually
+      const notificationsToRemove = [...notifications.value]
+      for (const notification of notificationsToRemove) {
+        await notificationStore.dismissNotification(notification.id)
+      }
+    } catch (error) {
+      console.error('Failed to clear all notifications:', error)
+    }
+  }
 }
 
-const removeNotification = (id) => {
-  notificationStore.removeNotification(id)
+const markAsRead = async (id) => {
+  try {
+    await notificationStore.markAsReadAPI(id)
+  } catch (error) {
+    console.error('Failed to mark notification as read:', error)
+  }
 }
 
-const handleNotificationClick = (notification) => {
-  if (!notification.read) {
-    notificationStore.markAsRead(notification.id)
+const removeNotification = async (id) => {
+  try {
+    await notificationStore.dismissNotification(id)
+  } catch (error) {
+    console.error('Failed to remove notification:', error)
+  }
+}
+
+const handleNotificationClick = async (notification) => {
+  if (!notification.is_read) {
+    try {
+      await notificationStore.markAsReadAPI(notification.id)
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error)
+    }
   }
 
   // Handle notification-specific routing

@@ -28,12 +28,6 @@ type Notification struct {
 	Data    *string `json:"data,omitempty" gorm:"type:json"` // Additional data as JSON
 	Actions *string `json:"actions,omitempty" gorm:"type:json"` // Actions as JSON
 
-	// State
-	IsRead     bool      `json:"is_read" gorm:"default:false;index"`
-	ReadAt     *time.Time `json:"read_at,omitempty"`
-	IsDismissed bool      `json:"is_dismissed" gorm:"default:false;index"`
-	DismissedAt *time.Time `json:"dismissed_at,omitempty"`
-
 	// Scheduling
 	ScheduledFor *time.Time `json:"scheduled_for,omitempty" gorm:"index"` // For delayed notifications
 	ExpiresAt    *time.Time `json:"expires_at,omitempty" gorm:"index"`    // When notification should expire
@@ -64,7 +58,7 @@ const (
 	NotificationTypeInventoryAlert      NotificationType = "inventory_alert"
 )
 
-// NotificationRecipient tracks which users have received/seen a notification
+// NotificationRecipient tracks which users have read/removed a notification
 type NotificationRecipient struct {
 	ID             uint         `json:"id" gorm:"primarykey"`
 	NotificationID uint         `json:"notification_id" gorm:"not null;index"`
@@ -73,16 +67,13 @@ type NotificationRecipient struct {
 	UserID uint `json:"user_id" gorm:"not null;index"`
 	User   User `json:"user" gorm:"foreignKey:UserID"`
 
-	// Status
-	IsRead      bool       `json:"is_read" gorm:"default:false;index"`
-	ReadAt      *time.Time `json:"read_at,omitempty"`
-	IsDismissed bool       `json:"is_dismissed" gorm:"default:false;index"`
-	DismissedAt *time.Time `json:"dismissed_at,omitempty"`
-	DeliveredAt time.Time  `json:"delivered_at" gorm:"default:CURRENT_TIMESTAMP"`
+	// Status - simplified to only track read state
+	IsRead bool       `json:"is_read" gorm:"default:false;index"`
+	ReadAt *time.Time `json:"read_at,omitempty"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"` // For soft delete (removal)
 }
 
 // NotificationAction represents an action that can be taken on a notification
@@ -203,10 +194,6 @@ type NotificationJSON struct {
 	ClinicID  *uint     `json:"clinic_id,omitempty"`
 	Data      interface{} `json:"data,omitempty"`
 	Actions   []NotificationAction `json:"actions,omitempty"`
-	IsRead    bool      `json:"is_read"`
-	ReadAt    *time.Time `json:"read_at,omitempty"`
-	IsDismissed bool    `json:"is_dismissed"`
-	DismissedAt *time.Time `json:"dismissed_at,omitempty"`
 	ScheduledFor *time.Time `json:"scheduled_for,omitempty"`
 	ExpiresAt    *time.Time `json:"expires_at,omitempty"`
 	CreatedByID  *uint     `json:"created_by_id,omitempty"`
@@ -225,10 +212,6 @@ func (n *Notification) MarshalJSON() ([]byte, error) {
 		Color:       n.Color,
 		UserID:      n.UserID,
 		ClinicID:    n.ClinicID,
-		IsRead:      n.IsRead,
-		ReadAt:      n.ReadAt,
-		IsDismissed: n.IsDismissed,
-		DismissedAt: n.DismissedAt,
 		ScheduledFor: n.ScheduledFor,
 		ExpiresAt:   n.ExpiresAt,
 		CreatedByID: n.CreatedByID,

@@ -54,7 +54,7 @@
             v-for="notification in displayedNotifications"
             :key="notification.id"
             class="px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer"
-            :class="{ 'bg-blue-50': !notification.read }"
+            :class="{ 'bg-blue-50': !notification.is_read }"
             @click="handleNotificationClick(notification)"
           >
             <div class="flex items-start space-x-3">
@@ -81,7 +81,7 @@
                       {{ formatTime(notification.timestamp) }}
                     </span>
                     <div
-                      v-if="!notification.read"
+                      v-if="!notification.is_read"
                       class="w-2 h-2 bg-blue-500 rounded-full"
                     ></div>
                   </div>
@@ -154,13 +154,25 @@ const closePanel = () => {
   isOpen.value = false
 }
 
-const markAllAsRead = () => {
-  notificationStore.markAllAsRead()
+const markAllAsRead = async () => {
+  try {
+    await notificationStore.markAllAsReadAPI()
+  } catch (error) {
+    console.error('Failed to mark all as read:', error)
+  }
 }
 
-const clearAll = () => {
-  notificationStore.clearAll()
-  closePanel()
+const clearAll = async () => {
+  try {
+    // Dismiss each notification individually
+    const notificationsToRemove = [...notifications.value]
+    for (const notification of notificationsToRemove) {
+      await notificationStore.dismissNotification(notification.id)
+    }
+    closePanel()
+  } catch (error) {
+    console.error('Failed to clear all notifications:', error)
+  }
 }
 
 const viewAllNotifications = () => {
@@ -168,9 +180,13 @@ const viewAllNotifications = () => {
   router.push('/notifications')
 }
 
-const handleNotificationClick = (notification) => {
-  if (!notification.read) {
-    notificationStore.markAsRead(notification.id)
+const handleNotificationClick = async (notification) => {
+  if (!notification.is_read) {
+    try {
+      await notificationStore.markAsReadAPI(notification.id)
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error)
+    }
   }
 
   // Handle notification-specific routing

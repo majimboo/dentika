@@ -112,48 +112,9 @@ func (ns *NotificationService) CreateNotification(req CreateNotificationRequest)
 	return &notification, nil
 }
 
-// createRecipientsAndDistribute creates recipient records and distributes via NATS
+// createRecipientsAndDistribute distributes notifications via NATS without creating recipient records
 func (ns *NotificationService) createRecipientsAndDistribute(notification *models.Notification) error {
-	var recipients []models.User
-
-	// Determine recipients based on scope
-	switch notification.GetScope() {
-	case models.ScopeUser:
-		// Single user
-		var user models.User
-		if err := ns.db.First(&user, *notification.UserID).Error; err != nil {
-			return fmt.Errorf("failed to find user: %v", err)
-		}
-		recipients = []models.User{user}
-
-	case models.ScopeClinic:
-		// All users in clinic
-		if err := ns.db.Where("clinic_id = ?", *notification.ClinicID).Find(&recipients).Error; err != nil {
-			return fmt.Errorf("failed to find clinic users: %v", err)
-		}
-
-	case models.ScopeSystem:
-		// All active users
-		if err := ns.db.Find(&recipients).Error; err != nil {
-			return fmt.Errorf("failed to find all users: %v", err)
-		}
-	}
-
-	// Create recipient records
-	var recipientRecords []models.NotificationRecipient
-	for _, user := range recipients {
-		recipientRecords = append(recipientRecords, models.NotificationRecipient{
-			NotificationID: notification.ID,
-			UserID:         user.ID,
-			DeliveredAt:    time.Now(),
-		})
-	}
-
-	if len(recipientRecords) > 0 {
-		if err := ns.db.Create(&recipientRecords).Error; err != nil {
-			return fmt.Errorf("failed to create recipient records: %v", err)
-		}
-	}
+	// Skip creating recipient records - they will be created on-demand when users fetch notifications
 
 	// Distribute via NATS if not scheduled
 	if notification.ScheduledFor == nil || notification.ScheduledFor.Before(time.Now()) {
@@ -237,37 +198,153 @@ func (ns *NotificationService) getNATSSubjects(notification *models.Notification
 
 // MarkAsRead marks a notification as read for a specific user
 func (ns *NotificationService) MarkAsRead(notificationID, userID uint) error {
-	now := time.Now()
+	log.Printf("SERVICE: MarkAsRead called for notification %d, user %d", notificationID, userID)
 
-	return ns.db.Model(&models.NotificationRecipient{}).
-		Where("notification_id = ? AND user_id = ?", notificationID, userID).
-		Updates(map[string]interface{}{
-			"is_read": true,
-			"read_at": &now,
-		}).Error
+	// Check if recipient record already exists
+	var existingRecipient models.NotificationRecipient
+	err := ns.db.Where("notification_id = ? AND user_id = ?", notificationID, userID).First(&existingRecipient).Error
+
+	if err == gorm.ErrRecordNotFound {
+		log.Printf("SERVICE: No existing recipient record found, creating new one")
+		// Create new read record
+		now := time.Now()
+		recipient := models.NotificationRecipient{
+			NotificationID: notificationID,
+			UserID:         userID,
+			IsRead:         true,
+			ReadAt:         &now,
+		}
+		err := ns.db.Create(&recipient).Error
+		if err != nil {
+			log.Printf("SERVICE: ERROR creating recipient record: %v", err)
+			return err
+		}
+		log.Printf("SERVICE: Successfully created recipient record with ID %d", recipient.ID)
+		return nil
+	}
+
+	if err != nil {
+		log.Printf("SERVICE: ERROR querying existing recipient: %v", err)
+		return err
+	}
+
+	log.Printf("SERVICE: Found existing recipient record ID %d, updating it", existingRecipient.ID)
+	// Update existing record to mark as read
+	now := time.Now()
+	err = ns.db.Model(&existingRecipient).Updates(map[string]interface{}{
+		"is_read": true,
+		"read_at": &now,
+	}).Error
+
+	if err != nil {
+		log.Printf("SERVICE: ERROR updating recipient record: %v", err)
+		return err
+	}
+
+	log.Printf("SERVICE: Successfully updated recipient record")
+	return nil
 }
 
-// MarkAsDismissed marks a notification as dismissed for a specific user
+// MarkAsDismissed permanently removes a notification for a specific user (soft delete)
 func (ns *NotificationService) MarkAsDismissed(notificationID, userID uint) error {
-	now := time.Now()
+	log.Printf("SERVICE: MarkAsDismissed called for notification %d, user %d", notificationID, userID)
 
-	return ns.db.Model(&models.NotificationRecipient{}).
-		Where("notification_id = ? AND user_id = ?", notificationID, userID).
-		Updates(map[string]interface{}{
-			"is_dismissed": true,
-			"dismissed_at": &now,
-		}).Error
+	// Find the recipient record
+	var recipient models.NotificationRecipient
+	err := ns.db.Where("notification_id = ? AND user_id = ?", notificationID, userID).First(&recipient).Error
+
+	if err == gorm.ErrRecordNotFound {
+		log.Printf("SERVICE: No recipient record exists, creating one to soft delete")
+		// No recipient record exists - create one and immediately soft delete it
+		now := time.Now()
+		recipient = models.NotificationRecipient{
+			NotificationID: notificationID,
+			UserID:         userID,
+			IsRead:         true,  // Mark as read when removing
+			ReadAt:         &now,
+		}
+		// Create and immediately soft delete
+		if err := ns.db.Create(&recipient).Error; err != nil {
+			log.Printf("SERVICE: ERROR creating recipient record: %v", err)
+			return err
+		}
+		log.Printf("SERVICE: Created recipient record with ID %d", recipient.ID)
+	} else if err != nil {
+		log.Printf("SERVICE: ERROR querying recipient record: %v", err)
+		return err
+	}
+
+	// Soft delete the recipient record
+	err = ns.db.Delete(&recipient).Error
+	if err != nil {
+		log.Printf("SERVICE: ERROR soft deleting recipient record: %v", err)
+		return err
+	}
+
+	log.Printf("SERVICE: Successfully soft deleted recipient record")
+	return nil
+}
+
+
+// NotificationWithStatus represents a notification with read status
+type NotificationWithStatus struct {
+	ID           uint                         `json:"id" gorm:"primarykey"`
+	Title        string                       `json:"title"`
+	Message      string                       `json:"message"`
+	Type         models.NotificationType      `json:"type"`
+	Icon         string                       `json:"icon"`
+	Color        string                       `json:"color"`
+	UserID       *uint                        `json:"user_id,omitempty"`
+	ClinicID     *uint                        `json:"clinic_id,omitempty"`
+	Data         *string                      `json:"data,omitempty"`
+	Actions      *string                      `json:"actions,omitempty"`
+	ScheduledFor *time.Time                   `json:"scheduled_for,omitempty"`
+	ExpiresAt    *time.Time                   `json:"expires_at,omitempty"`
+	CreatedByID  *uint                        `json:"created_by_id,omitempty"`
+	CreatedAt    time.Time                    `json:"created_at"`
+	UpdatedAt    time.Time                    `json:"updated_at"`
+	IsRead       bool                         `json:"is_read"`
+	ReadAt       *time.Time                   `json:"read_at,omitempty"`
+}
+
+// MarshalJSON customizes JSON output for NotificationWithStatus
+func (nws *NotificationWithStatus) MarshalJSON() ([]byte, error) {
+	type Alias NotificationWithStatus
+
+	// Create an alias to avoid infinite recursion
+	aux := &struct {
+		*Alias
+		Data    interface{}                  `json:"data,omitempty"`
+		Actions []models.NotificationAction  `json:"actions,omitempty"`
+	}{
+		Alias: (*Alias)(nws),
+	}
+
+	// Parse Data field if it exists
+	if nws.Data != nil && *nws.Data != "" {
+		var dataObj interface{}
+		if err := json.Unmarshal([]byte(*nws.Data), &dataObj); err == nil {
+			aux.Data = dataObj
+		} else {
+			aux.Data = *nws.Data
+		}
+	}
+
+	// Parse Actions field if it exists
+	if nws.Actions != nil && *nws.Actions != "" {
+		var actionsArray []models.NotificationAction
+		if err := json.Unmarshal([]byte(*nws.Actions), &actionsArray); err == nil {
+			aux.Actions = actionsArray
+		}
+	}
+
+	return json.Marshal(aux)
 }
 
 // GetUserNotifications retrieves notifications for a specific user
-func (ns *NotificationService) GetUserNotifications(userID uint, limit, offset int) ([]models.Notification, int64, error) {
-	var notifications []models.Notification
+func (ns *NotificationService) GetUserNotifications(userID uint, limit, offset int) ([]NotificationWithStatus, int64, error) {
+	var notifications []NotificationWithStatus
 	var total int64
-
-	// Base query - get notifications that are either:
-	// 1. User-specific (user_id = userID)
-	// 2. Clinic-wide (clinic_id = user's clinic_id)
-	// 3. System-wide (user_id IS NULL AND clinic_id IS NULL)
 
 	// First get the user's clinic_id
 	var user models.User
@@ -275,23 +352,34 @@ func (ns *NotificationService) GetUserNotifications(userID uint, limit, offset i
 		return nil, 0, err
 	}
 
-	query := ns.db.Model(&models.Notification{}).
-		Joins("LEFT JOIN notification_recipients nr ON notifications.id = nr.notification_id AND nr.user_id = ?", userID).
-		Where("(notifications.user_id = ? OR (notifications.clinic_id = ? AND notifications.user_id IS NULL) OR (notifications.user_id IS NULL AND notifications.clinic_id IS NULL)) AND (notifications.scheduled_for IS NULL OR notifications.scheduled_for <= ?) AND (notifications.expires_at IS NULL OR notifications.expires_at > ?) AND (nr.is_dismissed = false OR nr.is_dismissed IS NULL)",
+	// Base query - get all relevant notifications:
+	// 1. User-specific (user_id = userID)
+	// 2. Clinic-wide (clinic_id = user's clinic_id)
+	// 3. System-wide (user_id IS NULL AND clinic_id IS NULL)
+	// EXCLUDE only notifications that have been REMOVED (soft-deleted)
+	// INCLUDE notifications that are read but not removed
+	baseQuery := ns.db.Model(&models.Notification{}).
+		Joins("LEFT JOIN notification_recipients nr ON notifications.id = nr.notification_id AND nr.user_id = ? AND nr.deleted_at IS NULL", userID).
+		Where("(notifications.user_id = ? OR (notifications.clinic_id = ? AND notifications.user_id IS NULL) OR (notifications.user_id IS NULL AND notifications.clinic_id IS NULL)) AND (notifications.scheduled_for IS NULL OR notifications.scheduled_for <= ?) AND (notifications.expires_at IS NULL OR notifications.expires_at > ?)",
 			userID, user.ClinicID, time.Now(), time.Now()).
-		Order("notifications.created_at DESC")
+		Where("NOT EXISTS (SELECT 1 FROM notification_recipients nr_removed WHERE nr_removed.notification_id = notifications.id AND nr_removed.user_id = ? AND nr_removed.deleted_at IS NOT NULL)", userID)
 
 	// Get total count
-	if err := query.Count(&total).Error; err != nil {
+	if err := baseQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// Get paginated results with recipient info
-	err := query.
-		Select("notifications.*, nr.is_read, nr.read_at, nr.is_dismissed, nr.dismissed_at").
+	// Get paginated notifications with recipient status
+	err := baseQuery.
+		Select("notifications.*, COALESCE(nr.is_read, false) as is_read, nr.read_at").
+		Order("notifications.created_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&notifications).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
 
 	return notifications, total, err
 }
@@ -306,10 +394,16 @@ func (ns *NotificationService) GetUnreadCount(userID uint) (int64, error) {
 		return 0, err
 	}
 
+	// Count notifications that are:
+	// 1. Relevant to the user (user/clinic/system scope)
+	// 2. Not removed (no soft-deleted recipient record)
+	// 3. Not read (no recipient record with is_read=true OR recipient record doesn't exist)
 	err := ns.db.Model(&models.Notification{}).
-		Joins("LEFT JOIN notification_recipients nr ON notifications.id = nr.notification_id AND nr.user_id = ?", userID).
-		Where("(notifications.user_id = ? OR (notifications.clinic_id = ? AND notifications.user_id IS NULL) OR (notifications.user_id IS NULL AND notifications.clinic_id IS NULL)) AND (nr.is_read = false OR nr.is_read IS NULL) AND (nr.is_dismissed = false OR nr.is_dismissed IS NULL) AND (notifications.scheduled_for IS NULL OR notifications.scheduled_for <= ?) AND (notifications.expires_at IS NULL OR notifications.expires_at > ?)",
+		Joins("LEFT JOIN notification_recipients nr ON notifications.id = nr.notification_id AND nr.user_id = ? AND nr.deleted_at IS NULL", userID).
+		Where("(notifications.user_id = ? OR (notifications.clinic_id = ? AND notifications.user_id IS NULL) OR (notifications.user_id IS NULL AND notifications.clinic_id IS NULL)) AND (notifications.scheduled_for IS NULL OR notifications.scheduled_for <= ?) AND (notifications.expires_at IS NULL OR notifications.expires_at > ?)",
 			userID, user.ClinicID, time.Now(), time.Now()).
+		Where("NOT EXISTS (SELECT 1 FROM notification_recipients nr_removed WHERE nr_removed.notification_id = notifications.id AND nr_removed.user_id = ? AND nr_removed.deleted_at IS NOT NULL)", userID).
+		Where("(nr.id IS NULL OR nr.is_read = false)").
 		Count(&count).Error
 
 	return count, err

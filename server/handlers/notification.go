@@ -46,7 +46,7 @@ func GetUserNotifications(c *fiber.Ctx) error {
 
 	// Apply filter if specified
 	if filter != "all" {
-		filteredNotifications := make([]models.Notification, 0)
+		filteredNotifications := make([]services.NotificationWithStatus, 0)
 		for _, notification := range notifications {
 			switch filter {
 			case "unread":
@@ -101,17 +101,23 @@ func MarkNotificationAsRead(c *fiber.Ctx) error {
 
 	notificationID, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
+		log.Printf("ERROR: Invalid notification ID: %v", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid notification ID",
 		})
 	}
 
+	log.Printf("MarkNotificationAsRead called for notification %d, user %d", notificationID, user.ID)
+
 	err = notificationService.MarkAsRead(uint(notificationID), user.ID)
 	if err != nil {
+		log.Printf("ERROR: Failed to mark notification as read: %v", err)
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to mark notification as read",
 		})
 	}
+
+	log.Printf("Successfully marked notification %d as read for user %d", notificationID, user.ID)
 
 	return c.JSON(fiber.Map{
 		"success": true,
@@ -123,24 +129,31 @@ func MarkNotificationAsRead(c *fiber.Ctx) error {
 func MarkAllNotificationsAsRead(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 
-	// Get all unread notifications for the user
+	log.Printf("MarkAllNotificationsAsRead called for user %d", user.ID)
+
+	// Get all notifications for the user (these are all unread since we only show non-dismissed ones)
 	notifications, _, err := notificationService.GetUserNotifications(user.ID, 1000, 0)
 	if err != nil {
+		log.Printf("ERROR: Failed to retrieve notifications: %v", err)
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to retrieve notifications",
 		})
 	}
 
-	// Mark each as read
+	log.Printf("Found %d notifications to mark as read", len(notifications))
+
+	// Mark each notification as read (since all returned notifications are effectively unread)
+	var successCount int
 	for _, notification := range notifications {
-		if !notification.IsRead {
-			err := notificationService.MarkAsRead(notification.ID, user.ID)
-			if err != nil {
-				// Log error but continue with other notifications
-				continue
-			}
+		err := notificationService.MarkAsRead(notification.ID, user.ID)
+		if err != nil {
+			log.Printf("ERROR: Failed to mark notification %d as read: %v", notification.ID, err)
+			continue
 		}
+		successCount++
 	}
+
+	log.Printf("Successfully marked %d notifications as read for user %d", successCount, user.ID)
 
 	return c.JSON(fiber.Map{
 		"success": true,
@@ -154,17 +167,23 @@ func DismissNotification(c *fiber.Ctx) error {
 
 	notificationID, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
+		log.Printf("ERROR: Invalid notification ID for dismiss: %v", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid notification ID",
 		})
 	}
 
+	log.Printf("DismissNotification called for notification %d, user %d", notificationID, user.ID)
+
 	err = notificationService.MarkAsDismissed(uint(notificationID), user.ID)
 	if err != nil {
+		log.Printf("ERROR: Failed to dismiss notification: %v", err)
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to dismiss notification",
 		})
 	}
+
+	log.Printf("Successfully dismissed notification %d for user %d", notificationID, user.ID)
 
 	return c.JSON(fiber.Map{
 		"success": true,

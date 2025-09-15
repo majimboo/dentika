@@ -8,6 +8,7 @@ import (
 
 	"dentika/server/database"
 	"dentika/server/models"
+
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 )
@@ -90,10 +91,12 @@ func (wm *WSManager) broadcast(message WSMessage) {
 	}
 
 	for conn, client := range wm.clients {
-		if err := conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
-			log.Printf("Failed to send message to client (user %d): %v", client.UserID, err)
-			// Remove broken connection
-			go wm.removeClient(conn)
+		if conn != nil {
+			if err := conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
+				log.Printf("Failed to send message to client (user %d): %v", client.UserID, err)
+				// Remove broken connection
+				go wm.removeClient(conn)
+			}
 		}
 	}
 }
@@ -110,7 +113,7 @@ func (wm *WSManager) broadcastToUser(userID uint, message WSMessage) {
 	}
 
 	for conn, client := range wm.clients {
-		if client.UserID == userID {
+		if conn != nil && client.UserID == userID {
 			if err := conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
 				log.Printf("Failed to send message to user %d: %v", userID, err)
 				// Remove broken connection
@@ -132,7 +135,7 @@ func (wm *WSManager) broadcastToClinic(clinicID uint, message WSMessage) {
 	}
 
 	for conn, client := range wm.clients {
-		if client.User.ClinicID == clinicID {
+		if conn != nil && client.User.ClinicID == clinicID {
 			if err := conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
 				log.Printf("Failed to send message to clinic %d user %d: %v", clinicID, client.UserID, err)
 				// Remove broken connection

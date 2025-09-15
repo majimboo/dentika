@@ -1057,7 +1057,30 @@ const loadAppointmentProcedures = async (appointmentId) => {
     const result = await apiService.get(`/api/appointments/${appointmentId}/procedures`)
 
     if (result.success) {
-      selectedProcedures.value = result.data || []
+      // Transform the data to flatten the procedure_template structure
+      const transformedProcedures = (result.data || []).map(procedure => ({
+        id: procedure.procedure_template?.id,
+        name: procedure.procedure_template?.name,
+        description: procedure.procedure_template?.description,
+        estimated_duration: procedure.procedure_template?.estimated_duration,
+        default_cost: procedure.procedure_template?.default_cost,
+        category: procedure.procedure_template?.category,
+        code: procedure.procedure_template?.code,
+        is_active: procedure.procedure_template?.is_active,
+        // Include appointment procedure specific data
+        appointment_procedure_id: procedure.id,
+        custom_duration: procedure.procedure_template?.estimated_duration, // Use template duration as default
+        custom_cost: procedure.cost || procedure.procedure_template?.default_cost,
+        custom_notes: procedure.notes || '',
+        tooth_number: procedure.tooth_number,
+        surface: procedure.surface,
+        status: procedure.status,
+        start_time: procedure.start_time,
+        end_time: procedure.end_time,
+        performed_by: procedure.performed_by,
+        performed_by_id: procedure.performed_by_id
+      }))
+      selectedProcedures.value = transformedProcedures
     } else {
       console.error('Failed to load appointment procedures:', result.error)
       selectedProcedures.value = []
@@ -1359,17 +1382,47 @@ const updateAppointmentProcedures = async (appointmentId) => {
       }
     }
 
-    // Add new procedures
+    // Add new procedures or update existing ones
     for (const procedure of selectedProcedures.value) {
       const alreadyExists = existingProcedures.find(p => p.procedure_template_id === procedure.id)
+
       if (!alreadyExists) {
-        const procedureResult = await apiService.post(`/api/appointments/${appointmentId}/procedures`, {
+        // Add new procedure
+        const procedureData = {
           procedure_template_id: procedure.id,
-          cost: procedure.default_cost
-        })
+          cost: procedure.custom_cost || procedure.default_cost,
+          notes: procedure.custom_notes || '',
+          tooth_number: procedure.tooth_number || '',
+          surface: procedure.surface || '',
+          status: procedure.status || 'planned'
+        }
+
+        const procedureResult = await apiService.post(`/api/appointments/${appointmentId}/procedures`, procedureData)
 
         if (!procedureResult.success) {
           console.error('Failed to add procedure:', procedure.name, procedureResult.error)
+        }
+      } else {
+        // Update existing procedure if customizations have changed
+        const hasCustomizations = procedure.custom_cost !== procedure.default_cost ||
+                                 procedure.custom_notes ||
+                                 procedure.tooth_number ||
+                                 procedure.surface
+
+        if (hasCustomizations) {
+          const updateData = {
+            cost: procedure.custom_cost || procedure.default_cost,
+            notes: procedure.custom_notes || '',
+            tooth_number: procedure.tooth_number || '',
+            surface: procedure.surface || '',
+            status: procedure.status || 'planned'
+          }
+
+          const updateResult = await apiService.put(`/api/appointment-procedures/${alreadyExists.id}`, updateData)
+
+          if (!updateResult.success) {
+            console.error('Failed to update procedure:', procedure.name, updateResult.error)
+          }
         }
       }
     }

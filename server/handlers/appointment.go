@@ -331,16 +331,16 @@ func CreateAppointment(c *fiber.Ctx) error {
 	// Reload with relationships
 	database.DB.Preload("Patient").Preload("Doctor").Preload("Branch").First(&appointment, appointment.ID)
 
-	// // Send WebSocket notification for new appointment (clinic-scoped)
-	// go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "scheduled", appointment.Branch.ClinicID)
+	// Send WebSocket notification for new appointment (clinic-scoped)
+	go SendAppointmentUpdate(appointment.ID, appointment.Patient.FirstName+" "+appointment.Patient.LastName, "scheduled", appointment.Branch.ClinicID)
 
-	// // Send clinic-wide notification
-	// go SendClinicNotification(
-	// 	"New Appointment Scheduled",
-	// 	"Appointment scheduled for "+appointment.Patient.FirstName+" "+appointment.Patient.LastName+" with Dr. "+appointment.Doctor.FirstName+" "+appointment.Doctor.LastName,
-	// 	"appointment_scheduled",
-	// 	appointment.Branch.ClinicID,
-	// )
+	// Send clinic-wide notification
+	go SendClinicNotification(
+		"New Appointment Scheduled",
+		"Appointment scheduled for "+appointment.Patient.FirstName+" "+appointment.Patient.LastName+" with Dr. "+appointment.Doctor.FirstName+" "+appointment.Doctor.LastName,
+		"appointment_scheduled",
+		appointment.Branch.ClinicID,
+	)
 
 	return c.Status(201).JSON(appointment)
 }
@@ -385,6 +385,22 @@ func UpdateAppointment(c *fiber.Ctx) error {
 	}
 	if req.Status != "" {
 		appointment.Status = req.Status
+	}
+
+	// Update foreign key fields
+	if req.PatientID > 0 {
+		appointment.PatientID = req.PatientID
+	}
+	if req.DoctorID > 0 {
+		appointment.DoctorID = req.DoctorID
+	}
+	if req.BranchID > 0 {
+		appointment.BranchID = req.BranchID
+		// Update clinic ID based on branch
+		var branch models.Branch
+		if err := database.DB.First(&branch, req.BranchID).Error; err == nil {
+			appointment.ClinicID = branch.ClinicID
+		}
 	}
 
 	if req.EstimatedCost != nil {

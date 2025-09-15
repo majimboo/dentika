@@ -228,11 +228,11 @@ func main() {
 
 	// Appointment procedures and diagnoses
 	api.Get("/appointments/:appointment_id/procedures", handlers.GetAppointmentProcedures)
-	api.Post("/appointments/:appointment_id/procedures", middleware.RoleMiddleware(models.Doctor), handlers.AddProcedureToAppointment)
-	api.Put("/appointment-procedures/:id", middleware.RoleMiddleware(models.Doctor), handlers.UpdateAppointmentProcedure)
+	api.Post("/appointments/:appointment_id/procedures", middleware.RoleMiddleware(models.Doctor, models.Admin, models.Secretary, models.Assistant), handlers.AddProcedureToAppointment)
+	api.Put("/appointment-procedures/:id", middleware.RoleMiddleware(models.Doctor, models.Admin, models.Secretary, models.Assistant), handlers.UpdateAppointmentProcedure)
 	api.Get("/appointments/:appointment_id/diagnoses", handlers.GetAppointmentDiagnoses)
-	api.Post("/appointments/:appointment_id/diagnoses", middleware.RoleMiddleware(models.Doctor), handlers.AddDiagnosisToAppointment)
-	api.Put("/appointment-diagnoses/:id", middleware.RoleMiddleware(models.Doctor), handlers.UpdateAppointmentDiagnosis)
+	api.Post("/appointments/:appointment_id/diagnoses", middleware.RoleMiddleware(models.Doctor, models.Admin), handlers.AddDiagnosisToAppointment)
+	api.Put("/appointment-diagnoses/:id", middleware.RoleMiddleware(models.Doctor, models.Admin), handlers.UpdateAppointmentDiagnosis)
 
 	// Shop inventory management (for super admin only)
 	api.Get("/inventory/shop/items", middleware.RoleMiddleware(models.SuperAdmin), handlers.GetPlatformInventory)

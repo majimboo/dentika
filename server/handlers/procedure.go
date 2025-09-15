@@ -169,9 +169,9 @@ func AddProcedureToAppointment(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
-	// Only doctors can add procedures
-	if !user.IsSuperAdmin() && !user.HasRole(models.Doctor) {
-		return c.Status(403).JSON(fiber.Map{"error": "Only doctors can add procedures"})
+	// Allow doctors, admins, secretaries, and assistants to add procedures
+	if !user.IsSuperAdmin() && !user.HasRole(models.Doctor, models.Admin, models.Secretary, models.Assistant) {
+		return c.Status(403).JSON(fiber.Map{"error": "Insufficient permissions to add procedures"})
 	}
 
 	type AddProcedureRequest struct {
@@ -246,9 +246,9 @@ func UpdateAppointmentProcedure(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
-	// Only doctors can modify procedures
-	if !user.IsSuperAdmin() && !user.HasRole(models.Doctor) {
-		return c.Status(403).JSON(fiber.Map{"error": "Only doctors can modify procedures"})
+	// Allow doctors, admins, secretaries, and assistants to modify procedures
+	if !user.IsSuperAdmin() && !user.HasRole(models.Doctor, models.Admin, models.Secretary, models.Assistant) {
+		return c.Status(403).JSON(fiber.Map{"error": "Insufficient permissions to modify procedures"})
 	}
 
 	type UpdateProcedureRequest struct {
@@ -343,9 +343,9 @@ func AddDiagnosisToAppointment(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
-	// Only doctors can add diagnoses
-	if !user.IsSuperAdmin() && !user.HasRole(models.Doctor) {
-		return c.Status(403).JSON(fiber.Map{"error": "Only doctors can add diagnoses"})
+	// Only doctors and admins can add diagnoses
+	if !user.IsSuperAdmin() && !user.HasRole(models.Doctor, models.Admin) {
+		return c.Status(403).JSON(fiber.Map{"error": "Only doctors and admins can add diagnoses"})
 	}
 
 	type AddDiagnosisRequest struct {
@@ -415,9 +415,9 @@ func UpdateAppointmentDiagnosis(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
-	// Only doctors can modify diagnoses
-	if !user.IsSuperAdmin() && !user.HasRole(models.Doctor) {
-		return c.Status(403).JSON(fiber.Map{"error": "Only doctors can modify diagnoses"})
+	// Only doctors and admins can modify diagnoses
+	if !user.IsSuperAdmin() && !user.HasRole(models.Doctor, models.Admin) {
+		return c.Status(403).JSON(fiber.Map{"error": "Only doctors and admins can modify diagnoses"})
 	}
 
 	type UpdateDiagnosisRequest struct {

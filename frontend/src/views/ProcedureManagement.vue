@@ -166,8 +166,8 @@
 
       <!-- Procedures List View -->
       <div v-else class="procedures-list bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="procedures-table">
-          <table class="w-full">
+        <div class="procedures-table overflow-x-auto">
+          <table class="w-full min-w-full">
             <thead class="bg-gray-50 border-b">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Procedure</th>
@@ -259,8 +259,8 @@
 
       <!-- Diagnoses List -->
       <div class="diagnoses-list bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="diagnoses-table">
-          <table class="w-full">
+        <div class="diagnoses-table overflow-x-auto">
+          <table class="w-full min-w-full">
             <thead class="bg-gray-50 border-b">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diagnosis</th>
@@ -349,8 +349,8 @@
 
       <!-- Treatment Plans List -->
       <div class="treatments-list bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="treatments-table">
-          <table class="w-full">
+        <div class="treatments-table overflow-x-auto">
+          <table class="w-full min-w-full">
             <thead class="bg-gray-50 border-b">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
@@ -698,22 +698,69 @@ onMounted(() => {
   @apply bg-gray-500;
 }
 
+/* Table horizontal scroll styling for mobile */
+.procedures-table,
+.diagnoses-table,
+.treatments-table {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.procedures-table::-webkit-scrollbar,
+.diagnoses-table::-webkit-scrollbar,
+.treatments-table::-webkit-scrollbar {
+  height: 6px;
+}
+
+.procedures-table::-webkit-scrollbar-track,
+.diagnoses-table::-webkit-scrollbar-track,
+.treatments-table::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 3px;
+}
+
+.procedures-table::-webkit-scrollbar-thumb,
+.diagnoses-table::-webkit-scrollbar-thumb,
+.treatments-table::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.procedures-table::-webkit-scrollbar-thumb:hover,
+.diagnoses-table::-webkit-scrollbar-thumb:hover,
+.treatments-table::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .procedures-grid {
     @apply grid-cols-1;
   }
-  
+
   .treatment-stats {
     @apply grid-cols-2;
   }
-  
+
   .search-and-filters {
     @apply flex-col items-start space-x-0 space-y-4;
   }
-  
+
   .search-box input {
     @apply w-full;
+  }
+
+  /* Improve table readability on mobile */
+  .procedures-table table th,
+  .diagnoses-table table th,
+  .treatments-table table th {
+    @apply text-xs px-4 py-2;
+  }
+
+  .procedures-table table td,
+  .diagnoses-table table td,
+  .treatments-table table td {
+    @apply text-sm px-4 py-3;
   }
 }
 
@@ -721,7 +768,7 @@ onMounted(() => {
   .treatment-stats {
     @apply grid-cols-1;
   }
-  
+
   .procedures-table,
   .diagnoses-table,
   .treatments-table {

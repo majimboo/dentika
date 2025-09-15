@@ -23,14 +23,6 @@
             <span class="hidden sm:inline">Mark all as read</span>
             <span class="sm:hidden">Mark read</span>
           </button>
-          <button
-            v-if="notifications.length > 0"
-            @click="clearAll"
-            class="px-3 py-2 md:px-4 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <span class="hidden sm:inline">Clear all</span>
-            <span class="sm:hidden">Clear</span>
-          </button>
         </div>
       </div>
     </div>
@@ -43,7 +35,7 @@
     <!-- Filter Tabs -->
     <div class="bg-white rounded-lg shadow-sm border border-neutral-200 mb-6">
       <div class="border-b border-gray-200">
-        <nav class="flex space-x-6 md:space-x-8 px-4 md:px-6 overflow-x-auto scrollbar-hide" aria-label="Tabs">
+        <nav class="flex space-x-4 md:space-x-6 lg:space-x-8 px-4 md:px-6 overflow-x-auto" aria-label="Tabs">
           <button
             v-for="tab in filterTabs"
             :key="tab.key"
@@ -197,6 +189,20 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Clear All Button (Bottom for Safety) -->
+    <div v-if="notifications.length > 0" class="mt-6 text-center">
+      <button
+        @click="clearAll"
+        class="px-6 py-3 border border-red-300 text-red-700 bg-white text-sm rounded-lg hover:bg-red-50 hover:border-red-400 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+      >
+        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Clear All Notifications
+      </button>
+      <p class="text-xs text-gray-500 mt-2">This action cannot be undone</p>
     </div>
   </div>
 </template>
@@ -463,13 +469,54 @@ const formatDateTime = (timestamp) => {
 </script>
 
 <style scoped>
-/* Hide scrollbar but keep scrolling functionality */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+/* Mobile-friendly tab scrolling */
+nav[aria-label="Tabs"] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+nav[aria-label="Tabs"]::-webkit-scrollbar {
+  height: 4px;
+}
+
+nav[aria-label="Tabs"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+nav[aria-label="Tabs"]::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 2px;
+}
+
+nav[aria-label="Tabs"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Ensure tabs are properly visible on mobile */
+@media (max-width: 768px) {
+  nav[aria-label="Tabs"] {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  nav[aria-label="Tabs"] button {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    font-size: 0.875rem;
+    min-width: fit-content;
+  }
+}
+
+@media (max-width: 640px) {
+  nav[aria-label="Tabs"] {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  nav[aria-label="Tabs"] button {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+    font-size: 0.8125rem;
+  }
 }
 </style>

@@ -107,6 +107,12 @@ export function useTimezone() {
     return date >= now && date <= tomorrow
   }
 
+  // Get current time in the configured timezone
+  const getCurrentTimeInTimezone = () => {
+    const now = new Date()
+    return new Date(now.toLocaleString('en-US', { timeZone: timezone.value }))
+  }
+
   // Get appointment urgency color based on time
   const getAppointmentUrgency = (dateTime) => {
     if (!dateTime) return 'gray'
@@ -131,6 +137,7 @@ export function useTimezone() {
     formatDate,
     formatTime,
     toLocalTime,
+    getCurrentTimeInTimezone,
     getRelativeTime,
     isToday,
     isUpcoming,

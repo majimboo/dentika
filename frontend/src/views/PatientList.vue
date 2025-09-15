@@ -241,8 +241,8 @@
 
     <!-- Patient List View -->
     <div v-else class="patients-list bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div class="patients-table">
-        <table class="w-full">
+      <div class="patients-table overflow-x-auto">
+        <table class="w-full min-w-full">
           <thead class="bg-gray-50 border-b">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
@@ -549,27 +549,60 @@ onMounted(() => {
   transition: all 0.2s ease-in-out;
 }
 
+/* Table horizontal scroll styling for mobile */
+.patients-table {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.patients-table::-webkit-scrollbar {
+  height: 6px;
+}
+
+.patients-table::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 3px;
+}
+
+.patients-table::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.patients-table::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
 @media (max-width: 768px) {
   .table-header,
   .patient-row {
     @apply grid-cols-1 gap-2;
   }
-  
+
   .table-header > div,
   .patient-row > div {
     @apply col-span-1;
   }
-  
+
   .patients-grid .grid {
     @apply gap-3;
   }
-  
+
   .patient-card .p-4 {
     @apply p-3;
   }
-  
+
   .patient-card .grid-cols-2 {
     @apply grid-cols-1;
+  }
+
+  /* Improve table readability on mobile */
+  .patients-table table th {
+    @apply text-xs px-4 py-2;
+  }
+
+  .patients-table table td {
+    @apply text-sm px-4 py-3;
   }
 }
 </style>

@@ -10,7 +10,7 @@
       <!-- Date Selector -->
       <div class="flex items-center gap-3">
         <div class="relative">
-          <input v-model="selectedDate" type="date" :min="minDate"
+          <input v-model="selectedDate" type="date"
             class="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
             @change="loadAppointments" />
         </div>
@@ -299,6 +299,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useAppointmentStore } from '../stores/appointment'
+import { useTimezone } from '../composables/useTimezone'
 import BaseTransition from '../components/BaseTransition.vue'
 import AppointmentCard from '../components/AppointmentCard.vue'
 import { formatDate } from '@/utils'
@@ -314,19 +315,19 @@ export default {
   setup() {
     const authStore = useAuthStore()
     const appointmentStore = useAppointmentStore()
+    const { getCurrentTimeInTimezone } = useTimezone()
 
     const loading = computed(() => appointmentStore.isLoading)
     const appointments = computed(() => appointmentStore.appointments)
     const getLocalDateString = () => {
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = String(today.getMonth() + 1).padStart(2, '0')
-      const day = String(today.getDate()).padStart(2, '0')
+      const todayInTimezone = getCurrentTimeInTimezone()
+      const year = todayInTimezone.getFullYear()
+      const month = String(todayInTimezone.getMonth() + 1).padStart(2, '0')
+      const day = String(todayInTimezone.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
     }
 
     const selectedDate = ref(getLocalDateString())
-    const minDate = ref(getLocalDateString())
 
     const loadAppointments = async () => {
       await appointmentStore.fetchAppointments({
@@ -464,7 +465,6 @@ export default {
       loading,
       appointments,
       selectedDate,
-      minDate,
       loadAppointments,
       refreshAgenda,
       setToday,

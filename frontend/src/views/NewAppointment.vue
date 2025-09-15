@@ -786,6 +786,7 @@ import { useAppointmentStore } from '../stores/appointment'
 import { useAuthStore } from '../stores/auth'
 import apiService from '../services/api'
 import { useNavigation } from '../composables/useNavigation'
+import { useTimezone } from '../composables/useTimezone'
 
 const route = useRoute()
 const router = useRouter()
@@ -795,6 +796,7 @@ const patientStore = usePatientStore()
 const clinicStore = useClinicStore()
 const appointmentStore = useAppointmentStore()
 const authStore = useAuthStore()
+const { getCurrentTimeInTimezone } = useTimezone()
 
 const isSubmitting = ref(false)
 const errors = ref({})
@@ -862,7 +864,11 @@ const formData = ref({
 })
 
 const minDate = computed(() => {
-  return new Date().toISOString().split('T')[0]
+  const todayInTimezone = getCurrentTimeInTimezone()
+  const year = todayInTimezone.getFullYear()
+  const month = String(todayInTimezone.getMonth() + 1).padStart(2, '0')
+  const day = String(todayInTimezone.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 })
 
 // Procedure filtering computed property

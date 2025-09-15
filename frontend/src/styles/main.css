@@ -267,3 +267,43 @@ body {
     transform: translate3d(0, -4px, 0);
   }
 }
+
+/* Mobile table scrolling utilities */
+.table-mobile-scroll {
+  @apply overflow-x-auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.table-mobile-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-mobile-scroll::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 3px;
+}
+
+.table-mobile-scroll::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.table-mobile-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+.table-mobile-scroll table {
+  @apply min-w-full;
+}
+
+/* Mobile table text sizing */
+@media (max-width: 768px) {
+  .table-mobile-scroll table th {
+    @apply text-xs px-4 py-2;
+  }
+
+  .table-mobile-scroll table td {
+    @apply text-sm px-4 py-3;
+  }
+}

@@ -101,6 +101,7 @@
                    class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white"
                    :class="{ 'border-red-500': errors.date }"
                    :readonly="isReadOnly"
+                   :min="isReadOnly ? null : minDate"
                    required
                  />
                 <span v-if="errors.date" class="text-red-500 text-sm mt-1">{{ errors.date }}</span>
@@ -850,6 +851,7 @@ import { useClinicStore } from '../stores/clinic'
 import { useAppointmentStore } from '../stores/appointment'
 import { useAuthStore } from '../stores/auth'
 import apiService from '../services/api'
+import { useTimezone } from '../composables/useTimezone'
 
 const route = useRoute()
 const router = useRouter()
@@ -858,6 +860,7 @@ const patientStore = usePatientStore()
 const clinicStore = useClinicStore()
 const appointmentStore = useAppointmentStore()
 const authStore = useAuthStore()
+const { getCurrentTimeInTimezone } = useTimezone()
 
 const isSubmitting = ref(false)
 const loading = ref(false)
@@ -928,6 +931,14 @@ const formData = ref({
   reminder_email: true,
   reminder_sms: false,
   send_confirmation: true
+})
+
+const minDate = computed(() => {
+  const todayInTimezone = getCurrentTimeInTimezone()
+  const year = todayInTimezone.getFullYear()
+  const month = String(todayInTimezone.getMonth() + 1).padStart(2, '0')
+  const day = String(todayInTimezone.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 })
 
 // Procedure filtering computed property

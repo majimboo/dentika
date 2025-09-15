@@ -1,8 +1,7 @@
 <template>
-  <!-- Notification Panel -->
-  <div class="relative notification-panel">
+  <div class="relative">
     <!-- Notification Bell Button -->
-    <button 
+    <button
       @click="togglePanel"
       class="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
       :class="{ 'bg-blue-50': isOpen }"
@@ -11,7 +10,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9zM13.73 21a2 2 0 01-3.46 0"></path>
       </svg>
       <!-- Notification Badge -->
-      <span 
+      <span
         v-if="unreadCount > 0"
         class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium"
       >
@@ -19,84 +18,87 @@
       </span>
     </button>
 
-    <!-- Notification Panel - Mobile: full-screen, Desktop: right sidebar -->
+    <!-- Mobile Backdrop -->
     <div
-      v-show="isOpen"
-      class="fixed inset-0 bg-white flex flex-col z-50 overflow-hidden transition-transform duration-300 ease-in-out
-             lg:inset-auto lg:top-0 lg:right-0 lg:bottom-0 lg:w-96 lg:shadow-xl lg:border-l lg:border-gray-200"
-      :class="isOpen ? 'translate-x-0' : 'translate-x-full'"
+      v-if="isOpen && isMobile"
+      class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+      @click="closePanel"
+    ></div>
+
+    <!-- Desktop Dropdown Panel -->
+    <div
+      v-if="isOpen && !isMobile"
+      class="absolute top-full right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 flex flex-col"
       @click.stop
     >
-
-    <!-- Overlay for sidebar -->
-    <div v-if="isOpen" @click="closePanel" class="fixed inset-0 bg-black/30 z-40 hidden lg:block"></div>
-      <!-- Panel Header - Mobile: matches nav height, Desktop: sidebar header -->
-      <div class="h-14 lg:h-16 px-4 py-0 lg:py-4 border-b border-gray-200 flex items-center justify-between bg-white">
-        <h3 class="text-lg lg:text-xl font-semibold text-gray-900">Notifications</h3>
-        <div class="flex items-center space-x-2">
+      <!-- Desktop Header -->
+      <div class="px-4 py-3 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
           <button
             v-if="hasUnread"
             @click="markAllAsRead"
-            class="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+            class="text-sm text-blue-600 hover:text-blue-800 transition-colors"
           >
             Mark all read
-          </button>
-          <button
-            @click="closePanel"
-            class="p-1 rounded-md hover:bg-gray-100 transition-colors lg:hidden"
-          >
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
           </button>
         </div>
       </div>
 
-      <!-- Notifications List -->
-      <div class="flex-1 overflow-y-auto bg-white">
-        <div v-if="notifications.length === 0" class="h-screen lg:min-h-full flex flex-col items-center justify-center p-8 lg:p-4 text-center text-gray-500 text-sm bg-white">
-          <svg class="w-16 lg:w-12 h-16 lg:h-12 mx-auto mb-4 lg:mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Desktop Notifications List -->
+      <div class="flex-1 overflow-y-auto">
+        <div v-if="notifications.length === 0" class="px-4 py-8 text-center text-gray-500">
+          <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9zM13.73 21a2 2 0 01-3.46 0"></path>
           </svg>
-          <p>No notifications yet</p>
-          <p class="text-xs mt-1">You'll see updates about appointments and patients here</p>
+          <p class="text-sm">No notifications yet</p>
+          <p class="text-xs mt-1 text-gray-400">You'll see updates here</p>
         </div>
 
-        <div v-else class="py-1">
+        <div v-else>
           <div
             v-for="notification in displayedNotifications"
             :key="notification.id"
-            class="notification-item px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer"
-            :class="{ 'bg-blue-50/50': !notification.read }"
+            class="px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer"
+            :class="{ 'bg-blue-50': !notification.read }"
             @click="handleNotificationClick(notification)"
           >
             <div class="flex items-start space-x-3">
+              <!-- Icon -->
+              <div class="flex-shrink-0 mt-0.5">
+                <div :class="getIconClass(notification)" class="w-8 h-8 rounded-full flex items-center justify-center">
+                  <component :is="getIconComponent(notification)" class="w-4 h-4" />
+                </div>
+              </div>
+
               <!-- Content -->
               <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between">
-                  <p class="text-sm font-medium text-gray-900 truncate">
-                    {{ notification.title }}
-                  </p>
-                  <div class="flex items-center space-x-2 ml-2">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">
+                      {{ notification.title }}
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1">
+                      {{ notification.message }}
+                    </p>
+                  </div>
+                  <div class="flex items-center space-x-2 ml-2 flex-shrink-0">
                     <span class="text-xs text-gray-500">
                       {{ formatTime(notification.timestamp) }}
                     </span>
                     <div
                       v-if="!notification.read"
-                      class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"
+                      class="w-2 h-2 bg-blue-500 rounded-full"
                     ></div>
                   </div>
                 </div>
-                <p class="text-sm text-gray-600 mt-1">
-                  {{ notification.message }}
-                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Panel Footer -->
+      <!-- Desktop Footer -->
       <div v-if="notifications.length > 0" class="px-4 py-3 border-t border-gray-200 bg-gray-50">
         <div class="flex items-center justify-between">
           <button
@@ -105,14 +107,124 @@
           >
             Clear all
           </button>
+          <button
+            @click="viewAllNotifications"
+            class="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            View all
+          </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Mobile Full-Screen Panel -->
+    <div
+      v-if="isOpen && isMobile"
+      class="fixed inset-0 bg-white z-50 flex flex-col h-screen lg:hidden"
+      @click.stop
+    >
+      <!-- Mobile Header -->
+      <div class="h-14 px-4 border-b border-gray-200 flex items-center justify-between bg-white flex-shrink-0">
+        <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
+        <div class="flex items-center space-x-2">
+          <button
+            v-if="hasUnread"
+            @click="markAllAsRead"
+            class="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            Mark all read
+          </button>
+          <button
+            @click="closePanel"
+            class="p-1 rounded-md hover:bg-gray-100 transition-colors"
+          >
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Notifications List -->
+      <div class="flex-1 overflow-y-auto bg-white min-h-0">
+        <div v-if="notifications.length === 0" class="flex flex-col items-center justify-center h-full p-8 text-center text-gray-500">
+          <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9zM13.73 21a2 2 0 01-3.46 0"></path>
+          </svg>
+          <p class="text-base">No notifications yet</p>
+          <p class="text-sm mt-1 text-gray-400">You'll see updates about appointments and patients here</p>
+        </div>
+
+        <div v-else class="py-1">
+          <div
+            v-for="notification in notifications"
+            :key="notification.id"
+            class="px-4 py-4 border-b border-gray-100 last:border-b-0 active:bg-gray-50 transition-colors"
+            :class="{ 'bg-blue-50': !notification.read }"
+            @click="handleNotificationClick(notification)"
+          >
+            <div class="flex items-start space-x-3">
+              <!-- Icon -->
+              <div class="flex-shrink-0 mt-1">
+                <div :class="getIconClass(notification)" class="w-10 h-10 rounded-full flex items-center justify-center">
+                  <component :is="getIconComponent(notification)" class="w-5 h-5" />
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <p class="text-base font-medium text-gray-900">
+                      {{ notification.title }}
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1 leading-5">
+                      {{ notification.message }}
+                    </p>
+                  </div>
+                  <div class="flex items-center space-x-2 ml-3 flex-shrink-0">
+                    <span class="text-xs text-gray-500">
+                      {{ formatTime(notification.timestamp) }}
+                    </span>
+                    <div
+                      v-if="!notification.read"
+                      class="w-2.5 h-2.5 bg-blue-500 rounded-full"
+                    ></div>
+                  </div>
+                </div>
+
+                <!-- Action buttons for mobile -->
+                <div v-if="notification.actions && notification.actions.length > 0" class="mt-3 flex space-x-2">
+                  <button
+                    v-for="action in notification.actions"
+                    :key="action.label"
+                    @click.stop="handleActionClick(action, notification)"
+                    class="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                  >
+                    {{ action.label }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Footer -->
+      <div v-if="notifications.length > 0" class="px-4 py-3 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+        <button
+          @click="clearAll"
+          class="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          Clear all notifications
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
 
@@ -121,6 +233,7 @@ const notificationStore = useNotificationStore()
 
 // Component state
 const isOpen = ref(false)
+const isMobile = ref(window.innerWidth < 1024)
 
 // Computed properties
 const notifications = computed(() => notificationStore.recentNotifications)
@@ -128,24 +241,23 @@ const unreadCount = computed(() => notificationStore.unreadCount)
 const hasUnread = computed(() => notificationStore.hasUnread)
 
 const displayedNotifications = computed(() => {
-  return notifications.value.slice(0, 5)
+  // Desktop shows only 5, mobile shows all
+  return isMobile.value ? notifications.value : notifications.value.slice(0, 5)
 })
 
 // Methods
 const togglePanel = () => {
   isOpen.value = !isOpen.value
-  if (window.innerWidth < 1024) { // lg breakpoint
-    if (isOpen.value) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+  if (isMobile.value && isOpen.value) {
+    document.body.style.overflow = 'hidden'
+  } else if (isMobile.value && !isOpen.value) {
+    document.body.style.overflow = ''
   }
 }
 
 const closePanel = () => {
   isOpen.value = false
-  if (window.innerWidth < 1024) {
+  if (isMobile.value) {
     document.body.style.overflow = ''
   }
 }
@@ -159,20 +271,91 @@ const clearAll = () => {
   closePanel()
 }
 
+const viewAllNotifications = () => {
+  closePanel()
+  router.push('/notifications')
+}
+
 const handleNotificationClick = (notification) => {
   if (!notification.read) {
     notificationStore.markAsRead(notification.id)
   }
+
+  // Handle notification-specific routing
+  if (notification.appointmentId) {
+    router.push(`/appointments/${notification.appointmentId}`)
+  } else if (notification.patientId) {
+    router.push(`/patients/${notification.patientId}`)
+  }
+
   closePanel()
+}
+
+const handleActionClick = (action, notification) => {
+  // Handle action-specific logic
+  switch (action.action) {
+    case 'view-appointment':
+      router.push(`/appointments/${action.appointmentId}`)
+      break
+    case 'view-patient':
+      router.push(`/patients/${action.patientId}`)
+      break
+    case 'snooze-reminder':
+      // Implementation for snoozing reminders
+      notificationStore.removeNotification(notification.id)
+      break
+  }
+  closePanel()
+}
+
+const getIconClass = (notification) => {
+  const colorClasses = {
+    success: 'bg-green-100 text-green-600',
+    error: 'bg-red-100 text-red-600',
+    warning: 'bg-yellow-100 text-yellow-600',
+    info: 'bg-blue-100 text-blue-600',
+    appointment_reminder: 'bg-blue-100 text-blue-600',
+    appointment_update: 'bg-purple-100 text-purple-600',
+    patient_update: 'bg-green-100 text-green-600'
+  }
+  return colorClasses[notification.type] || 'bg-gray-100 text-gray-600'
+}
+
+const getIconComponent = (notification) => {
+  const iconMap = {
+    'check-circle': () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' })
+    ]),
+    'x-circle': () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' })
+    ]),
+    'exclamation-triangle': () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.99-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z' })
+    ]),
+    'information-circle': () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
+    ]),
+    'clock': () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' })
+    ]),
+    'calendar': () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' })
+    ]),
+    'user': () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' })
+    ])
+  }
+
+  return iconMap[notification.icon] || iconMap['information-circle']
 }
 
 const formatTime = (timestamp) => {
   if (!timestamp) return ''
-  
+
   const now = new Date()
   const time = new Date(timestamp)
   const diff = now - time
-  
+
   if (diff < 60000) return 'Just now'
   if (diff < 3600000) {
     const minutes = Math.floor(diff / 60000)
@@ -182,8 +365,26 @@ const formatTime = (timestamp) => {
     const hours = Math.floor(diff / 3600000)
     return `${hours}h ago`
   }
-  
+
   return time.toLocaleDateString()
+}
+
+// Handle resize to update mobile state
+const handleResize = () => {
+  const wasMobile = isMobile.value
+  isMobile.value = window.innerWidth < 1024
+
+  // If switching from mobile to desktop while open, adjust body overflow
+  if (wasMobile && !isMobile.value && isOpen.value) {
+    document.body.style.overflow = ''
+  }
+}
+
+// Close on outside click (desktop only)
+const handleClickOutside = (event) => {
+  if (isOpen.value && !isMobile.value && !event.target.closest('.relative')) {
+    closePanel()
+  }
 }
 
 // Add sample notifications
@@ -193,35 +394,20 @@ onMounted(() => {
       { id: 1, patient_name: 'John Doe' },
       'scheduled'
     )
-    
+
     notificationStore.showInfo('System maintenance scheduled for tonight', {
       title: 'System Update'
     })
   }
-})
 
-// Close on outside click
-const handleClickOutside = (event) => {
-  if (isOpen.value && !event.target.closest('.notification-panel')) {
-    closePanel()
-  }
-}
-
-onMounted(() => {
+  window.addEventListener('resize', handleResize)
   document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
   document.removeEventListener('click', handleClickOutside)
   // Ensure body scrolling is restored if component unmounts while open
   document.body.style.overflow = ''
 })
 </script>
-
-<style scoped>
-@import "../styles/main.css";
-
-.notification-item {
-  transition: all 0.2s ease-in-out;
-}
-</style>

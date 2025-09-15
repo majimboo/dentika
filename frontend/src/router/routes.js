@@ -10,6 +10,7 @@ const UserEdit = () => import('../views/UserEdit.vue');
 const StaffEdit = () => import('../views/StaffEdit.vue');
 const NewStaff = () => import('../views/NewStaff.vue');
 const NewUser = () => import('../views/NewUser.vue');
+const PatientSelfSchedule = () => import('../views/PatientSelfSchedule.vue');
 
 const Agenda = () => import('../views/Agenda.vue');
 const AppointmentCalendar = () => import('../views/AppointmentCalendar.vue');
@@ -57,6 +58,12 @@ const routes = [
         name: 'Login',
         component: Login,
         meta: { hideLayout: true },
+    },
+    {
+        path: '/schedule/:clinicIdentifier',
+        name: 'PatientSelfSchedule',
+        component: PatientSelfSchedule,
+        meta: { hideLayout: true, public: true },
     },
     {
         path: '/',

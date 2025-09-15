@@ -57,6 +57,7 @@ func main() {
 		&models.Branch{},
 		&models.Patient{},
 		&models.PatientDocument{},
+		&models.PatientSelfScheduleRequest{},
 		&models.Appointment{},
 		&models.AppointmentReminder{},
 		&models.ProcedureTemplate{},
@@ -187,6 +188,12 @@ func main() {
 	api.Put("/patients/:id", handlers.UpdatePatient)
 	api.Delete("/patients/:id", handlers.DeactivatePatient)
 
+	// Patient self-scheduling routes (public routes - no auth required)
+	app.Get("/api/public/clinic/:clinicIdentifier", handlers.GetClinicInfo)
+	app.Get("/api/public/timeslots/:clinicIdentifier", handlers.GetAvailableTimeSlots)
+	app.Get("/api/public/patient/:clinicIdentifier", handlers.CheckPatientByPhone)
+	app.Post("/api/public/schedule/:clinicIdentifier", handlers.CreatePatientSelfSchedule)
+
 	// Patient diagnosis routes
 	api.Get("/patients/:patientId/diagnoses", handlers.GetPatientDiagnoses)
 	api.Get("/patients/:patientId/diagnoses/:diagnosisId", handlers.GetPatientDiagnosis)
@@ -212,6 +219,7 @@ func main() {
 	api.Put("/appointments/:id", handlers.UpdateAppointment)
 	api.Put("/appointments/:id/status", handlers.UpdateAppointmentStatus)
 	api.Post("/appointments/:id/arrived", handlers.MarkPatientArrived)
+	api.Post("/appointments/check-availability", handlers.CheckAppointmentAvailability)
 
 	// Dental records routes
 	api.Get("/patients/:patient_id/dental-records", handlers.GetPatientDentalRecords)
@@ -319,7 +327,7 @@ func main() {
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "3002"
 	}
 
 	// Start server
@@ -344,6 +352,7 @@ func createDefaultAdmin() {
 			Phone:    "+63 32 520 8888",
 			Email:    "info@dentika.com",
 			Website:  "https://dentika.com",
+			Code:     "Dentika",
 			IsActive: true,
 		}
 
@@ -1044,6 +1053,7 @@ func seedAdditionalClinics() {
 		Phone:    "+63 32 412 3456",
 		Email:    "info@smilecare.ph",
 		Website:  "https://smilecare.ph",
+		Code:     "SmileCare",
 		IsActive: true,
 	}
 
@@ -1076,6 +1086,7 @@ func seedAdditionalClinics() {
 		Phone:    "+63 32 234 5678",
 		Email:    "info@brightsmile.ph",
 		Website:  "https://brightsmile.ph",
+		Code:     "BrightSmile",
 		IsActive: true,
 	}
 

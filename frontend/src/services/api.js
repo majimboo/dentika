@@ -222,6 +222,15 @@ class ApiService {
     return this.request('get', `/api/analytics/dashboard?period=${period}`)
   }
 
+  // Public patient self-scheduling methods (no auth required)
+  async getClinicInfo(clinicIdentifier) {
+    return this.request('get', `/api/public/clinic/${clinicIdentifier}`)
+  }
+
+  async createPatientSelfSchedule(clinicIdentifier, scheduleData) {
+    return this.request('post', `/api/public/schedule/${clinicIdentifier}`, scheduleData)
+  }
+
   // Procedure and diagnosis template methods
   async getProcedureTemplates(params = {}) {
     const queryParams = new URLSearchParams(params)

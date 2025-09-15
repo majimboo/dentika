@@ -517,6 +517,77 @@ func MarkPatientArrived(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Patient marked as arrived", "is_late": appointment.IsLate})
 }
 
+func CheckAppointmentAvailability(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+
+	var req struct {
+		DoctorID  uint   `json:"doctor_id"`
+		Date      string `json:"date"`
+		Time      string `json:"time"`
+		Duration  int    `json:"duration"`
+		BranchID  uint   `json:"branch_id,omitempty"`
+		ExcludeID uint   `json:"exclude_id,omitempty"` // For editing existing appointments
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	// Validate required fields
+	if req.DoctorID == 0 || req.Date == "" || req.Time == "" || req.Duration == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "Doctor ID, date, time, and duration are required"})
+	}
+
+	// Parse date and time to create start_time in Asia/Manila timezone
+	location, err := time.LoadLocation("Asia/Manila")
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to load timezone"})
+	}
+
+	dateTimeStr := req.Date + " " + req.Time
+	startTime, err := time.ParseInLocation("2006-01-02 15:04", dateTimeStr, location)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid date or time format"})
+	}
+
+	endTime := startTime.Add(time.Duration(req.Duration) * time.Minute)
+
+	// Check for conflicting appointments
+	query := database.DB.Where("doctor_id = ? AND status IN (?, ?) AND ((start_time <= ? AND end_time > ?) OR (start_time < ? AND end_time >= ?))",
+		req.DoctorID, models.StatusScheduled, models.StatusConfirmed,
+		startTime, startTime, endTime, endTime)
+
+	// Exclude the appointment being edited (if editing)
+	if req.ExcludeID > 0 {
+		query = query.Where("id != ?", req.ExcludeID)
+	}
+
+	// Filter by clinic access if not super admin
+	if !user.IsSuperAdmin() {
+		query = query.Joins("JOIN branches ON appointments.branch_id = branches.id").
+			Where("branches.clinic_id = ?", user.ClinicID)
+	}
+
+	var conflictingAppointments []models.Appointment
+	if err := query.Preload("Patient").Find(&conflictingAppointments).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to check for conflicts"})
+	}
+
+	// Return availability status
+	if len(conflictingAppointments) > 0 {
+		return c.JSON(fiber.Map{
+			"available": false,
+			"conflicts": conflictingAppointments,
+			"message":   "Doctor has conflicting appointment(s) at this time",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"available": true,
+		"message":   "Time slot is available",
+	})
+}
+
 func GetUpcomingAppointments(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.User)
 

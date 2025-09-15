@@ -116,3 +116,69 @@ func GenerateUniquePatientNumber(clinicID uint, db *gorm.DB) (string, error) {
 	nextNumber := count + 1
 	return fmt.Sprintf("%d%04d", now.Year(), nextNumber), nil
 }
+
+// PatientSelfScheduleRequest represents a patient's request for self-scheduling an appointment
+type PatientSelfScheduleRequest struct {
+	ID        uint   `json:"id" gorm:"primarykey"`
+	FirstName string `json:"first_name" gorm:"size:100;not null"`
+	LastName  string `json:"last_name" gorm:"size:100;not null"`
+	Email     string `json:"email" gorm:"size:100;not null"`
+	Phone     string `json:"phone" gorm:"size:50;not null"`
+
+	// Appointment preferences
+	PreferredDate   *time.Time `json:"preferred_date"`
+	PreferredTime   string     `json:"preferred_time" gorm:"size:10"` // HH:MM format
+	Symptoms        string     `json:"symptoms" gorm:"type:text"`     // What's bothering them
+	AdditionalNotes string     `json:"additional_notes" gorm:"type:text"`
+
+	// Clinic/Branch information
+	ClinicID uint   `json:"clinic_id" gorm:"not null;index"`
+	Clinic   Clinic `json:"clinic" gorm:"foreignKey:ClinicID"`
+	BranchID *uint  `json:"branch_id" gorm:"index"`
+	Branch   Branch `json:"branch,omitempty" gorm:"foreignKey:BranchID"`
+
+	// Status tracking
+	Status       PatientSelfScheduleStatus `json:"status" gorm:"default:'pending'"`
+	ReviewedByID *uint                     `json:"reviewed_by_id"`
+	ReviewedBy   User                      `json:"reviewed_by,omitempty" gorm:"foreignKey:ReviewedByID"`
+	ReviewNotes  string                    `json:"review_notes" gorm:"type:text"`
+	ReviewedAt   *time.Time                `json:"reviewed_at"`
+
+	// Conversion tracking (when converted to actual appointment)
+	ConvertedToAppointmentID *uint       `json:"converted_to_appointment_id"`
+	ConvertedToAppointment   Appointment `json:"converted_to_appointment,omitempty" gorm:"foreignKey:ConvertedToAppointmentID"`
+
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+type PatientSelfScheduleStatus string
+
+const (
+	PatientScheduleStatusPending   PatientSelfScheduleStatus = "pending"
+	PatientScheduleStatusReviewed  PatientSelfScheduleStatus = "reviewed"
+	PatientScheduleStatusApproved  PatientSelfScheduleStatus = "approved"
+	PatientScheduleStatusRejected  PatientSelfScheduleStatus = "rejected"
+	PatientScheduleStatusConverted PatientSelfScheduleStatus = "converted"
+)
+
+func (p *PatientSelfScheduleRequest) GetFullName() string {
+	return p.FirstName + " " + p.LastName
+}
+
+func (p *PatientSelfScheduleRequest) GetPreferredDateTime() *time.Time {
+	if p.PreferredDate == nil {
+		return nil
+	}
+
+	// Parse preferred time if available
+	if p.PreferredTime != "" {
+		dateTimeStr := p.PreferredDate.Format("2006-01-02") + " " + p.PreferredTime
+		if parsedTime, err := time.Parse("2006-01-02 15:04", dateTimeStr); err == nil {
+			return &parsedTime
+		}
+	}
+
+	return p.PreferredDate
+}

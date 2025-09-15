@@ -48,18 +48,33 @@
               dayIndex < weekDays.length - 1 ? 'border-r' : ''
             ]"
           >
-           <!-- Time Slots -->
-           <div class="time-slots">
-             <div
-               v-for="hour in hours"
-               :key="hour"
-               class="time-slot h-16 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors"
-               @click="selectTimeSlot(day.date, hour)"
-             >
-               <!-- 30-minute marker -->
-               <div class="absolute top-1/2 left-0 right-0 h-px bg-gray-50"></div>
-             </div>
-           </div>
+            <!-- Time Slots -->
+            <div class="time-slots">
+              <div
+                v-for="hour in hours"
+                :key="hour"
+                :class="[
+                  'time-slot h-16 border-b border-gray-100 transition-colors relative',
+                  isTimeSlotAvailable(day.date, hour)
+                    ? 'cursor-pointer hover:bg-blue-50'
+                    : 'cursor-not-allowed bg-red-50 opacity-60'
+                ]"
+                @click="isTimeSlotAvailable(day.date, hour) ? selectTimeSlot(day.date, hour) : null"
+              >
+                <!-- 30-minute marker -->
+                <div class="absolute top-1/2 left-0 right-0 h-px bg-gray-50"></div>
+
+                <!-- Unavailable indicator -->
+                <div
+                  v-if="!isTimeSlotAvailable(day.date, hour)"
+                  class="absolute inset-0 flex items-center justify-center"
+                >
+                  <div class="text-red-400 text-xs font-medium">
+                    Busy
+                  </div>
+                </div>
+              </div>
+            </div>
 
            <!-- Appointments for this day -->
            <div class="appointments-layer absolute inset-0 pointer-events-none">
@@ -251,6 +266,24 @@ const getDayAppointments = (date) => {
     const aptDateInTimezone = new Date(aptDate.toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
     const aptDayStr = aptDateInTimezone.toISOString().split('T')[0]
     return aptDayStr === dayStr
+  })
+}
+
+const isTimeSlotAvailable = (date, hour) => {
+  const slotStart = new Date(date)
+  slotStart.setHours(hour, 0, 0, 0)
+  const slotEnd = new Date(slotStart)
+  slotEnd.setHours(hour + 1, 0, 0, 0)
+
+  const dayAppointments = getDayAppointments(date)
+
+  // Check if this time slot conflicts with any existing appointments
+  return !dayAppointments.some(appointment => {
+    const aptStart = new Date(appointment.start_time)
+    const aptEnd = new Date(appointment.end_time)
+
+    // Check for overlap: slot starts before appointment ends AND slot ends after appointment starts
+    return slotStart < aptEnd && slotEnd > aptStart
   })
 }
 

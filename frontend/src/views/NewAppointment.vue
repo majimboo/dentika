@@ -1195,16 +1195,35 @@ const getSelectedBranchId = () => {
 }
 
 const checkForConflicts = async () => {
-  if (!formData.value.doctor_id || !formData.value.date || !formData.value.time) {
+  if (!formData.value.doctor_id || !formData.value.date || !formData.value.time || !formData.value.duration) {
+    hasConflicts.value = false
     return
   }
 
   try {
-    // This would check for scheduling conflicts
-    // For now, just simulate no conflicts
-    hasConflicts.value = false
+    const branchId = getSelectedBranchId()
+    const availabilityData = {
+      doctor_id: parseInt(formData.value.doctor_id),
+      date: formData.value.date,
+      time: formData.value.time,
+      duration: parseInt(formData.value.duration),
+      branch_id: branchId > 0 ? branchId : undefined
+    }
+
+    const result = await apiService.post('/api/appointments/check-availability', availabilityData)
+
+    if (result.success) {
+      hasConflicts.value = !result.data.available
+      if (!result.data.available) {
+        console.log('Conflicts found:', result.data.conflicts)
+      }
+    } else {
+      console.error('Failed to check availability:', result.error)
+      hasConflicts.value = false
+    }
   } catch (error) {
     console.error('Error checking conflicts:', error)
+    hasConflicts.value = false
   }
 }
 

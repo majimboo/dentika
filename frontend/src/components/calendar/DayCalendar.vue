@@ -29,18 +29,33 @@
 
          <!-- Appointment Slots -->
          <div class="appointment-slots flex-1 relative">
-           <!-- Time Slot Grid -->
-           <div class="time-slot-grid">
-             <div
-               v-for="hour in hours"
-               :key="hour"
-               class="hour-slot h-16 border-b border-gray-100 relative cursor-pointer hover:bg-blue-50 transition-colors"
-               @click="selectTimeSlot(hour)"
-             >
-               <!-- 30-minute markers -->
-               <div class="absolute top-1/2 left-0 right-0 h-px bg-gray-100"></div>
-             </div>
-           </div>
+            <!-- Time Slot Grid -->
+            <div class="time-slot-grid">
+              <div
+                v-for="hour in hours"
+                :key="hour"
+                :class="[
+                  'hour-slot h-16 border-b border-gray-100 relative transition-colors',
+                  isTimeSlotAvailable(hour)
+                    ? 'cursor-pointer hover:bg-blue-50'
+                    : 'cursor-not-allowed bg-red-50 opacity-60'
+                ]"
+                @click="isTimeSlotAvailable(hour) ? selectTimeSlot(hour) : null"
+              >
+                <!-- 30-minute markers -->
+                <div class="absolute top-1/2 left-0 right-0 h-px bg-gray-100"></div>
+
+                <!-- Unavailable indicator -->
+                <div
+                  v-if="!isTimeSlotAvailable(hour)"
+                  class="absolute inset-0 flex items-center justify-center"
+                >
+                  <div class="text-red-400 text-xs font-medium">
+                    Unavailable
+                  </div>
+                </div>
+              </div>
+            </div>
 
            <!-- Appointments -->
            <div class="appointments-layer absolute inset-0">
@@ -149,6 +164,22 @@ const dayAppointments = computed(() => {
     return aptDayStr === dayStr
   })
 })
+
+const isTimeSlotAvailable = (hour) => {
+  const slotStart = new Date(props.currentDate)
+  slotStart.setHours(hour, 0, 0, 0)
+  const slotEnd = new Date(slotStart)
+  slotEnd.setHours(hour + 1, 0, 0, 0)
+
+  // Check if this time slot conflicts with any existing appointments
+  return !dayAppointments.value.some(appointment => {
+    const aptStart = new Date(appointment.start_time)
+    const aptEnd = new Date(appointment.end_time)
+
+    // Check for overlap: slot starts before appointment ends AND slot ends after appointment starts
+    return slotStart < aptEnd && slotEnd > aptStart
+  })
+}
 
   const currentTimeStyle = computed(() => {
    if (!isToday.value) return {}

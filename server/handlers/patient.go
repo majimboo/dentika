@@ -367,6 +367,48 @@ func DeactivatePatient(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Patient deactivated successfully"})
 }
 
+// CheckPatientByPhone checks if a patient exists by phone number for self-scheduling
+func CheckPatientByPhone(c *fiber.Ctx) error {
+	clinicIdentifier := c.Params("clinicIdentifier")
+	phone := c.Query("phone")
+
+	if phone == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Phone number is required"})
+	}
+
+	// Get clinic
+	var clinic models.Clinic
+	if id, err := strconv.ParseUint(clinicIdentifier, 10, 32); err == nil {
+		if err := database.DB.First(&clinic, id).Error; err != nil {
+			return c.Status(404).JSON(fiber.Map{"error": "Clinic not found"})
+		}
+	} else {
+		if err := database.DB.Where("code = ? OR name = ?", clinicIdentifier, clinicIdentifier).First(&clinic).Error; err != nil {
+			return c.Status(404).JSON(fiber.Map{"error": "Clinic not found"})
+		}
+	}
+
+	// Look for patient by phone number in this clinic
+	var patient models.Patient
+	if err := database.DB.Where("phone = ? AND clinic_id = ? AND is_active = ?", phone, clinic.ID, true).First(&patient).Error; err != nil {
+		// Patient not found
+		return c.JSON(fiber.Map{
+			"found": false,
+		})
+	}
+
+	// Patient found
+	return c.JSON(fiber.Map{
+		"found": true,
+		"patient": fiber.Map{
+			"first_name": patient.FirstName,
+			"last_name":  patient.LastName,
+			"email":      patient.Email,
+			"phone":      patient.Phone,
+		},
+	})
+}
+
 func createInitialDentalRecords(patientID uint, clinicID uint) {
 	// Create permanent teeth record
 	permanentRecord := models.DentalRecord{

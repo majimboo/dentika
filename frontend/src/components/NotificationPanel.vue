@@ -18,12 +18,6 @@
       </span>
     </button>
 
-    <!-- Mobile Backdrop -->
-    <div
-      v-if="isOpen && isMobile"
-      class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-      @click="closePanel"
-    ></div>
 
     <!-- Desktop Dropdown Panel -->
     <div
@@ -117,109 +111,6 @@
       </div>
     </div>
 
-    <!-- Mobile Full-Screen Panel -->
-    <div
-      v-if="isOpen && isMobile"
-      class="fixed inset-0 bg-white z-50 flex flex-col h-screen lg:hidden"
-      @click.stop
-    >
-      <!-- Mobile Header -->
-      <div class="h-14 px-4 border-b border-gray-200 flex items-center justify-between bg-white flex-shrink-0">
-        <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
-        <div class="flex items-center space-x-2">
-          <button
-            v-if="hasUnread"
-            @click="markAllAsRead"
-            class="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            Mark all read
-          </button>
-          <button
-            @click="closePanel"
-            class="p-1 rounded-md hover:bg-gray-100 transition-colors"
-          >
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Mobile Notifications List -->
-      <div class="flex-1 overflow-y-auto bg-white min-h-0">
-        <div v-if="notifications.length === 0" class="flex flex-col items-center justify-center h-full p-8 text-center text-gray-500">
-          <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9zM13.73 21a2 2 0 01-3.46 0"></path>
-          </svg>
-          <p class="text-base">No notifications yet</p>
-          <p class="text-sm mt-1 text-gray-400">You'll see updates about appointments and patients here</p>
-        </div>
-
-        <div v-else class="py-1">
-          <div
-            v-for="notification in notifications"
-            :key="notification.id"
-            class="px-4 py-4 border-b border-gray-100 last:border-b-0 active:bg-gray-50 transition-colors"
-            :class="{ 'bg-blue-50': !notification.read }"
-            @click="handleNotificationClick(notification)"
-          >
-            <div class="flex items-start space-x-3">
-              <!-- Icon -->
-              <div class="flex-shrink-0 mt-1">
-                <div :class="getIconClass(notification)" class="w-10 h-10 rounded-full flex items-center justify-center">
-                  <component :is="getIconComponent(notification)" class="w-5 h-5" />
-                </div>
-              </div>
-
-              <!-- Content -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between">
-                  <div class="flex-1">
-                    <p class="text-base font-medium text-gray-900">
-                      {{ notification.title }}
-                    </p>
-                    <p class="text-sm text-gray-600 mt-1 leading-5">
-                      {{ notification.message }}
-                    </p>
-                  </div>
-                  <div class="flex items-center space-x-2 ml-3 flex-shrink-0">
-                    <span class="text-xs text-gray-500">
-                      {{ formatTime(notification.timestamp) }}
-                    </span>
-                    <div
-                      v-if="!notification.read"
-                      class="w-2.5 h-2.5 bg-blue-500 rounded-full"
-                    ></div>
-                  </div>
-                </div>
-
-                <!-- Action buttons for mobile -->
-                <div v-if="notification.actions && notification.actions.length > 0" class="mt-3 flex space-x-2">
-                  <button
-                    v-for="action in notification.actions"
-                    :key="action.label"
-                    @click.stop="handleActionClick(action, notification)"
-                    class="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
-                  >
-                    {{ action.label }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mobile Footer -->
-      <div v-if="notifications.length > 0" class="px-4 py-3 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-        <button
-          @click="clearAll"
-          class="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          Clear all notifications
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -241,25 +132,24 @@ const unreadCount = computed(() => notificationStore.unreadCount)
 const hasUnread = computed(() => notificationStore.hasUnread)
 
 const displayedNotifications = computed(() => {
-  // Desktop shows only 5, mobile shows all
-  return isMobile.value ? notifications.value : notifications.value.slice(0, 5)
+  // Desktop dropdown shows only 5 most recent
+  return notifications.value.slice(0, 5)
 })
 
 // Methods
 const togglePanel = () => {
-  isOpen.value = !isOpen.value
-  if (isMobile.value && isOpen.value) {
-    document.body.style.overflow = 'hidden'
-  } else if (isMobile.value && !isOpen.value) {
-    document.body.style.overflow = ''
+  if (isMobile.value) {
+    // On mobile, navigate directly to notifications page
+    router.push('/notifications')
+    return
   }
+
+  // On desktop, toggle the dropdown panel
+  isOpen.value = !isOpen.value
 }
 
 const closePanel = () => {
   isOpen.value = false
-  if (isMobile.value) {
-    document.body.style.overflow = ''
-  }
 }
 
 const markAllAsRead = () => {
@@ -371,13 +261,7 @@ const formatTime = (timestamp) => {
 
 // Handle resize to update mobile state
 const handleResize = () => {
-  const wasMobile = isMobile.value
   isMobile.value = window.innerWidth < 1024
-
-  // If switching from mobile to desktop while open, adjust body overflow
-  if (wasMobile && !isMobile.value && isOpen.value) {
-    document.body.style.overflow = ''
-  }
 }
 
 // Close on outside click (desktop only)
@@ -407,7 +291,5 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   document.removeEventListener('click', handleClickOutside)
-  // Ensure body scrolling is restored if component unmounts while open
-  document.body.style.overflow = ''
 })
 </script>

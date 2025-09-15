@@ -35,6 +35,8 @@ const PeerReviewList = () => import('../views/PeerReviewList.vue');
 const PeerReviewCase = () => import('../views/PeerReviewCase.vue');
 const PeerReviewCreate = () => import('../views/PeerReviewCreate.vue');
 
+const Notifications = () => import('../views/Notifications.vue');
+
 const InventoryList = () => import('../views/InventoryList.vue');
 const InventoryForm = () => import('../views/InventoryForm.vue');
 const InventoryView = () => import('../views/InventoryView.vue');
@@ -133,6 +135,12 @@ const routes = [
                 name: 'PeerReviewList',
                 component: PeerReviewList,
                 meta: { level: 1, title: 'Peer Review', parent: 'Dashboard' },
+            },
+            {
+                path: '/notifications',
+                name: 'Notifications',
+                component: Notifications,
+                meta: { level: 1, title: 'Notifications', parent: 'Dashboard' },
             },
             {
                 path: '/peer-review/create',

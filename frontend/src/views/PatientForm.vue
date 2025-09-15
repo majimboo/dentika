@@ -922,37 +922,86 @@ const handleAvatarUpdated = (avatarPath) => {
   form.avatar_path = avatarPath || ''
 }
 
-const validatePatientForm = () => {
-  const validationRules = {
-    first_name: [value => validateRequired(value, 'First name')],
-    last_name: [value => validateRequired(value, 'Last name')],
-    date_of_birth: [value => validateRequired(value, 'Date of birth')],
-    gender: [value => validateRequired(value, 'Gender')],
-    phone: [value => validateRequired(value, 'Phone number'), value => validatePhone(value)],
-    email: [value => value ? validateEmail(value) : null]
-  }
+const cleanPhoneNumbers = () => {
+   // Remove spaces and auto-prepend country code for Philippine phone numbers
+   if (form.phone) {
+     form.phone = normalizePhoneNumber(form.phone.replace(/\s+/g, ''))
+   }
+   if (form.emergency_contact_phone) {
+     form.emergency_contact_phone = normalizePhoneNumber(form.emergency_contact_phone.replace(/\s+/g, ''))
+   }
+}
 
-  const result = validateForm(form, validationRules)
-  errors.value = result.errors
-  return result.isValid
+const normalizePhoneNumber = (phone) => {
+   if (!phone) return phone
+
+   // Normalize Philippine phone numbers to +63xxxxxxxxxx format
+   // Examples:
+   // 09171234567 -> +639171234567
+   // 639171234567 -> +639171234567
+   // +639171234567 -> +639171234567 (unchanged)
+
+   // If already starts with +63, return as is
+   if (phone.startsWith('+63')) {
+     return phone
+   }
+
+   // If starts with 63 but no +, add the +
+   if (phone.startsWith('63')) {
+     return '+' + phone
+   }
+
+   // If starts with 09 (local mobile format), replace with +63
+   if (phone.startsWith('09')) {
+     return '+63' + phone.substring(1)
+   }
+
+   // If starts with 9 (just the mobile number), add +63
+   if (phone.startsWith('9') && phone.length === 10) {
+     return '+63' + phone
+   }
+
+   // Return as is for other formats (international numbers, etc.)
+   return phone
+}
+
+const validatePatientForm = () => {
+   // Clean phone numbers before validation
+   cleanPhoneNumbers()
+
+   const validationRules = {
+     first_name: [value => validateRequired(value, 'First name')],
+     last_name: [value => validateRequired(value, 'Last name')],
+     date_of_birth: [value => validateRequired(value, 'Date of birth')],
+     gender: [value => validateRequired(value, 'Gender')],
+     phone: [value => validateRequired(value, 'Phone number'), value => validatePhone(value)],
+     email: [value => value ? validateEmail(value) : null]
+   }
+
+   const result = validateForm(form, validationRules)
+   errors.value = result.errors
+   return result.isValid
 }
 
 const handleSubmit = async () => {
-  if (!validatePatientForm()) {
-    submitError.value = 'Please fix the form errors before submitting'
-    return
-  }
+   if (!validatePatientForm()) {
+     submitError.value = 'Please fix the form errors before submitting'
+     return
+   }
 
-  try {
-    loading.value = true
-    submitError.value = ''
-    submitSuccess.value = false
+   try {
+     loading.value = true
+     submitError.value = ''
+     submitSuccess.value = false
 
-    // Convert allergies array to string for backend
-    const submitData = {
-      ...form,
-      allergies: form.allergies.join(', ')
-    }
+     // Clean phone numbers again before submission (double check)
+     cleanPhoneNumbers()
+
+     // Convert allergies array to string for backend
+     const submitData = {
+       ...form,
+       allergies: form.allergies.join(', ')
+     }
 
     // Format date_of_birth to RFC3339 format for Go backend
     if (submitData.date_of_birth) {

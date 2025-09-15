@@ -16,9 +16,19 @@ export const validateEmail = (email) => {
 
 export const validatePhone = (phone) => {
   if (!phone) return null
-  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/
-  if (!phoneRegex.test(phone)) {
-    return 'Please enter a valid phone number'
+
+  // Remove spaces for validation
+  const cleanPhone = phone.replace(/\s+/g, '')
+
+  // Philippine phone number patterns:
+  // +639xxxxxxxxx (13 digits with +)
+  // 639xxxxxxxxx (12 digits)
+  // 09xxxxxxxxx (11 digits, local format)
+  // 9xxxxxxxxx (10 digits, mobile only)
+  const phoneRegex = /^(\+63[9]\d{9}|63[9]\d{9}|09[9]\d{8}|[9]\d{9})$/
+
+  if (!phoneRegex.test(cleanPhone)) {
+    return 'Please enter a valid Philippine phone number'
   }
   return null
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"dentika/server/database"
@@ -9,6 +10,43 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 )
+
+// cleanPhoneNumber removes spaces and normalizes Philippine phone numbers
+// Examples:
+// "09171234567" -> "+639171234567"
+// "639171234567" -> "+639171234567"
+// "+639171234567" -> "+639171234567" (unchanged)
+func cleanPhoneNumber(phone string) string {
+	if phone == "" {
+		return phone
+	}
+
+	// Remove spaces first
+	phone = strings.ReplaceAll(phone, " ", "")
+
+	// If already starts with +63, return as is
+	if strings.HasPrefix(phone, "+63") {
+		return phone
+	}
+
+	// If starts with 63 but no +, add the +
+	if strings.HasPrefix(phone, "63") {
+		return "+" + phone
+	}
+
+	// If starts with 09 (local mobile format), replace with +63
+	if strings.HasPrefix(phone, "09") {
+		return "+63" + phone[1:]
+	}
+
+	// If starts with 9 (just the mobile number), add +63
+	if strings.HasPrefix(phone, "9") && len(phone) == 10 {
+		return "+63" + phone
+	}
+
+	// Return as is for other formats (international numbers, etc.)
+	return phone
+}
 
 type CreatePatientRequest struct {
 	FirstName                string     `json:"first_name"`
@@ -201,12 +239,12 @@ func CreatePatient(c *fiber.Ctx) error {
 		FirstName:                req.FirstName,
 		LastName:                 req.LastName,
 		Email:                    req.Email,
-		Phone:                    req.Phone,
+		Phone:                    cleanPhoneNumber(req.Phone),
 		DateOfBirth:              req.DateOfBirth,
 		Gender:                   req.Gender,
 		Address:                  req.Address,
 		EmergencyContactName:     req.EmergencyContactName,
-		EmergencyContactPhone:    req.EmergencyContactPhone,
+		EmergencyContactPhone:    cleanPhoneNumber(req.EmergencyContactPhone),
 		EmergencyContactRelation: req.EmergencyContactRelation,
 		Allergies:                req.Allergies,
 		MedicalConditions:        req.MedicalConditions,
@@ -280,7 +318,7 @@ func UpdatePatient(c *fiber.Ctx) error {
 		patient.Email = req.Email
 	}
 	if req.Phone != "" {
-		patient.Phone = req.Phone
+		patient.Phone = cleanPhoneNumber(req.Phone)
 	}
 	if req.DateOfBirth != nil {
 		patient.DateOfBirth = req.DateOfBirth
@@ -295,7 +333,7 @@ func UpdatePatient(c *fiber.Ctx) error {
 		patient.EmergencyContactName = req.EmergencyContactName
 	}
 	if req.EmergencyContactPhone != "" {
-		patient.EmergencyContactPhone = req.EmergencyContactPhone
+		patient.EmergencyContactPhone = cleanPhoneNumber(req.EmergencyContactPhone)
 	}
 	if req.EmergencyContactRelation != "" {
 		patient.EmergencyContactRelation = req.EmergencyContactRelation

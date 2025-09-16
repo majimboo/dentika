@@ -48,125 +48,267 @@
         </div>
 
         <!-- Patient Details Display (View Mode) -->
-        <div v-if="isViewMode" class="space-y-8">
-          <!-- Patient Avatar and Basic Info -->
-          <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
-            <div class="flex-shrink-0">
-              <div class="relative">
-                <img
-                  v-if="form.avatar_path"
-                  :src="`/uploads/${form.avatar_path}`"
-                  :alt="`${form.first_name} ${form.last_name}`"
-                  class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                />
-                <div
-                  v-else
-                  class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center border-4 border-white shadow-lg"
+        <div v-if="isViewMode" class="space-y-6">
+          <!-- CRITICAL MEDICAL ALERTS - Always Visible -->
+          <div v-if="hasCriticalAlerts" class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+              </div>
+              <div class="ml-3 flex-1">
+                <h3 class="text-sm font-bold text-red-800 uppercase tracking-wide">⚠️ MEDICAL ALERTS</h3>
+                <div class="mt-2 space-y-1">
+                  <div v-if="form.allergies && form.allergies.length > 0" class="flex flex-wrap gap-1">
+                    <span class="text-xs font-semibold text-red-700">ALLERGIES:</span>
+                    <span
+                      v-for="allergy in form.allergies"
+                      :key="allergy"
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-200 text-red-900 border border-red-300"
+                    >
+                      {{ allergy }}
+                    </span>
+                  </div>
+                  <div v-if="hasCriticalMedicalConditions" class="text-xs text-red-700">
+                    <span class="font-semibold">CONDITIONS:</span> {{ criticalMedicalConditions }}
+                  </div>
+                  <div v-if="hasCriticalMedications" class="text-xs text-red-700">
+                    <span class="font-semibold">MEDICATIONS:</span> {{ criticalMedications }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PATIENT IDENTITY & VISIT CONTEXT -->
+          <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+              <div class="flex items-center space-x-4">
+                <div class="flex-shrink-0">
+                  <img
+                    v-if="form.avatar_path"
+                    :src="`/uploads/${form.avatar_path}`"
+                    :alt="`${form.first_name} ${form.last_name}`"
+                    class="w-16 h-16 rounded-full object-cover border-3 border-white shadow-md"
+                  />
+                  <div
+                    v-else
+                    class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center border-3 border-white shadow-md"
+                  >
+                    <span class="text-lg font-bold text-white">
+                      {{ (form.first_name || '').charAt(0) }}{{ (form.last_name || '').charAt(0) }}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <h1 class="text-xl font-bold text-gray-900">
+                    {{ form.first_name }} {{ form.last_name }}
+                  </h1>
+                  <div class="flex items-center space-x-3 text-sm text-gray-600">
+                    <span>ID: {{ patientStore.currentPatient?.patient_number || 'N/A' }}</span>
+                    <span>•</span>
+                    <span>{{ calculateAge(form.date_of_birth) }} years old</span>
+                    <span>•</span>
+                    <span class="capitalize">{{ form.gender || 'Not specified' }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="showVisitHistory = !showVisitHistory"
+                  class="inline-flex items-center px-3 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 >
-                  <span class="text-2xl font-bold text-white">
-                    {{ (form.first_name || '').charAt(0) }}{{ (form.last_name || '').charAt(0) }}
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Visit History
+                </button>
+                <router-link
+                  :to="`/patients/${route.params.id}/dental-chart`"
+                  class="inline-flex items-center px-3 py-2 border border-green-300 rounded-lg text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  Dental Chart
+                </router-link>
+              </div>
+            </div>
+          </div>
+
+          <!-- VISIT HISTORY NAVIGATION -->
+          <div v-if="showVisitHistory" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Visit History
+                </h3>
+                <div class="flex items-center space-x-2">
+                  <button
+                    @click="previousVisit"
+                    :disabled="currentVisitIndex <= 0"
+                    class="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                  </button>
+                  <span class="text-sm text-gray-600">
+                    {{ currentVisitIndex + 1 }} of {{ visitHistory.length || 1 }}
+                  </span>
+                  <button
+                    @click="nextVisit"
+                    :disabled="currentVisitIndex >= (visitHistory.length - 1)"
+                    class="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="p-4">
+              <div v-if="currentVisit" class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-semibold text-gray-900">{{ formatDate(currentVisit.start_time) }}</h4>
+                    <p class="text-sm text-gray-600">Dr. {{ currentVisit.doctor?.first_name }} {{ currentVisit.doctor?.last_name }}</p>
+                  </div>
+                  <span :class="getAppointmentStatusClass(currentVisit.status)" class="px-2 py-1 rounded-full text-xs font-medium">
+                    {{ currentVisit.status }}
                   </span>
                 </div>
-              </div>
-            </div>
-            <div class="flex-1 text-center sm:text-left">
-              <h2 class="text-2xl font-bold text-gray-900 mb-1">
-                {{ form.first_name }} {{ form.last_name }}
-              </h2>
-              <div class="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-600 mb-3">
-                <span class="inline-flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                  </svg>
-                  ID: {{ patientStore.currentPatient?.patient_number || 'N/A' }}
-                </span>
-                <span class="hidden sm:inline text-gray-400">•</span>
-                <span class="inline-flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                  </svg>
-                  Age: {{ calculateAge(form.date_of_birth) }} years
-                </span>
-                <span class="hidden sm:inline text-gray-400">•</span>
-                <span class="inline-flex items-center capitalize">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                  </svg>
-                  {{ form.gender || 'Not specified' }}
-                </span>
-              </div>
-              <p class="text-sm text-gray-600">
-                Born: {{ formatDate(form.date_of_birth, { dateStyle: 'long' }) || 'Date not provided' }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Contact Information -->
-          <div class="space-y-6">
-            <h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-              </svg>
-              Contact Information
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-4">
-                <div v-if="form.phone" class="flex items-start space-x-3">
-                  <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                  </svg>
-                  <div>
-                    <p class="text-sm font-medium text-gray-700">Phone Number</p>
-                    <p class="text-sm text-gray-900">{{ formatPhoneNumber(form.phone) }}</p>
+                <div v-if="currentVisit.title || currentVisit.description" class="bg-blue-50 p-3 rounded-lg">
+                  <h5 class="font-medium text-blue-900" v-if="currentVisit.title">{{ currentVisit.title }}</h5>
+                  <p class="text-sm text-blue-800" v-if="currentVisit.description">{{ currentVisit.description }}</p>
+                </div>
+                <div v-if="currentVisit.procedures && currentVisit.procedures.length > 0" class="space-y-2">
+                  <h5 class="font-medium text-gray-900">Procedures Performed:</h5>
+                  <div class="space-y-1">
+                    <div v-for="procedure in currentVisit.procedures" :key="procedure.id" class="text-sm bg-green-50 p-2 rounded border-l-4 border-green-400">
+                      <div class="flex justify-between items-start">
+                        <div>
+                          <span class="font-medium text-green-900">{{ procedure.procedure_template?.name }}</span>
+                          <span v-if="procedure.tooth_number" class="text-green-700 ml-2">(Tooth {{ procedure.tooth_number }})</span>
+                        </div>
+                        <span class="text-green-600 font-medium">${{ procedure.cost }}</span>
+                      </div>
+                      <p v-if="procedure.notes" class="text-green-800 text-xs mt-1">{{ procedure.notes }}</p>
+                    </div>
                   </div>
                 </div>
-                <div v-if="form.email" class="flex items-start space-x-3">
-                  <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
-                  </svg>
-                  <div>
-                    <p class="text-sm font-medium text-gray-700">Email Address</p>
-                    <p class="text-sm text-gray-900">{{ form.email }}</p>
+                <div v-if="currentVisit.diagnoses && currentVisit.diagnoses.length > 0" class="space-y-2">
+                  <h5 class="font-medium text-gray-900">Diagnoses:</h5>
+                  <div class="space-y-1">
+                    <div v-for="diagnosis in currentVisit.diagnoses" :key="diagnosis.id" class="text-sm bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
+                      <div class="flex justify-between items-start">
+                        <div>
+                          <span class="font-medium text-yellow-900">{{ diagnosis.diagnosis_template?.name }}</span>
+                          <span v-if="diagnosis.tooth_number" class="text-yellow-700 ml-2">(Tooth {{ diagnosis.tooth_number }})</span>
+                        </div>
+                        <span class="text-xs text-yellow-600">{{ diagnosis.severity }}</span>
+                      </div>
+                      <p v-if="diagnosis.notes" class="text-yellow-800 text-xs mt-1">{{ diagnosis.notes }}</p>
+                    </div>
                   </div>
+                </div>
+                <div v-if="currentVisit.post_appointment_notes" class="bg-gray-50 p-3 rounded-lg">
+                  <h5 class="font-medium text-gray-900 mb-1">Post-Visit Notes:</h5>
+                  <p class="text-sm text-gray-700">{{ currentVisit.post_appointment_notes }}</p>
                 </div>
               </div>
-              <div v-if="form.address">
-                <div class="flex items-start space-x-3">
-                  <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  </svg>
-                  <div>
-                    <p class="text-sm font-medium text-gray-700">Address</p>
-                    <p class="text-sm text-gray-900 whitespace-pre-line">{{ form.address }}</p>
-                  </div>
-                </div>
+              <div v-else class="text-center py-8 text-gray-500">
+                <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <p>No visit history available</p>
               </div>
             </div>
           </div>
 
-          <!-- Emergency Contact -->
-          <div v-if="form.emergency_contact_name || form.emergency_contact_phone" class="space-y-6">
-            <h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-              </svg>
-              Emergency Contact
-            </h3>
-            <div class="bg-red-50 rounded-lg p-4 border border-red-100">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div v-if="form.emergency_contact_name">
-                  <p class="text-sm font-medium text-gray-700">Contact Name</p>
-                  <p class="text-sm text-gray-900">{{ form.emergency_contact_name }}</p>
+          <!-- CURRENT TREATMENT STATUS -->
+          <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Current Treatment Status
+              </h3>
+            </div>
+            <div class="p-4 space-y-4">
+              <!-- Active Treatment Plans -->
+              <div v-if="patientTreatmentPlans && patientTreatmentPlans.length > 0" class="space-y-3">
+                <h4 class="font-medium text-gray-900">Active Treatment Plans</h4>
+                <div class="space-y-2">
+                  <div v-for="plan in activeTreatmentPlans" :key="plan.id" class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <h5 class="font-medium text-blue-900">{{ plan.procedure_template?.name }}</h5>
+                        <p class="text-sm text-blue-700" v-if="plan.tooth_number">Tooth {{ plan.tooth_number }}</p>
+                        <p class="text-sm text-blue-700" v-if="plan.estimated_sessions">{{ plan.estimated_sessions }} sessions planned</p>
+                      </div>
+                      <span :class="getTreatmentPlanStatusClass(plan.status)" class="px-2 py-1 rounded-full text-xs font-medium">
+                        {{ plan.status }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div v-if="form.emergency_contact_phone">
-                  <p class="text-sm font-medium text-gray-700">Phone Number</p>
-                  <p class="text-sm text-gray-900">{{ formatPhoneNumber(form.emergency_contact_phone) }}</p>
+              </div>
+
+              <!-- Recent Diagnoses -->
+              <div v-if="patientDiagnoses && patientDiagnoses.length > 0" class="space-y-3">
+                <h4 class="font-medium text-gray-900">Recent Diagnoses</h4>
+                <div class="space-y-2">
+                  <div v-for="diagnosis in recentDiagnoses" :key="diagnosis.id" class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <h5 class="font-medium text-yellow-900">{{ diagnosis.diagnosis_template?.name }}</h5>
+                        <p class="text-sm text-yellow-700" v-if="diagnosis.tooth_number">Tooth {{ diagnosis.tooth_number }}</p>
+                        <p class="text-sm text-yellow-600">{{ formatDate(diagnosis.diagnosed_at) }}</p>
+                      </div>
+                      <span :class="getDiagnosisStatusClass(diagnosis.status)" class="px-2 py-1 rounded-full text-xs font-medium">
+                        {{ diagnosis.status }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div v-if="form.emergency_contact_relation">
-                  <p class="text-sm font-medium text-gray-700">Relationship</p>
-                  <p class="text-sm text-gray-900">{{ form.emergency_contact_relation }}</p>
-                </div>
+              </div>
+
+              <!-- Quick Actions -->
+              <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                <router-link
+                  :to="`/patients/${route.params.id}/diagnosis/new`"
+                  class="inline-flex items-center px-3 py-2 border border-yellow-300 rounded-lg text-sm font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                  </svg>
+                  Add Diagnosis
+                </router-link>
+                <router-link
+                  :to="`/patients/${route.params.id}/treatment-plan/new`"
+                  class="inline-flex items-center px-3 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                  </svg>
+                  Add Treatment Plan
+                </router-link>
+                <button
+                  @click="showAdministrativeInfo = !showAdministrativeInfo"
+                  class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Contact & Insurance
+                </button>
               </div>
             </div>
           </div>
@@ -210,40 +352,6 @@
             </div>
           </div>
 
-          <!-- Insurance Information -->
-          <div v-if="form.insurance_provider || form.insurance_number" class="space-y-6">
-            <h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-              Insurance Information
-            </h3>
-            <div class="bg-purple-50 rounded-lg p-4 border border-purple-100">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div v-if="form.insurance_provider">
-                  <p class="text-sm font-medium text-gray-700">Insurance Provider</p>
-                  <p class="text-sm text-gray-900">{{ form.insurance_provider }}</p>
-                </div>
-                <div v-if="form.insurance_number">
-                  <p class="text-sm font-medium text-gray-700">Policy Number</p>
-                  <p class="text-sm text-gray-900">{{ form.insurance_number }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Additional Notes -->
-          <div v-if="form.notes" class="space-y-6">
-            <h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-              </svg>
-              Additional Notes
-            </h3>
-            <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
-              <p class="text-sm text-gray-900 whitespace-pre-line">{{ form.notes }}</p>
-            </div>
-          </div>
         </div>
 
         <form v-if="!isViewMode" @submit.prevent="handleSubmit" class="space-y-8">
@@ -932,6 +1040,12 @@ const consentForms = ref([])
 const patientDiagnoses = ref([])
 const patientTreatmentPlans = ref([])
 
+// New functionality for improved patient details
+const visitHistory = ref([])
+const currentVisitIndex = ref(0)
+const showVisitHistory = ref(false)
+const showAdministrativeInfo = ref(false)
+
 // Form data
 const form = reactive({
   first_name: '',
@@ -964,6 +1078,59 @@ const isCreateMode = computed(() => !isEditing.value)
 // Computed properties for formatted display
 const formattedPhone = computed(() => formatPhoneNumber(form.phone))
 const formattedEmergencyPhone = computed(() => formatPhoneNumber(form.emergency_contact_phone))
+
+// Medical alerts computed properties
+const criticalAllergies = ['penicillin', 'latex', 'iodine', 'lidocaine', 'novocaine', 'epinephrine']
+const criticalConditionKeywords = ['diabetes', 'heart', 'cardiac', 'blood pressure', 'hypertension', 'bleeding disorder', 'hemophilia', 'warfarin', 'coumadin']
+const criticalMedicationKeywords = ['warfarin', 'coumadin', 'blood thinner', 'anticoagulant', 'insulin', 'aspirin', 'plavix', 'clopidogrel']
+
+const hasCriticalAlerts = computed(() => {
+  return (form.allergies && form.allergies.length > 0) ||
+         hasCriticalMedicalConditions.value ||
+         hasCriticalMedications.value
+})
+
+const hasCriticalMedicalConditions = computed(() => {
+  if (!form.medical_conditions) return false
+  const conditions = form.medical_conditions.toLowerCase()
+  return criticalConditionKeywords.some(keyword => conditions.includes(keyword))
+})
+
+const hasCriticalMedications = computed(() => {
+  if (!form.current_medications) return false
+  const medications = form.current_medications.toLowerCase()
+  return criticalMedicationKeywords.some(keyword => medications.includes(keyword))
+})
+
+const criticalMedicalConditions = computed(() => {
+  if (!hasCriticalMedicalConditions.value) return ''
+  return form.medical_conditions
+})
+
+const criticalMedications = computed(() => {
+  if (!hasCriticalMedications.value) return ''
+  return form.current_medications
+})
+
+// Visit history computed properties
+const currentVisit = computed(() => {
+  if (!visitHistory.value || visitHistory.value.length === 0) return null
+  return visitHistory.value[currentVisitIndex.value] || null
+})
+
+const activeTreatmentPlans = computed(() => {
+  if (!patientTreatmentPlans.value) return []
+  return patientTreatmentPlans.value.filter(plan =>
+    plan.status === 'active' || plan.status === 'in_progress'
+  ).slice(0, 3) // Show only first 3
+})
+
+const recentDiagnoses = computed(() => {
+  if (!patientDiagnoses.value) return []
+  return patientDiagnoses.value
+    .sort((a, b) => new Date(b.diagnosed_at) - new Date(a.diagnosed_at))
+    .slice(0, 3) // Show only 3 most recent
+})
 
 const hasChanges = computed(() => {
   if (!isEditing.value) {
@@ -1126,6 +1293,7 @@ const loadPatient = async (patientId) => {
         await loadConsentForms(patientId)
         await loadPatientDiagnoses(patientId)
         await loadPatientTreatmentPlans(patientId)
+        await loadVisitHistory(patientId)
       }
     } else {
       const errorMessage = result?.error || 'Patient not found'
@@ -1353,6 +1521,25 @@ const getTreatmentPlanStatusClass = (status) => {
   return getTreatmentStatusClass(status)
 }
 
+const getAppointmentStatusClass = (status) => {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-100 text-green-800'
+    case 'in_progress':
+      return 'bg-blue-100 text-blue-800'
+    case 'confirmed':
+      return 'bg-indigo-100 text-indigo-800'
+    case 'scheduled':
+      return 'bg-gray-100 text-gray-800'
+    case 'cancelled':
+      return 'bg-red-100 text-red-800'
+    case 'no_show':
+      return 'bg-yellow-100 text-yellow-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
 const getPriorityClass = (priority) => {
   switch (priority) {
     case 'urgent':
@@ -1365,6 +1552,41 @@ const getPriorityClass = (priority) => {
       return 'bg-green-100 text-green-800'
     default:
       return 'bg-gray-100 text-gray-800'
+  }
+}
+
+// Visit history navigation methods
+const previousVisit = () => {
+  if (currentVisitIndex.value > 0) {
+    currentVisitIndex.value--
+  }
+}
+
+const nextVisit = () => {
+  if (currentVisitIndex.value < visitHistory.value.length - 1) {
+    currentVisitIndex.value++
+  }
+}
+
+// Load visit history
+const loadVisitHistory = async (patientId) => {
+  try {
+    const response = await fetch(`/api/patients/${patientId}/appointments`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      // Sort by date, most recent first
+      visitHistory.value = (data.appointments || []).sort((a, b) =>
+        new Date(b.start_time) - new Date(a.start_time)
+      )
+    }
+  } catch (error) {
+    console.error('Error loading visit history:', error)
   }
 }
 

@@ -210,10 +210,12 @@
 <script setup>
 import { ref, computed, h } from 'vue'
 import { useRouter } from 'vue-router'
+import { useNavigation } from '../composables/useNavigation'
 import { useNotificationStore } from '../stores/notification'
 import NotificationTestManager from '../components/NotificationTestManager.vue'
 
 const router = useRouter()
+const { navigateWithContext } = useNavigation()
 const notificationStore = useNotificationStore()
 
 // Test manager toggle
@@ -326,9 +328,9 @@ const handleNotificationClick = async (notification) => {
 
   // Handle notification-specific routing
   if (notification.appointmentId) {
-    router.push(`/appointments/${notification.appointmentId}`)
+    navigateWithContext(`/appointments/${notification.appointmentId}`)
   } else if (notification.patientId) {
-    router.push(`/patients/${notification.patientId}`)
+    navigateWithContext(`/patients/${notification.patientId}`)
   }
 }
 
@@ -342,7 +344,7 @@ const handleActionClick = (action, notification) => {
       }
       break
     case 'view-patient':
-      router.push(`/patients/${action.patientId}`)
+      navigateWithContext(`/patients/${action.patientId}`)
       break
     case 'snooze-reminder':
       notificationStore.removeNotification(notification.id)

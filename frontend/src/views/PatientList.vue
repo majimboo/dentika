@@ -353,11 +353,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { usePatientStore } from '../stores/patient'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
+import { useNavigation } from '../composables/useNavigation'
 import { formatDate, calculateAge, debounce, getInitials, formatPhoneNumber } from '@/utils'
 
 const patientStore = usePatientStore()
 const authStore = useAuthStore()
 const router = useRouter()
+const { navigateWithContext } = useNavigation()
 
 // Reactive data
 const searchQuery = ref('')
@@ -470,15 +472,15 @@ const getLastVisit = (patient) => {
 
 
 const viewPatient = (patient) => {
-  router.push(`/patients/${patient.id}`)
+  navigateWithContext(`/patients/${patient.id}`)
 }
 
 const editPatient = (patient) => {
-  router.push(`/patients/${patient.id}/edit`)
+  navigateWithContext(`/patients/${patient.id}/edit`)
 }
 
 const viewDentalChart = (patient) => {
-  router.push(`/patients/${patient.id}/dental-chart`)
+  navigateWithContext(`/patients/${patient.id}/dental-chart`)
 }
 
 const scheduleAppointment = (patient) => {

@@ -39,9 +39,11 @@
 <script setup>
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useContextualNavigation } from '../composables/useContextualNavigation'
 
 const route = useRoute()
 const router = useRouter()
+const { goBack: contextualGoBack, getBackButtonLabel: contextualBackLabel, hasContextualNavigation } = useContextualNavigation()
 
 // Computed properties for navigation state
 const currentLevel = computed(() => {
@@ -57,6 +59,11 @@ const currentPageTitle = computed(() => {
 })
 
 const backButtonLabel = computed(() => {
+  // Use contextual back label if available, otherwise fallback to parent route
+  if (hasContextualNavigation()) {
+    return contextualBackLabel()
+  }
+
   const parentRoute = getParentRouteName()
   return parentRoute ? `Back to ${parentRoute}` : 'Back'
 })
@@ -77,10 +84,20 @@ const getParentRouteName = () => {
   const displayNames = {
     'Dashboard': 'Dashboard',
     'PatientList': 'Patients',
-    'AppointmentCalendar': 'Appointments', 
+    'PatientView': 'Patients',
+    'AppointmentCalendar': 'Appointments',
+    'AppointmentList': 'Appointment List',
     'ProcedureManagement': 'Procedures',
-    'UserList': 'Users',
-    'ClinicManagement': 'Clinics'
+    'UserManagement': 'Users',
+    'StaffManagement': 'Staff',
+    'ClinicManagement': 'Clinics',
+    'ClinicEdit': 'Clinics',
+    'PeerReviewList': 'Peer Review',
+    'InventoryList': 'Inventory',
+    'InventoryView': 'Inventory',
+    'Shop': 'Shop',
+    'SuperAdminShop': 'Dentika Shop',
+    'SuperAdminShopView': 'Dentika Shop'
   }
   
   return displayNames[parentName] || parentName
@@ -88,30 +105,8 @@ const getParentRouteName = () => {
 
 // Navigation logic
 const goBack = () => {
-  const parentRouteName = route.meta?.parent
-  
-  if (parentRouteName) {
-    // Navigate to the specific parent route
-    const routeMap = {
-      'Dashboard': '/',
-      'PatientList': '/patients',
-      'AppointmentCalendar': '/appointments',
-      'ProcedureManagement': '/procedures',
-      'UserList': '/users',
-      'ClinicManagement': '/clinics'
-    }
-    
-    const parentPath = routeMap[parentRouteName]
-    if (parentPath) {
-      router.push(parentPath)
-    } else {
-      // Fallback to browser back
-      router.go(-1)
-    }
-  } else {
-    // Fallback to browser back for unknown structure
-    router.go(-1)
-  }
+  // Use contextual navigation which handles both context-aware and fallback navigation
+  contextualGoBack()
 }
 
 // Optional: Handle hardware back button on mobile

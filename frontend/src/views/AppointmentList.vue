@@ -143,7 +143,7 @@
           v-for="appointment in paginatedAppointments"
           :key="appointment.id"
           class="appointment-card group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
-          @click="$router.push(`/appointments/${appointment.id}`)"
+          @click="viewAppointment(appointment)"
         >
           <!-- Card Header with Time and Status -->
           <div class="relative p-4 pb-3" :class="getStatusHeaderClass(appointment.status)">
@@ -277,7 +277,7 @@
                 </router-link>
                 <button
                   v-if="appointment.patient_id"
-                  @click.stop="$router.push(`/patients/${appointment.patient_id}/dental-chart`)"
+                  @click.stop="viewPatientDentalChart(appointment)"
                   class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
                   title="Dental Chart"
                 >
@@ -570,11 +570,13 @@ import { useAppointmentStore } from '../stores/appointment'
 import { useClinicStore } from '../stores/clinic'
 import { useAuthStore } from '../stores/auth'
 import { useTimezone } from '../composables/useTimezone'
+import { useNavigation } from '../composables/useNavigation'
 
 const appointmentStore = useAppointmentStore()
 const clinicStore = useClinicStore()
 const authStore = useAuthStore()
 const { formatDateTime, formatDate, formatTime } = useTimezone()
+const { navigateWithContext } = useNavigation()
 
 // Reactive data
 const loading = computed(() => appointmentStore.isLoading)
@@ -803,6 +805,15 @@ const handleClickOutside = (event) => {
   if (!event.target.closest('.relative')) {
     activeStatusMenu.value = null
   }
+}
+
+// Navigation methods
+const viewAppointment = (appointment) => {
+  navigateWithContext(`/appointments/${appointment.id}`)
+}
+
+const viewPatientDentalChart = (appointment) => {
+  navigateWithContext(`/patients/${appointment.patient_id}/dental-chart`)
 }
 
 // Lifecycle

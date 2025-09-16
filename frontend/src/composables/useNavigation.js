@@ -1,35 +1,14 @@
 import { useRoute, useRouter } from 'vue-router'
+import { useContextualNavigation } from './useContextualNavigation'
 
 export function useNavigation() {
   const route = useRoute()
   const router = useRouter()
+  const { goBack: contextualGoBack, navigateWithContext } = useContextualNavigation()
 
   const goBack = () => {
-    const parentRouteName = route.meta?.parent
-
-    if (parentRouteName) {
-      // Navigate to the specific parent route
-      const routeMap = {
-        'Dashboard': '/',
-        'PatientList': '/patients',
-        'AppointmentCalendar': '/appointments',
-        'ProcedureManagement': '/procedures',
-        'UserList': '/users',
-        'ClinicManagement': '/clinics',
-        'StaffManagement': '/staff',
-        'PeerReviewList': '/peer-review',
-        'InventoryList': '/inventory'
-      }
-
-      const parentPath = routeMap[parentRouteName]
-      if (parentPath) {
-        router.push(parentPath)
-        return
-      }
-    }
-
-    // Fallback to browser back
-    router.go(-1)
+    // Use contextual navigation which handles both context-aware and fallback navigation
+    contextualGoBack()
   }
 
   const getParentRouteName = () => {
@@ -40,13 +19,20 @@ export function useNavigation() {
     const displayNames = {
       'Dashboard': 'Dashboard',
       'PatientList': 'Patients',
+      'PatientView': 'Patients',
       'AppointmentCalendar': 'Appointments',
+      'AppointmentList': 'Appointment List',
       'ProcedureManagement': 'Procedures',
-      'UserList': 'Users',
-      'ClinicManagement': 'Clinics',
+      'UserManagement': 'Users',
       'StaffManagement': 'Staff',
+      'ClinicManagement': 'Clinics',
+      'ClinicEdit': 'Clinics',
       'PeerReviewList': 'Peer Review',
-      'InventoryList': 'Inventory'
+      'InventoryList': 'Inventory',
+      'InventoryView': 'Inventory',
+      'Shop': 'Shop',
+      'SuperAdminShop': 'Dentika Shop',
+      'SuperAdminShopView': 'Dentika Shop'
     }
 
     return displayNames[parentName] || parentName
@@ -54,6 +40,7 @@ export function useNavigation() {
 
   return {
     goBack,
-    getParentRouteName
+    getParentRouteName,
+    navigateWithContext
   }
 }

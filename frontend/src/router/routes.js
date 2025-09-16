@@ -31,12 +31,14 @@ const PrescriptionForm = () => import('../views/PrescriptionForm.vue');
 
 const ClinicManagement = () => import('../views/ClinicManagement.vue');
 const ClinicForm = () => import('../views/ClinicForm.vue');
+const BranchForm = () => import('../views/BranchForm.vue');
 
 const PeerReviewList = () => import('../views/PeerReviewList.vue');
 const PeerReviewCase = () => import('../views/PeerReviewCase.vue');
 const PeerReviewCreate = () => import('../views/PeerReviewCreate.vue');
 
 const Notifications = () => import('../views/Notifications.vue');
+const ClinicSettings = () => import('../views/ClinicSettings.vue');
 
 const InventoryList = () => import('../views/InventoryList.vue');
 const InventoryForm = () => import('../views/InventoryForm.vue');
@@ -126,6 +128,12 @@ const routes = [
                 meta: { level: 1, title: 'Staff Management', parent: 'Dashboard' },
             },
             {
+                path: '/settings',
+                name: 'ClinicSettings',
+                component: ClinicSettings,
+                meta: { level: 1, title: 'Settings', parent: 'Dashboard', requiresNonSuperAdmin: true },
+            },
+            {
                 path: '/staff/new',
                 name: 'StaffCreate',
                 component: NewStaff,
@@ -171,16 +179,26 @@ const routes = [
                     parent: 'ClinicManagement',
                 },
             },
-            {
-                path: '/clinics/:id/edit',
-                name: 'ClinicEdit',
-                component: ClinicForm,
-                meta: {
-                    level: 2,
-                    title: 'Edit Clinic',
-                    parent: 'ClinicManagement',
-                },
-            },
+             {
+                 path: '/clinics/:id/edit',
+                 name: 'ClinicEdit',
+                 component: ClinicForm,
+                 meta: {
+                     level: 2,
+                     title: 'Edit Clinic',
+                     parent: 'ClinicManagement',
+                 },
+             },
+             {
+                 path: '/clinics/:clinicId/branches/:branchId/edit',
+                 name: 'BranchEdit',
+                 component: BranchForm,
+                 meta: {
+                     level: 3,
+                     title: 'Edit Branch',
+                     parent: 'ClinicEdit',
+                 },
+             },
             {
                 path: '/patients/new',
                 name: 'PatientCreate',

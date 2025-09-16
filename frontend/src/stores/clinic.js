@@ -137,7 +137,7 @@ export const useClinicStore = defineStore('clinic', {
     async createBranch(clinicId, branchData) {
       this.loading = true
       this.error = null
-      
+
       try {
         const result = await apiService.post(`/api/clinics/${clinicId}/branches`, branchData)
         if (result.success) {
@@ -151,6 +151,41 @@ export const useClinicStore = defineStore('clinic', {
         this.error = 'Failed to create branch'
         console.error('Error creating branch:', error)
         return { success: false, error: 'Failed to create branch' }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async updateBranch(clinicId, branchId, branchData) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const result = await apiService.put(`/api/clinics/${clinicId}/branches/${branchId}`, branchData)
+        if (result.success) {
+          // Update branch in current clinic
+          if (this.currentClinic && this.currentClinic.branches) {
+            const branchIndex = this.currentClinic.branches.findIndex(b => b.id === branchId)
+            if (branchIndex !== -1) {
+              this.currentClinic.branches[branchIndex] = result.data
+            }
+          }
+
+          // Update branch in branches array
+          const branchIndex = this.branches.findIndex(b => b.id === branchId)
+          if (branchIndex !== -1) {
+            this.branches[branchIndex] = result.data
+          }
+
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to update branch'
+        console.error('Error updating branch:', error)
+        return { success: false, error: 'Failed to update branch' }
       } finally {
         this.loading = false
       }

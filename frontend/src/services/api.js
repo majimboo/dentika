@@ -265,6 +265,21 @@ class ApiService {
     })
   }
 
+  // Clinic logo upload methods
+  async uploadClinicLogo(formData) {
+    return this.request('post', '/api/upload/clinic-logo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
+
+  async deleteClinicLogo(logoPath) {
+    return this.request('delete', '/api/upload/clinic-logo', null, {
+      params: { path: logoPath }
+    })
+  }
+
 }
 
 // Create and export a single instance

@@ -55,10 +55,33 @@
                   <input type="email" id="email" v-model="clinic.email" class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white">
                 </div>
               </div>
-              <div class="space-y-2">
-                <label for="website" class="block text-sm font-semibold text-gray-700">Website</label>
-                <input type="url" id="website" v-model="clinic.website" class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white">
-              </div>
+               <div class="space-y-2">
+                 <label for="website" class="block text-sm font-semibold text-gray-700">Website</label>
+                 <input type="url" id="website" v-model="clinic.website" class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white">
+               </div>
+               <div class="space-y-2">
+                 <label for="tagline" class="block text-sm font-semibold text-gray-700">Tagline</label>
+                 <input type="text" id="tagline" v-model="clinic.tagline" class="block w-full px-4 py-3 border border-neutral-300 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 hover:bg-white focus:bg-white" placeholder="Enter clinic tagline or slogan">
+               </div>
+               <div class="space-y-2">
+                 <label for="logo" class="block text-sm font-semibold text-gray-700">Clinic Logo</label>
+                 <div class="flex items-center space-x-4">
+                   <div v-if="clinic.logo" class="flex items-center space-x-2">
+                     <img :src="'/uploads/' + clinic.logo" alt="Clinic Logo" class="w-16 h-16 object-cover rounded-lg border border-neutral-200">
+                     <button type="button" @click="removeLogo" class="text-red-600 hover:text-red-800 text-sm font-medium">Remove</button>
+                   </div>
+                   <div v-else class="flex items-center space-x-2">
+                     <input type="file" id="logo" ref="logoInput" @change="handleLogoUpload" accept="image/*" class="hidden">
+                     <button type="button" @click="$refs.logoInput.click()" class="inline-flex items-center px-4 py-2 border border-neutral-300 rounded-lg text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                       <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                       </svg>
+                       Upload Logo
+                     </button>
+                   </div>
+                 </div>
+                 <p class="text-xs text-neutral-500">Recommended: Square image, max 5MB (JPEG, PNG, GIF, WebP)</p>
+               </div>
             </div>
 
             <!-- Form Actions -->
@@ -106,7 +129,7 @@
                    <button
                      @click="editBranch(branch)"
                      class="p-2 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 touch-manipulation"
-                     :class="{ 'text-blue-600 bg-blue-50': editingBranch && editingBranch.id === branch.id }"
+
                    >
                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -123,41 +146,7 @@
                  </div>
                </div>
 
-               <!-- Inline Edit Form -->
-               <BaseTransition name="slide-down">
-                 <div v-if="editingBranch && editingBranch.id === branch.id" class="border-t border-neutral-200 bg-neutral-50 p-4">
-                   <form @submit.prevent="saveBranch" class="space-y-3">
-                     <div>
-                       <label class="block text-xs font-medium text-neutral-600 mb-1">Branch Name <span class="text-danger-500">*</span></label>
-                       <input
-                         type="text"
-                         v-model="newBranch.name"
-                         class="block w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                         placeholder="Enter branch name"
-                         required
-                       >
-                     </div>
-                     <div>
-                       <label class="block text-xs font-medium text-neutral-600 mb-1">Address</label>
-                       <input
-                         type="text"
-                         v-model="newBranch.address"
-                         class="block w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                         placeholder="Enter branch address"
-                       >
-                     </div>
-                     <div class="flex justify-end space-x-2 pt-2">
-                       <button type="button" @click="cancelBranchForm" class="px-3 py-2 text-xs font-medium text-neutral-600 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors">
-                         Cancel
-                       </button>
-                       <button type="submit" :disabled="savingBranch" class="px-3 py-2 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 rounded-lg transition-colors flex items-center">
-                         <BaseLoading v-if="savingBranch" type="spinner" size="small" color="white" :show-text="false" class="mr-1" />
-                         {{ savingBranch ? 'Saving...' : 'Update Branch' }}
-                       </button>
-                     </div>
-                   </form>
-                 </div>
-               </BaseTransition>
+
              </li>
            </ul>
            <button
@@ -201,7 +190,7 @@
        <div v-if="showBranchForm" class="bg-neutral-50 rounded-xl p-4 mb-4 border border-neutral-200">
          <form @submit.prevent="saveBranch" class="space-y-4">
            <div class="flex items-center justify-between mb-3">
-             <h4 class="text-sm font-semibold text-neutral-900">{{ editingBranch ? 'Edit Branch' : 'Add New Branch' }}</h4>
+              <h4 class="text-sm font-semibold text-neutral-900">Add New Branch</h4>
              <button type="button" @click="cancelBranchForm" class="text-neutral-400 hover:text-neutral-600 transition-colors">
                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -221,16 +210,56 @@
                  required
                >
              </div>
-             <div>
-               <label for="branchAddress" class="block text-xs font-medium text-neutral-600 mb-1">Address</label>
-               <input
-                 type="text"
-                 id="branchAddress"
-                 v-model="newBranch.address"
-                 class="block w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                 placeholder="Enter branch address"
-               >
-             </div>
+              <div>
+                <label for="branchAddress" class="block text-xs font-medium text-neutral-600 mb-1">Address</label>
+                <input
+                  type="text"
+                  id="branchAddress"
+                  v-model="newBranch.address"
+                  class="block w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Enter branch address"
+                >
+              </div>
+              <div>
+                <label for="branchOperatingHours" class="block text-xs font-medium text-neutral-600 mb-1">Operating Hours</label>
+                <input
+                  type="text"
+                  id="branchOperatingHours"
+                  v-model="newBranch.operating_hours"
+                  class="block w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  placeholder='e.g., {"monday": "9:00-17:00", "tuesday": "9:00-17:00"}'
+                >
+              </div>
+              <div>
+                <label for="branchOperatingDays" class="block text-xs font-medium text-neutral-600 mb-1">Operating Days</label>
+                <input
+                  type="text"
+                  id="branchOperatingDays"
+                  v-model="newBranch.operating_days"
+                  class="block w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  placeholder='e.g., ["monday", "tuesday", "wednesday", "thursday", "friday"]'
+                >
+              </div>
+              <div class="flex items-center space-x-4">
+                <div class="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="branchIsOpenOnHolidays"
+                    v-model="newBranch.is_open_on_holidays"
+                    class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
+                  >
+                  <label for="branchIsOpenOnHolidays" class="ml-2 text-xs font-medium text-neutral-600">Open on holidays</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="branchIsClosedToday"
+                    v-model="newBranch.is_closed_today"
+                    class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
+                  >
+                  <label for="branchIsClosedToday" class="ml-2 text-xs font-medium text-neutral-600">Closed today</label>
+                </div>
+              </div>
            </div>
 
            <div class="flex justify-end space-x-2 pt-2">
@@ -239,7 +268,7 @@
              </button>
              <button type="submit" :disabled="savingBranch" class="px-3 py-2 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 rounded-lg transition-colors flex items-center">
                <BaseLoading v-if="savingBranch" type="spinner" size="small" color="white" :show-text="false" class="mr-1" />
-               {{ savingBranch ? 'Saving...' : (editingBranch ? 'Update' : 'Add Branch') }}
+                          {{ savingBranch ? 'Saving...' : 'Add Branch' }}
              </button>
            </div>
          </form>
@@ -255,6 +284,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useClinicStore } from '../stores/clinic'
 import BaseLoading from '../components/BaseLoading.vue'
 import BaseTransition from '../components/BaseTransition.vue'
+import apiService from '../services/api'
 
 export default {
   name: 'ClinicForm',
@@ -267,14 +297,14 @@ export default {
     const router = useRouter()
     const clinicStore = useClinicStore()
 
-    const clinic = ref({ name: '', address: '', phone: '', email: '', website: '', branches: [], staff: [] })
+    const clinic = ref({ name: '', address: '', phone: '', email: '', website: '', tagline: '', logo: '', branches: [], staff: [] })
     const saving = ref(false)
     const loading = ref(true)
     const error = ref('')
     const showBranchForm = ref(false)
     const savingBranch = ref(false)
-    const editingBranch = ref(null)
-    const newBranch = ref({ name: '', address: '' })
+    const newBranch = ref({ name: '', address: '', operating_hours: '', operating_days: '', is_open_on_holidays: false, is_closed_today: false })
+    const logoInput = ref(null)
 
     const clinicId = route.params.id
     const isEditMode = computed(() => !!clinicId)
@@ -297,13 +327,26 @@ export default {
       }
     }
 
+    const cleanPhoneNumber = (phone) => {
+      if (!phone) return phone
+      // Remove all non-digit characters except + at the beginning
+      return phone.replace(/[^\d+]/g, '')
+    }
+
     const saveClinic = async () => {
       saving.value = true
+
+      // Clean phone number before saving
+      const clinicData = { ...clinic.value }
+      if (clinicData.phone) {
+        clinicData.phone = cleanPhoneNumber(clinicData.phone)
+      }
+
       let result
       if (isEditMode.value) {
-        result = await clinicStore.updateClinic(clinicId, clinic.value)
+        result = await clinicStore.updateClinic(clinicId, clinicData)
       } else {
-        result = await clinicStore.createClinic(clinic.value)
+        result = await clinicStore.createClinic(clinicData)
       }
 
       if (result.success) {
@@ -337,34 +380,57 @@ export default {
     }
 
     const addBranch = () => {
-      editingBranch.value = null
-      newBranch.value = { name: '', address: '' }
+      newBranch.value = { name: '', address: '', operating_hours: '', operating_days: '', is_open_on_holidays: false, is_closed_today: false }
       showBranchForm.value = true
     }
 
+    const handleLogoUpload = async (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+
+      const formData = new FormData()
+      formData.append('logo', file)
+      formData.append('clinic_id', clinicId.value)
+
+      const result = await apiService.uploadClinicLogo(formData)
+      if (result.success) {
+        clinic.value.logo = result.data.path
+        // Reset file input
+        event.target.value = ''
+      } else {
+        alert('Failed to upload logo: ' + result.error)
+      }
+    }
+
+    const removeLogo = async () => {
+      if (!clinic.value.logo) return
+
+      const result = await apiService.deleteClinicLogo(clinic.value.logo)
+      if (result.success) {
+        clinic.value.logo = ''
+      } else {
+        alert('Failed to remove logo: ' + result.error)
+      }
+    }
+
     const editBranch = (branch) => {
-      editingBranch.value = branch
-      newBranch.value = { name: branch.name, address: branch.address }
-      showBranchForm.value = false // Hide add form if open
+      router.push(`/clinics/${clinicId}/branches/${branch.id}/edit`)
+    }
+
+    const closeBranchModal = () => {
+      showBranchForm.value = false
+      newBranch.value = { name: '', address: '', operating_hours: '', operating_days: '', is_open_on_holidays: false, is_closed_today: false }
     }
 
     const cancelBranchForm = () => {
       showBranchForm.value = false
-      editingBranch.value = null
-      newBranch.value = { name: '', address: '' }
+      newBranch.value = { name: '', address: '', operating_hours: '', operating_days: '', is_open_on_holidays: false, is_closed_today: false }
     }
 
     const saveBranch = async () => {
       savingBranch.value = true
-      let result
 
-      if (editingBranch.value) {
-        // Update existing branch
-        result = await clinicStore.updateBranch(clinicId, editingBranch.value.id, newBranch.value)
-      } else {
-        // Create new branch
-        result = await clinicStore.createBranch(clinicId, newBranch.value)
-      }
+      const result = await clinicStore.createBranch(clinicId, newBranch.value)
 
       if (result.success) {
         closeBranchModal()
@@ -389,6 +455,7 @@ export default {
       showBranchForm,
       savingBranch,
       newBranch,
+      logoInput,
       loadClinicData,
       saveClinic,
       deleteBranch,
@@ -397,8 +464,11 @@ export default {
       editUser,
       addBranch,
       editBranch,
+      closeBranchModal,
       cancelBranchForm,
       saveBranch,
+      handleLogoUpload,
+      removeLogo,
     }
   }
 }

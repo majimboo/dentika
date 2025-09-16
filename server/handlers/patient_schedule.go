@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"strconv"
+	"strings"
 	"time"
 
 	"dentika/server/database"
@@ -180,9 +182,12 @@ func GetAvailableTimeSlots(c *fiber.Ctx) error {
 func generateAvailableTimeSlots(date time.Time, clinicID uint, branchID *uint) []fiber.Map {
 	var availableSlots []fiber.Map
 
-	// Clinic hours: 9 AM to 5 PM
-	startHour := 9
-	endHour := 17
+	// Get the operating hours for this date
+	operatingHours := getBranchOperatingHours(date, clinicID, branchID)
+	if len(operatingHours) == 0 {
+		// No operating hours available for this date
+		return availableSlots
+	}
 
 	// Get existing appointments for this date
 	var existingAppointments []models.Appointment
@@ -224,34 +229,159 @@ func generateAvailableTimeSlots(date time.Time, clinicID uint, branchID *uint) [
 
 		// Mark all slots that this appointment occupies
 		for currentSlot.Before(appointmentEnd) || currentSlot.Equal(appointmentEnd) {
-			if currentSlot.Hour() >= startHour && currentSlot.Hour() < endHour {
-				slotKey := currentSlot.Format("15:04")
-				occupiedSlots[slotKey] = true
+			// Mark the slot as occupied regardless of operating hours
+			// We'll filter by operating hours when generating available slots
+			slotKey := currentSlot.Format("15:04")
+			occupiedSlots[slotKey] = true
+			currentSlot = currentSlot.Add(30 * time.Minute)
+		}
+	}
+
+	// Generate all possible 30-minute time slots for each operating period
+	now := time.Now()
+	for _, period := range operatingHours {
+		// Parse start and end times
+		startTime, err := time.Parse("15:04", period.Start)
+		if err != nil {
+			continue // Skip invalid time format
+		}
+		endTime, err := time.Parse("15:04", period.End)
+		if err != nil {
+			continue // Skip invalid time format
+		}
+
+		startHour := startTime.Hour()
+		startMinute := startTime.Minute()
+		endHour := endTime.Hour()
+		endMinute := endTime.Minute()
+
+		// Generate slots for this period
+		currentSlot := time.Date(date.Year(), date.Month(), date.Day(), startHour, startMinute, 0, 0, time.Local)
+		endSlot := time.Date(date.Year(), date.Month(), date.Day(), endHour, endMinute, 0, 0, time.Local)
+
+		// Round start time to nearest 30-minute boundary (up)
+		if currentSlot.Minute()%30 != 0 {
+			minutes := currentSlot.Minute()
+			currentSlot = currentSlot.Add(time.Duration(30-minutes%30) * time.Minute)
+		}
+
+		for currentSlot.Before(endSlot) {
+			slotKey := currentSlot.Format("15:04")
+
+			// Skip slots that are occupied by existing appointments
+			if !occupiedSlots[slotKey] {
+				// Only include slots that are in the future (if today) or any slot for future dates
+				if currentSlot.After(now) || currentSlot.Format("2006-01-02") != now.Format("2006-01-02") {
+					availableSlots = append(availableSlots, fiber.Map{
+						"time":     slotKey,
+						"datetime": currentSlot.Format("2006-01-02 15:04"),
+						"display":  currentSlot.Format("3:04 PM"),
+					})
+				}
 			}
 			currentSlot = currentSlot.Add(30 * time.Minute)
 		}
 	}
 
-	// Generate all possible 30-minute slots
-	for hour := startHour; hour < endHour; hour++ {
-		for minute := 0; minute < 60; minute += 30 {
-			slotTime := time.Date(date.Year(), date.Month(), date.Day(), hour, minute, 0, 0, time.Local)
-			slotKey := slotTime.Format("15:04")
+	return availableSlots
+}
 
-			// Check if slot is available
-			if !occupiedSlots[slotKey] {
-				// Check if slot is in the future (not in the past)
-				now := time.Now()
-				if slotTime.After(now) || slotTime.Format("2006-01-02") != now.Format("2006-01-02") {
-					availableSlots = append(availableSlots, fiber.Map{
-						"time":     slotKey,
-						"datetime": slotTime.Format("2006-01-02 15:04"),
-						"display":  slotTime.Format("3:04 PM"),
-					})
-				}
-			}
+// SchedulePeriod represents a time period (e.g., 09:00-13:00)
+type SchedulePeriod struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+// DaySchedule represents the schedule for a specific day
+type DaySchedule struct {
+	Enabled bool             `json:"enabled"`
+	Periods []SchedulePeriod `json:"periods"`
+}
+
+// BranchSchedule represents the complete schedule configuration
+type BranchSchedule struct {
+	Monday    DaySchedule `json:"monday"`
+	Tuesday   DaySchedule `json:"tuesday"`
+	Wednesday DaySchedule `json:"wednesday"`
+	Thursday  DaySchedule `json:"thursday"`
+	Friday    DaySchedule `json:"friday"`
+	Saturday  DaySchedule `json:"saturday"`
+	Sunday    DaySchedule `json:"sunday"`
+	Holidays  struct {
+		Enabled bool `json:"enabled"`
+	} `json:"holidays"`
+	Timezone string `json:"timezone"`
+}
+
+// getBranchOperatingHours returns the operating hours for a given date and branch
+func getBranchOperatingHours(date time.Time, clinicID uint, branchID *uint) []SchedulePeriod {
+	// Get branches
+	var branches []models.Branch
+	query := database.DB.Where("clinic_id = ? AND is_active = ?", clinicID, true)
+
+	if branchID != nil {
+		query = query.Where("id = ?", *branchID)
+	}
+
+	if err := query.Find(&branches).Error; err != nil {
+		return []SchedulePeriod{}
+	}
+
+	if len(branches) == 0 {
+		return []SchedulePeriod{}
+	}
+
+	// Use the first branch (or the specified branch)
+	branch := branches[0]
+
+	// Check if the branch is closed today (emergency override)
+	if branch.IsClosedToday {
+		return []SchedulePeriod{}
+	}
+
+	// Parse the schedule JSON
+	if branch.Schedule == "" {
+		// Fallback to default hours if no schedule is set
+		return []SchedulePeriod{
+			{Start: "09:00", End: "17:00"},
 		}
 	}
 
-	return availableSlots
+	var schedule BranchSchedule
+	if err := json.Unmarshal([]byte(branch.Schedule), &schedule); err != nil {
+		// Fallback to default hours if JSON is invalid
+		return []SchedulePeriod{
+			{Start: "09:00", End: "17:00"},
+		}
+	}
+
+	// Get the day of the week
+	dayName := strings.ToLower(date.Weekday().String())
+
+	var daySchedule DaySchedule
+	switch dayName {
+	case "monday":
+		daySchedule = schedule.Monday
+	case "tuesday":
+		daySchedule = schedule.Tuesday
+	case "wednesday":
+		daySchedule = schedule.Wednesday
+	case "thursday":
+		daySchedule = schedule.Thursday
+	case "friday":
+		daySchedule = schedule.Friday
+	case "saturday":
+		daySchedule = schedule.Saturday
+	case "sunday":
+		daySchedule = schedule.Sunday
+	default:
+		return []SchedulePeriod{}
+	}
+
+	// Check if the day is enabled
+	if !daySchedule.Enabled {
+		return []SchedulePeriod{}
+	}
+
+	return daySchedule.Periods
 }

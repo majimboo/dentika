@@ -756,7 +756,15 @@
           </div>
           <h4 class="font-bold text-gray-900 mb-2 text-center">Call Us</h4>
           <p class="text-gray-600 text-center font-medium">{{ clinic.phone }}</p>
-          <p class="text-sm text-gray-500 text-center mt-2">Mon-Fri: 8AM-6PM</p>
+          <div class="text-xs text-gray-500 text-center mt-2">
+            <ClinicScheduleDisplay
+              v-if="clinic.branches && clinic.branches.length > 0"
+              :schedule="getMainBranchSchedule()"
+              :compact="true"
+              :showHolidays="false"
+            />
+            <span v-else>Schedule not available</span>
+          </div>
         </div>
 
         <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
@@ -781,7 +789,15 @@
           </div>
           <h4 class="font-bold text-gray-900 mb-2 text-center">Visit Us</h4>
           <p class="text-gray-600 text-center font-medium text-sm">{{ clinic.address }}</p>
-          <p class="text-sm text-gray-500 text-center mt-2">Open daily</p>
+          <div class="text-xs text-gray-500 text-center mt-2">
+            <ClinicScheduleDisplay
+              v-if="clinic.branches && clinic.branches.length > 0"
+              :schedule="getMainBranchSchedule()"
+              :compact="true"
+              :showHolidays="false"
+            />
+            <span v-else>Schedule not available</span>
+          </div>
         </div>
       </div>
     </div>
@@ -792,6 +808,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import apiService from '../services/api'
+import ClinicScheduleDisplay from '../components/ClinicScheduleDisplay.vue'
 
 const route = useRoute()
 
@@ -845,23 +862,74 @@ const minDate = computed(() => {
 
 const allTimeSlots = computed(() => {
   const slots = []
-  // Generate time slots from 9:00 AM to 5:00 PM in 30-minute intervals
-  for (let hour = 9; hour < 17; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-      const displayTime = formatTimeDisplay(hour, minute)
 
-      // Check if this slot is available
-      const isAvailable = availableTimeSlots.value.some(slot => slot.time === timeString)
+  // Get the operating hours for the selected date and branch
+  const branchSchedule = getSelectedBranchSchedule()
+  if (!branchSchedule) {
+    // Fallback to default 9-5 schedule if no schedule available
+    for (let hour = 9; hour < 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        const displayTime = formatTimeDisplay(hour, minute)
+        const isAvailable = availableTimeSlots.value.some(slot => slot.time === timeString)
 
-      slots.push({
-        time: timeString,
-        display: displayTime,
-        available: isAvailable
-      })
+        slots.push({
+          time: timeString,
+          display: displayTime,
+          available: isAvailable
+        })
+      }
     }
+    return slots
   }
-  return slots
+
+  // Parse the schedule to get operating periods for the selected date
+  const operatingPeriods = getOperatingPeriodsForDate(branchSchedule, form.value.preferred_date)
+
+  // Generate slots for each operating period
+  operatingPeriods.forEach(period => {
+    const startTime = parseTimeString(period.start)
+    const endTime = parseTimeString(period.end)
+
+    if (startTime && endTime) {
+      let current = { ...startTime }
+
+      // Round start time to nearest 30-minute boundary (up)
+      if (current.minute % 30 !== 0) {
+        current.minute = Math.ceil(current.minute / 30) * 30
+        if (current.minute >= 60) {
+          current.hour += 1
+          current.minute = 0
+        }
+      }
+
+      // Generate 30-minute slots
+      while (current.hour < endTime.hour || (current.hour === endTime.hour && current.minute < endTime.minute)) {
+        const timeString = `${current.hour.toString().padStart(2, '0')}:${current.minute.toString().padStart(2, '0')}`
+        const displayTime = formatTimeDisplay(current.hour, current.minute)
+        const isAvailable = availableTimeSlots.value.some(slot => slot.time === timeString)
+
+        slots.push({
+          time: timeString,
+          display: displayTime,
+          available: isAvailable
+        })
+
+        current.minute += 30
+        if (current.minute >= 60) {
+          current.hour += 1
+          current.minute = 0
+        }
+      }
+    }
+  })
+
+  // Remove duplicates and sort
+  const uniqueSlots = slots.filter((slot, index, self) =>
+    index === self.findIndex(s => s.time === slot.time)
+  ).sort((a, b) => a.time.localeCompare(b.time))
+
+  return uniqueSlots
 })
 
 // Step navigation computed properties
@@ -885,6 +953,74 @@ const formatTimeDisplay = (hour, minute) => {
   const period = hour >= 12 ? 'PM' : 'AM'
   const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
   return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`
+}
+
+// Get the schedule of the main branch or first branch
+const getMainBranchSchedule = () => {
+  if (!clinic.value.branches || clinic.value.branches.length === 0) {
+    return ''
+  }
+
+  // Find main branch or use first branch
+  const mainBranch = clinic.value.branches.find(b => b.is_main_branch) || clinic.value.branches[0]
+  return mainBranch.schedule || ''
+}
+
+// Get the schedule for the selected branch (or default to main branch)
+const getSelectedBranchSchedule = () => {
+  if (!clinic.value.branches || clinic.value.branches.length === 0) {
+    return ''
+  }
+
+  let selectedBranch
+  if (form.value.branch_id) {
+    selectedBranch = clinic.value.branches.find(b => b.id == form.value.branch_id)
+  }
+
+  if (!selectedBranch) {
+    // Find main branch or use first branch
+    selectedBranch = clinic.value.branches.find(b => b.is_main_branch) || clinic.value.branches[0]
+  }
+
+  return selectedBranch.schedule || ''
+}
+
+// Parse time string (HH:MM) to object with hour and minute
+const parseTimeString = (timeString) => {
+  if (!timeString || typeof timeString !== 'string') return null
+
+  const parts = timeString.split(':')
+  if (parts.length !== 2) return null
+
+  const hour = parseInt(parts[0])
+  const minute = parseInt(parts[1])
+
+  if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return null
+  }
+
+  return { hour, minute }
+}
+
+// Get operating periods for a specific date
+const getOperatingPeriodsForDate = (scheduleString, dateString) => {
+  if (!scheduleString || !dateString) return []
+
+  try {
+    const schedule = JSON.parse(scheduleString)
+    const date = new Date(dateString + 'T00:00:00')
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+
+    const daySchedule = schedule[dayName]
+    if (!daySchedule || !daySchedule.enabled || !daySchedule.periods) {
+      return []
+    }
+
+    return daySchedule.periods
+  } catch (error) {
+    console.error('Error parsing schedule:', error)
+    return []
+  }
 }
 
 // Check if patient exists by phone number

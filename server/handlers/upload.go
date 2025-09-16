@@ -22,6 +22,7 @@ const (
 	UploadBaseDir    = "uploads"
 	AvatarDir        = "avatars"
 	InventoryItemDir = "inventory-items"
+	ClinicLogoDir    = "clinic-logos"
 )
 
 var AllowedImageTypes = map[string]bool{
@@ -41,6 +42,7 @@ func createUploadDirs() {
 	dirs := []string{
 		filepath.Join(UploadBaseDir, AvatarDir),
 		filepath.Join(UploadBaseDir, InventoryItemDir),
+		filepath.Join(UploadBaseDir, ClinicLogoDir),
 	}
 
 	for _, dir := range dirs {
@@ -278,6 +280,119 @@ func DeleteInventoryItemImage(c *fiber.Ctx) error {
 
 	// Construct full file path
 	fullPath := filepath.Join(UploadBaseDir, imagePath)
+
+	// Check if file exists
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "File not found",
+		})
+	}
+
+	// Delete the file
+	if err := os.Remove(fullPath); err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to delete file",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"message": "File deleted successfully",
+	})
+}
+
+func UploadClinicLogo(c *fiber.Ctx) error {
+	// Get clinic ID from form
+	clinicIDStr := c.FormValue("clinic_id")
+	if clinicIDStr == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Clinic ID is required",
+		})
+	}
+
+	clinicID, err := strconv.ParseUint(clinicIDStr, 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid clinic ID",
+		})
+	}
+
+	// Get the file from form
+	file, err := c.FormFile("logo")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "No file uploaded",
+		})
+	}
+
+	// Validate file size
+	if file.Size > MaxFileSize {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "File size too large. Maximum size is 5MB",
+		})
+	}
+
+	// Validate file type
+	if !AllowedImageTypes[file.Header.Get("Content-Type")] {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed",
+		})
+	}
+
+	// Create year/month directory structure
+	now := time.Now()
+	yearMonth := fmt.Sprintf("%d/%02d", now.Year(), now.Month())
+	logoDir := filepath.Join(UploadBaseDir, ClinicLogoDir, yearMonth)
+
+	// Create directory if it doesn't exist
+	if err := os.MkdirAll(logoDir, 0755); err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to create upload directory",
+		})
+	}
+
+	// Save the file
+	filename, err := saveFile(file, logoDir)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to save file",
+		})
+	}
+
+	// Return the file path relative to uploads directory
+	relativePath := filepath.Join(ClinicLogoDir, yearMonth, filename)
+	// Convert to forward slashes for URLs
+	relativePath = strings.ReplaceAll(relativePath, "\\", "/")
+
+	// Update the clinic with the new logo path
+	if err := database.DB.Model(&models.Clinic{}).Where("id = ?", clinicID).Update("logo", relativePath).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "File uploaded but failed to update clinic: " + err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success":  true,
+		"filename": filename,
+		"path":     relativePath,
+		"url":      "/uploads/" + relativePath,
+	})
+}
+
+func DeleteClinicLogo(c *fiber.Ctx) error {
+	logoPath := c.Query("path")
+	if logoPath == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Logo path is required",
+		})
+	}
+
+	// Remove leading slash and "uploads/" if present
+	logoPath = strings.TrimPrefix(logoPath, "/")
+	logoPath = strings.TrimPrefix(logoPath, "uploads/")
+
+	// Construct full file path
+	fullPath := filepath.Join(UploadBaseDir, logoPath)
 
 	// Check if file exists
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {

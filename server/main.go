@@ -169,6 +169,8 @@ func main() {
 	api.Delete("/upload/avatar", handlers.DeleteAvatar)
 	api.Post("/upload/inventory-item-image", handlers.UploadInventoryItemImage)
 	api.Delete("/upload/inventory-item-image", handlers.DeleteInventoryItemImage)
+	api.Post("/upload/clinic-logo", handlers.UploadClinicLogo)
+	api.Delete("/upload/clinic-logo", handlers.DeleteClinicLogo)
 
 	// Clinic management routes
 	api.Get("/clinics", handlers.GetClinics)
@@ -352,6 +354,7 @@ func createDefaultAdmin() {
 			Email:    "info@dentika.com",
 			Website:  "https://dentika.com",
 			Code:     "Dentika",
+			Tagline:  "Your Trusted Dental Partner in Cebu",
 			IsActive: true,
 		}
 
@@ -361,13 +364,15 @@ func createDefaultAdmin() {
 		} else {
 			// Create main branch for the clinic with ID = 1
 			mainBranch := models.Branch{
-				ID:           1,
-				Name:         "Main Branch",
-				Address:      dentikaClinic.Address,
-				Phone:        dentikaClinic.Phone,
-				IsMainBranch: true,
-				IsActive:     true,
-				ClinicID:     dentikaClinic.ID,
+				ID:               1,
+				Name:             "Main Branch",
+				Address:          dentikaClinic.Address,
+				Phone:            dentikaClinic.Phone,
+				IsMainBranch:     true,
+				IsActive:         true,
+				Schedule: `{"monday":{"enabled":true,"periods":[{"start":"09:00","end":"17:00"}]},"tuesday":{"enabled":true,"periods":[{"start":"09:00","end":"17:00"}]},"wednesday":{"enabled":true,"periods":[{"start":"09:00","end":"17:00"}]},"thursday":{"enabled":true,"periods":[{"start":"09:00","end":"17:00"}]},"friday":{"enabled":true,"periods":[{"start":"09:00","end":"17:00"}]},"saturday":{"enabled":true,"periods":[{"start":"09:00","end":"12:00"}]},"sunday":{"enabled":false,"periods":[]},"holidays":{"enabled":false},"timezone":"UTC"}`,
+				IsClosedToday:    false,
+				ClinicID:         dentikaClinic.ID,
 			}
 
 			if err := database.DB.Create(&mainBranch).Error; err != nil {
@@ -1052,6 +1057,7 @@ func seedAdditionalClinics() {
 		Email:    "info@smilecare.ph",
 		Website:  "https://smilecare.ph",
 		Code:     "SmileCare",
+		Tagline:  "Caring for Your Smile with Excellence",
 		IsActive: true,
 	}
 
@@ -1062,13 +1068,15 @@ func seedAdditionalClinics() {
 
 	// Create main branch for SmileCare
 	smileCareBranch := models.Branch{
-		ID:           2,
-		Name:         "Main Branch",
-		Address:      smileCareClinic.Address,
-		Phone:        smileCareClinic.Phone,
-		IsMainBranch: true,
-		IsActive:     true,
-		ClinicID:     smileCareClinic.ID,
+		ID:               2,
+		Name:             "Main Branch",
+		Address:          smileCareClinic.Address,
+		Phone:            smileCareClinic.Phone,
+		IsMainBranch:     true,
+		IsActive:         true,
+		Schedule: `{"monday":{"enabled":true,"periods":[{"start":"08:00","end":"18:00"}]},"tuesday":{"enabled":true,"periods":[{"start":"08:00","end":"18:00"}]},"wednesday":{"enabled":true,"periods":[{"start":"08:00","end":"18:00"}]},"thursday":{"enabled":true,"periods":[{"start":"08:00","end":"18:00"}]},"friday":{"enabled":true,"periods":[{"start":"08:00","end":"18:00"}]},"saturday":{"enabled":true,"periods":[{"start":"08:00","end":"16:00"}]},"sunday":{"enabled":true,"periods":[{"start":"09:00","end":"14:00"}]},"holidays":{"enabled":true},"timezone":"UTC"}`,
+		IsClosedToday:    false,
+		ClinicID:         smileCareClinic.ID,
 	}
 
 	if err := database.DB.Create(&smileCareBranch).Error; err != nil {
@@ -1084,6 +1092,7 @@ func seedAdditionalClinics() {
 		Email:    "info@brightsmile.ph",
 		Website:  "https://brightsmile.ph",
 		Code:     "BrightSmile",
+		Tagline:  "Bringing Brightness to Your Smile",
 		IsActive: true,
 	}
 
@@ -1094,13 +1103,15 @@ func seedAdditionalClinics() {
 
 	// Create main branch for Bright Smile
 	brightSmileMainBranch := models.Branch{
-		ID:           3,
-		Name:         "Main Branch",
-		Address:      brightSmileClinic.Address,
-		Phone:        brightSmileClinic.Phone,
-		IsMainBranch: true,
-		IsActive:     true,
-		ClinicID:     brightSmileClinic.ID,
+		ID:               3,
+		Name:             "Main Branch",
+		Address:          brightSmileClinic.Address,
+		Phone:            brightSmileClinic.Phone,
+		IsMainBranch:     true,
+		IsActive:         true,
+		Schedule: `{"monday":{"enabled":true,"periods":[{"start":"09:00","end":"19:00"}]},"tuesday":{"enabled":true,"periods":[{"start":"09:00","end":"19:00"}]},"wednesday":{"enabled":true,"periods":[{"start":"09:00","end":"19:00"}]},"thursday":{"enabled":true,"periods":[{"start":"09:00","end":"19:00"}]},"friday":{"enabled":true,"periods":[{"start":"09:00","end":"19:00"}]},"saturday":{"enabled":true,"periods":[{"start":"09:00","end":"17:00"}]},"sunday":{"enabled":false,"periods":[]},"holidays":{"enabled":false},"timezone":"UTC"}`,
+		IsClosedToday:    false,
+		ClinicID:         brightSmileClinic.ID,
 	}
 
 	if err := database.DB.Create(&brightSmileMainBranch).Error; err != nil {
@@ -1110,13 +1121,15 @@ func seedAdditionalClinics() {
 
 	// Create second branch for Bright Smile
 	brightSmileSecondBranch := models.Branch{
-		ID:           4,
-		Name:         "Lahug Branch",
-		Address:      "3/F Ayala Terraces, Salinas Drive, Lahug, Cebu City, 6000 Cebu",
-		Phone:        "+63322345679",
-		IsMainBranch: false,
-		IsActive:     true,
-		ClinicID:     brightSmileClinic.ID,
+		ID:               4,
+		Name:             "Lahug Branch",
+		Address:          "3/F Ayala Terraces, Salinas Drive, Lahug, Cebu City, 6000 Cebu",
+		Phone:            "+63322345679",
+		IsMainBranch:     false,
+		IsActive:         true,
+		Schedule: `{"monday":{"enabled":true,"periods":[{"start":"10:00","end":"18:00"}]},"tuesday":{"enabled":true,"periods":[{"start":"10:00","end":"18:00"}]},"wednesday":{"enabled":true,"periods":[{"start":"10:00","end":"18:00"}]},"thursday":{"enabled":true,"periods":[{"start":"10:00","end":"18:00"}]},"friday":{"enabled":true,"periods":[{"start":"10:00","end":"18:00"}]},"saturday":{"enabled":true,"periods":[{"start":"10:00","end":"15:00"}]},"sunday":{"enabled":false,"periods":[]},"holidays":{"enabled":false},"timezone":"UTC"}`,
+		IsClosedToday:    false,
+		ClinicID:         brightSmileClinic.ID,
 	}
 
 	if err := database.DB.Create(&brightSmileSecondBranch).Error; err != nil {

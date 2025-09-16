@@ -169,6 +169,24 @@
                   </div>
                </router-link>
              </li>
+             <li role="listitem">
+               <router-link
+                 to="/settings"
+                 @click="closeSidebarOnMobile"
+                 class="group flex items-center px-3 py-2 text-sm font-medium text-neutral-600 rounded-xl hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                 :class="{ 'bg-primary-100 text-primary-700 shadow-sm': $route.path.startsWith('/settings') }"
+                 :aria-current="$route.path.startsWith('/settings') ? 'page' : null"
+               >
+                 <div class="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100 group-hover:bg-blue-200 transition-colors duration-200"
+                      :class="{ 'bg-blue-200': $route.path.startsWith('/settings') }">
+                    <font-awesome-icon icon="fa-solid fa-cog" class="w-5 h-5" />
+                 </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium truncate">Settings</div>
+                    <div class="text-xs text-gray-400 truncate">Clinic configuration</div>
+                  </div>
+               </router-link>
+             </li>
           </ul>
         </div>
 

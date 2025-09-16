@@ -7,7 +7,16 @@
 **Phone:** +63 32 520 8888
 **Email:** info@dentika.com
 **Website:** https://dentika.com
+**Tagline:** Your Trusted Dental Partner in Cebu
 **Branches:** 1 (Main Branch)
+
+#### Branch 1 - Main Branch (ID: 1)
+**Address:** Unit 205 JY Square Mall, Lahug, Cebu City, 6000 Cebu
+**Phone:** +63 32 520 8888
+**Operating Hours:** Mon-Fri: 9:00-17:00, Sat: 9:00-12:00
+**Operating Days:** Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
+**Open on Holidays:** No
+**Closed Today:** No
 
 **Users:**
 - **Super Admin:** admin / admin (Admin User) - admin@dentika.com
@@ -21,7 +30,16 @@
 **Phone:** +63 32 412 3456
 **Email:** info@smilecare.ph
 **Website:** https://smilecare.ph
+**Tagline:** Caring for Your Smile with Excellence
 **Branches:** 1 (Main Branch)
+
+#### Branch 1 - Main Branch (ID: 2)
+**Address:** G/F Ayala Center Cebu, Cebu Business Park, Cebu City, 6000 Cebu
+**Phone:** +63 32 412 3456
+**Operating Hours:** Mon-Sat: 8:00-18:00, Sun: 9:00-14:00
+**Operating Days:** Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+**Open on Holidays:** Yes
+**Closed Today:** No
 
 **Users:**
 - **Admins:**
@@ -50,15 +68,24 @@
 **Phone:** +63 32 234 5678
 **Email:** info@brightsmile.ph
 **Website:** https://brightsmile.ph
+**Tagline:** Bringing Brightness to Your Smile
 **Branches:** 2
 
 #### Branch 1 - Main Branch (ID: 3)
 **Address:** 2/F Robinson's Galleria Cebu, Gen. Maxilom Avenue, Cebu City, 6000 Cebu
 **Phone:** +63 32 234 5678
+**Operating Hours:** Mon-Fri: 9:00-19:00, Sat: 9:00-17:00
+**Operating Days:** Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
+**Open on Holidays:** No
+**Closed Today:** No
 
 #### Branch 2 - Lahug Branch (ID: 4)
 **Address:** 3/F Ayala Terraces, Salinas Drive, Lahug, Cebu City, 6000 Cebu
 **Phone:** +63 32 234 5679
+**Operating Hours:** Mon-Fri: 10:00-18:00, Sat: 10:00-15:00
+**Operating Days:** Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
+**Open on Holidays:** No
+**Closed Today:** No
 
 **Users:**
 - **Admins:**
@@ -83,8 +110,8 @@
 ---
 
 ## Summary
-- **Total Clinics:** 3
-- **Total Branches:** 4
+- **Total Clinics:** 3 (with taglines)
+- **Total Branches:** 4 (with operating hours, days, and holiday settings)
 - **Total Users:** 15 (1 super admin + 14 clinic staff)
 - **Total Patients:** 40 (20 for SmileCare + 20 for Bright Smile)
 
@@ -92,6 +119,15 @@ All passwords are set to "admin" for testing purposes.
 All addresses are based in Cebu City, Philippines with local phone numbers.
 
 ## Database Schema Updates
+
+### Clinic and Branch Field Additions
+- **Added to Clinics:** `tagline` field for clinic slogans/taglines
+- **Added to Branches:**
+  - `operating_hours` - JSON string for flexible operating hours (e.g., `{"monday": "9:00-17:00"}`)
+  - `operating_days` - JSON array for operating days (e.g., `["monday", "tuesday"]`)
+  - `is_open_on_holidays` - Boolean flag for holiday operations
+  - `is_closed_today` - Override flag to close branch even when normally open
+- **Benefit:** Enhanced clinic and branch management with detailed operating information
 
 ### Consent Template Index Fix
 - **Fixed:** `idx_consent_templates_code` to be unique per clinic

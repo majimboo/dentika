@@ -15,13 +15,16 @@ type CreateClinicRequest struct {
 	Phone   string `json:"phone"`
 	Email   string `json:"email"`
 	Website string `json:"website"`
+	Tagline string `json:"tagline"`
 }
 
 type CreateBranchRequest struct {
-	Name         string `json:"name"`
-	Address      string `json:"address"`
-	Phone        string `json:"phone"`
-	IsMainBranch bool   `json:"is_main_branch"`
+	Name          string `json:"name"`
+	Address       string `json:"address"`
+	Phone         string `json:"phone"`
+	IsMainBranch  bool   `json:"is_main_branch"`
+	Schedule      string `json:"schedule"`
+	IsClosedToday bool   `json:"is_closed_today"`
 }
 
 func GetClinics(c *fiber.Ctx) error {
@@ -85,6 +88,7 @@ func CreateClinic(c *fiber.Ctx) error {
 		Phone:    req.Phone,
 		Email:    req.Email,
 		Website:  req.Website,
+		Tagline:  req.Tagline,
 		IsActive: true,
 	}
 
@@ -152,6 +156,9 @@ func UpdateClinic(c *fiber.Ctx) error {
 	if req.Website != "" {
 		clinic.Website = req.Website
 	}
+	if req.Tagline != "" {
+		clinic.Tagline = req.Tagline
+	}
 
 	if err := database.DB.Save(&clinic).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to update clinic"})
@@ -210,12 +217,14 @@ func CreateBranch(c *fiber.Ctx) error {
 	}
 
 	branch := models.Branch{
-		Name:         req.Name,
-		Address:      req.Address,
-		Phone:        req.Phone,
-		IsMainBranch: req.IsMainBranch,
-		IsActive:     true,
-		ClinicID:     uint(clinicID),
+		Name:          req.Name,
+		Address:       req.Address,
+		Phone:         req.Phone,
+		IsMainBranch:  req.IsMainBranch,
+		IsActive:      true,
+		Schedule:      req.Schedule,
+		IsClosedToday: req.IsClosedToday,
+		ClinicID:      uint(clinicID),
 	}
 
 	if err := database.DB.Create(&branch).Error; err != nil {
@@ -300,6 +309,8 @@ func UpdateBranch(c *fiber.Ctx) error {
 	branch.Address = req.Address
 	branch.Phone = req.Phone
 	branch.IsMainBranch = req.IsMainBranch
+	branch.Schedule = req.Schedule
+	branch.IsClosedToday = req.IsClosedToday
 
 	if err := database.DB.Save(&branch).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to update branch"})

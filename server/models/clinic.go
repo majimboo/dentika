@@ -15,6 +15,7 @@ type Clinic struct {
 	Email    string `json:"email" gorm:"size:100"`
 	Website  string `json:"website" gorm:"size:200"`
 	Logo     string `json:"logo" gorm:"size:500"`
+	Tagline  string `json:"tagline" gorm:"size:300"` // Clinic tagline/slogan
 	IsActive bool   `json:"is_active" gorm:"default:true"`
 
 	// Relationships
@@ -34,6 +35,8 @@ type Branch struct {
 	Phone        string `json:"phone" gorm:"size:50"`
 	IsMainBranch bool   `json:"is_main_branch" gorm:"default:false"`
 	IsActive     bool   `json:"is_active" gorm:"default:true"`
+	Schedule     string `json:"schedule" gorm:"type:text"` // JSON string for complete schedule configuration
+	IsClosedToday bool  `json:"is_closed_today" gorm:"default:false"` // Override flag to close branch even if normally open
 
 	// Foreign Keys
 	ClinicID uint   `json:"clinic_id" gorm:"not null;index"`

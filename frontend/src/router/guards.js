@@ -17,11 +17,15 @@ export function setupRouterGuards(router) {
 
     const isAuthenticated = authStore.isAuthenticated
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+    const isPublic = to.matched.some(record => record.meta.public)
     const hideLayout = to.matched.some(record => record.meta.hideLayout)
     const requiresNonSuperAdmin = to.matched.some(record => record.meta.requiresNonSuperAdmin)
     const requiresSuperAdmin = to.matched.some(record => record.meta.requiresSuperAdmin)
 
-    if (requiresAuth && !isAuthenticated) {
+    // Allow public routes to bypass authentication
+    if (isPublic) {
+      next()
+    } else if (requiresAuth && !isAuthenticated) {
       next('/login')
     } else if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
       next('/')

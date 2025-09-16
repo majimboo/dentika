@@ -150,10 +150,16 @@ func main() {
 		return c.JSON(handlers.GetWSStats())
 	})
 
-	// Auth routes
+	// Auth routes (public)
 	app.Post("/api/auth/login", handlers.Login)
 	app.Post("/api/auth/register", handlers.Register)
 	app.Get("/api/auth/health", handlers.HealthCheck)
+
+	// Patient self-scheduling routes (public routes - no auth required)
+	app.Get("/api/public/clinic/:clinicIdentifier", handlers.GetClinicInfo)
+	app.Get("/api/public/timeslots/:clinicIdentifier", handlers.GetAvailableTimeSlots)
+	app.Get("/api/public/patient/:clinicIdentifier", handlers.CheckPatientByPhone)
+	app.Post("/api/public/schedule/:clinicIdentifier", handlers.CreatePatientSelfSchedule)
 
 	// Protected routes
 	api := app.Group("/api", middleware.AuthMiddleware())
@@ -190,12 +196,6 @@ func main() {
 	api.Post("/patients", handlers.CreatePatient)
 	api.Put("/patients/:id", handlers.UpdatePatient)
 	api.Delete("/patients/:id", handlers.DeactivatePatient)
-
-	// Patient self-scheduling routes (public routes - no auth required)
-	app.Get("/api/public/clinic/:clinicIdentifier", handlers.GetClinicInfo)
-	app.Get("/api/public/timeslots/:clinicIdentifier", handlers.GetAvailableTimeSlots)
-	app.Get("/api/public/patient/:clinicIdentifier", handlers.CheckPatientByPhone)
-	app.Post("/api/public/schedule/:clinicIdentifier", handlers.CreatePatientSelfSchedule)
 
 	// Patient diagnosis routes
 	api.Get("/patients/:patientId/diagnoses", handlers.GetPatientDiagnoses)

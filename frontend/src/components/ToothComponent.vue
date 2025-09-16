@@ -49,8 +49,8 @@
             fill="transparent"
             class="surface-area surface-occlusal"
             :class="{ 'surface-selected': isSurfaceSelected('occlusal') }"
-            @click.stop="handleSurfaceClick('occlusal')"
-            :title="'Occlusal surface - ' + (isSurfaceSelected('occlusal') ? 'Selected' : 'Click to select')"
+            @click="handleSurfaceClick('occlusal')"
+            :title="'Occlusal surface - ' + (props.editable ? 'Click to edit' : 'View details')"
           />
 
           <!-- Right surface (mesial/distal depending on quadrant) -->
@@ -62,8 +62,8 @@
               'surface-' + getRightSurface(),
               { 'surface-selected': isSurfaceSelected(getRightSurface()) }
             ]"
-            @click.stop="handleSurfaceClick(getRightSurface())"
-            :title="getRightSurface() + ' surface - ' + (isSurfaceSelected(getRightSurface()) ? 'Selected' : 'Click to select')"
+            @click="handleSurfaceClick(getRightSurface())"
+            :title="getRightSurface() + ' surface - ' + (props.editable ? 'Click to edit' : 'View details')"
           />
 
           <!-- Bottom surface (lingual/buccal depending on quadrant) -->
@@ -75,8 +75,8 @@
               'surface-' + getBottomSurface(),
               { 'surface-selected': isSurfaceSelected(getBottomSurface()) }
             ]"
-            @click.stop="handleSurfaceClick(getBottomSurface())"
-            :title="getBottomSurface() + ' surface - ' + (isSurfaceSelected(getBottomSurface()) ? 'Selected' : 'Click to select')"
+            @click="handleSurfaceClick(getBottomSurface())"
+            :title="getBottomSurface() + ' surface - ' + (props.editable ? 'Click to edit' : 'View details')"
           />
 
           <!-- Left surface (mesial/distal depending on quadrant) -->
@@ -88,8 +88,8 @@
               'surface-' + getLeftSurface(),
               { 'surface-selected': isSurfaceSelected(getLeftSurface()) }
             ]"
-            @click.stop="handleSurfaceClick(getLeftSurface())"
-            :title="getLeftSurface() + ' surface - ' + (isSurfaceSelected(getLeftSurface()) ? 'Selected' : 'Click to select')"
+            @click="handleSurfaceClick(getLeftSurface())"
+            :title="getLeftSurface() + ' surface - ' + (props.editable ? 'Click to edit' : 'View details')"
           />
 
           <!-- Center area (whole tooth) -->
@@ -102,8 +102,8 @@
             stroke-width="2"
             class="surface-area surface-center"
             :class="{ 'surface-selected': isSurfaceSelected('center') }"
-            @click.stop="handleSurfaceClick('center')"
-            :title="'Whole tooth - ' + (isSurfaceSelected('center') ? 'Selected' : 'Click to select')"
+            @click="handleSurfaceClick('center')"
+            :title="'Whole tooth - ' + (props.editable ? 'Click to edit' : 'View details')"
           />
 
           <!-- Surface indicators (dots) -->
@@ -367,30 +367,15 @@ const isSurfaceSelected = (surface) => {
 }
 
 const handleSurfaceClick = (surface) => {
-  if (!props.editable) return
-
-  const currentSurfaces = props.tooth.surfaces || []
-  let newSurfaces
-
-  if (surface === 'center') {
-    // Selecting center toggles whole tooth selection
-    newSurfaces = currentSurfaces.includes('center') ? [] : ['center']
-  } else {
-    // For specific surfaces, toggle that surface
-    if (currentSurfaces.includes(surface)) {
-      newSurfaces = currentSurfaces.filter(s => s !== surface)
-    } else {
-      // Remove center if selecting specific surface
-      newSurfaces = [...currentSurfaces.filter(s => s !== 'center'), surface]
-    }
+  if (!props.editable) {
+    // If not editable, just trigger the main tooth click
+    handleClick()
+    return
   }
 
-  const updatedTooth = {
-    ...props.tooth,
-    surfaces: newSurfaces
-  }
-
-  emit('update', updatedTooth)
+  // In the new workflow, surface clicks should open the edit modal
+  // instead of just selecting surfaces
+  handleClick()
 }
 
 const getSurfaceIndicatorPosition = (surface) => {

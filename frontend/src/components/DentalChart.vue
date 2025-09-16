@@ -1,28 +1,110 @@
 <template>
   <div class="dental-chart">
-    <div class="dental-chart-header mb-4">
-      <h3 class="text-lg font-semibold text-gray-900">Dental Chart</h3>
-      <div class="flex items-center space-x-4">
-        <div class="flex items-center space-x-2">
-          <label class="text-sm font-medium text-gray-700">Chart Type:</label>
-           <select
-             v-model="chartType"
-             @change="switchChartType"
-             class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-           >
-             <option value="permanent">Adult Teeth (FDI)</option>
-             <option value="primary">Primary Teeth (A-T)</option>
-           </select>
+    <!-- Read-only banner for non-doctors -->
+    <div v-if="!isDoctor" class="read-only-banner bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <font-awesome-icon icon="fa-solid fa-eye" class="w-5 h-5 text-blue-600" />
+          </div>
+          <div class="ml-3">
+            <h4 class="text-sm font-medium text-blue-800">
+              Read-Only Access
+            </h4>
+            <p class="text-sm text-blue-600">
+              You are viewing this dental chart in read-only mode. Only doctors can modify chart data and settings.
+            </p>
+          </div>
         </div>
-        
-        <div v-if="isDoctor" class="flex items-center space-x-2">
-          <button 
-            @click="toggleEditMode"
-            class="px-3 py-1 text-sm rounded-md transition-colors"
-            :class="editMode ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'"
+        <div class="flex-shrink-0">
+          <font-awesome-icon icon="fa-solid fa-lock" class="w-4 h-4 text-blue-500" />
+        </div>
+      </div>
+    </div>
+
+    <div class="dental-chart-header mb-6">
+      <div class="header-top flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">Dental Chart</h3>
+          <p class="text-sm text-gray-600">Interactive dental chart with visit tracking</p>
+        </div>
+
+        <div class="header-actions flex items-center space-x-3">
+          <!-- Chart History Button -->
+          <button
+            @click="showChartHistory = !showChartHistory"
+            class="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
           >
-            {{ editMode ? 'Exit Edit' : 'Edit Chart' }}
+            <font-awesome-icon icon="fa-solid fa-history" class="w-4 h-4 mr-1" />
+            {{ showChartHistory ? 'Hide History' : 'Chart History' }}
           </button>
+
+          <!-- Edit mode toggle -->
+          <div v-if="isDoctor">
+            <button
+              @click="toggleEditMode"
+              class="px-3 py-2 text-sm font-medium rounded-md transition-colors"
+              :class="editMode ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'"
+            >
+              {{ editMode ? 'Exit Edit' : 'Edit Chart' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart Type Selection - More Prominent -->
+      <div class="chart-type-selection bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <label class="text-sm font-medium text-gray-700 mb-2 block">Chart Type:</label>
+            <div class="chart-type-buttons flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              <button
+                @click="setChartType('permanent')"
+                :disabled="!isDoctor"
+                class="chart-type-btn"
+                :class="chartType === 'permanent' ? 'chart-type-btn-active' : 'chart-type-btn-inactive'"
+                title="Switch to adult teeth chart (automatically saved)"
+              >
+                <font-awesome-icon icon="fa-solid fa-user" class="w-4 h-4 mr-2" />
+                Adult Teeth
+                <span class="chart-notation">(FDI Notation)</span>
+              </button>
+              <button
+                @click="setChartType('primary')"
+                :disabled="!isDoctor"
+                class="chart-type-btn"
+                :class="chartType === 'primary' ? 'chart-type-btn-active' : 'chart-type-btn-inactive'"
+                title="Switch to child teeth chart (automatically saved)"
+              >
+                <font-awesome-icon icon="fa-solid fa-child" class="w-4 h-4 mr-2" />
+                Child Teeth
+                <span class="chart-notation">(A-T Notation)</span>
+              </button>
+            </div>
+
+            <!-- Chart type status -->
+            <div class="chart-type-status mt-2">
+              <div class="text-xs text-gray-600">
+                <font-awesome-icon icon="fa-solid fa-check-circle" class="w-3 h-3 text-green-500 mr-1" />
+                Chart type selection is automatically saved
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart Info -->
+          <div class="chart-info text-sm text-gray-600">
+            <div class="info-stats flex space-x-4">
+              <div class="stat-item">
+                <span class="font-medium">Total:</span> {{ totalTeethCount }}
+              </div>
+              <div class="stat-item">
+                <span class="font-medium">Healthy:</span> {{ healthyTeethCount }}
+              </div>
+              <div class="stat-item">
+                <span class="font-medium">Issues:</span> {{ problemTeethCount }}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -142,10 +224,16 @@
       @close="deselectTooth"
     />
 
+    <!-- Chart History Section -->
+    <div v-if="showChartHistory" class="chart-history-section mt-8">
+      <DentalChartHistory :patientId="patientId" />
+    </div>
+
     <!-- Tooth Edit Modal -->
     <ToothEditModal
       v-if="editingTooth"
       :tooth="editingTooth"
+      :patientId="patientId"
       @save="saveToothEdit"
       @cancel="cancelToothEdit"
     />
@@ -159,6 +247,7 @@ import { useDentalRecordStore } from '../stores/dentalRecord'
 import ToothComponent from './ToothComponent.vue'
 import ToothDetailsPanel from './ToothDetailsPanel.vue'
 import ToothEditModal from './ToothEditModal.vue'
+import DentalChartHistory from './DentalChartHistory.vue'
 
 const props = defineProps({
   patientId: {
@@ -180,6 +269,7 @@ const chartType = ref('permanent')
 const editMode = ref(false)
 const selectedTooth = ref(null)
 const editingTooth = ref(null)
+const showChartHistory = ref(false)
 
 const loading = computed(() => dentalRecordStore.isLoading)
 const isDoctor = computed(() => authStore.isDoctor || authStore.isSuperAdmin)
@@ -188,6 +278,18 @@ const teethData = computed(() => dentalRecordStore.currentRecord?.teeth_data || 
 const selectedToothData = computed(() => {
   if (!selectedTooth.value) return null
   return teethData.value.find(tooth => tooth.tooth_number === selectedTooth.value)
+})
+
+const totalTeethCount = computed(() => teethData.value.length)
+
+const healthyTeethCount = computed(() => {
+  return teethData.value.filter(tooth => tooth.condition === 'healthy').length
+})
+
+const problemTeethCount = computed(() => {
+  return teethData.value.filter(tooth =>
+    ['decay', 'extracted', 'missing'].includes(tooth.condition)
+  ).length
 })
 
 const legendItems = {
@@ -232,8 +334,17 @@ const getQuadrantTeeth = (quadrant) => {
 }
 
 const selectTooth = (toothNumber) => {
-  selectedTooth.value = selectedTooth.value === toothNumber ? null : toothNumber
-  dentalRecordStore.setSelectedTooth(selectedTooth.value)
+  if (editMode.value && isDoctor.value) {
+    // In edit mode, directly open the edit modal
+    const tooth = teethData.value.find(t => t.tooth_number === toothNumber)
+    if (tooth) {
+      editingTooth.value = tooth
+    }
+  } else {
+    // In view mode, just select the tooth for details
+    selectedTooth.value = selectedTooth.value === toothNumber ? null : toothNumber
+    dentalRecordStore.setSelectedTooth(selectedTooth.value)
+  }
 }
 
 const deselectTooth = () => {
@@ -250,32 +361,48 @@ const toggleEditMode = () => {
 
 const updateTooth = async (toothData) => {
   if (!dentalRecordStore.currentRecord) return
-  
-  const result = await dentalRecordStore.updateToothCondition(
-    dentalRecordStore.currentRecord.id,
-    toothData
-  )
-  
+
+  let result
+  if (toothData.appointment_id) {
+    // Use the appointment-linked update method
+    result = await dentalRecordStore.updateToothConditionWithAppointment(
+      dentalRecordStore.currentRecord.id,
+      toothData,
+      toothData.appointment_id
+    )
+  } else {
+    // Use the regular update method
+    result = await dentalRecordStore.updateToothCondition(
+      dentalRecordStore.currentRecord.id,
+      toothData
+    )
+  }
+
   if (result.success) {
     emit('toothUpdated', toothData)
     emit('chartUpdated')
   }
 }
 
+const setChartType = async (type) => {
+  chartType.value = type
+  await switchChartType()
+}
+
 const switchChartType = async () => {
-  const targetRecord = dentalRecordStore.dentalRecords.find(record => 
+  const targetRecord = dentalRecordStore.dentalRecords.find(record =>
     record.record_type === chartType.value
   )
-  
+
   if (targetRecord) {
-    if (!targetRecord.is_active && isDoctor.value) {
-      // Activate the record if it's not active
+    if (isDoctor.value) {
+      // For doctors, always activate the selected record to persist the choice
       await dentalRecordStore.activateDentalRecord(targetRecord.id)
     } else {
       dentalRecordStore.setCurrentRecord(targetRecord)
     }
   }
-  
+
   deselectTooth()
 }
 
@@ -296,17 +423,36 @@ const cancelToothEdit = () => {
 onMounted(async () => {
   if (props.patientId) {
     await dentalRecordStore.fetchPatientDentalRecords(props.patientId)
-    
-    // Set initial chart type based on available records
-    const permanentRecord = dentalRecordStore.getPermanentTeethRecord
-    const primaryRecord = dentalRecordStore.getPrimaryTeethRecord
-    
-    if (permanentRecord) {
-      chartType.value = 'permanent'
-      dentalRecordStore.setCurrentRecord(permanentRecord)
-    } else if (primaryRecord) {
-      chartType.value = 'primary'
-      dentalRecordStore.setCurrentRecord(primaryRecord)
+
+    // Get the currently active record to determine chart type
+    const activeRecord = dentalRecordStore.getActiveDentalRecord
+
+    if (activeRecord) {
+      // Set chart type based on the active record
+      chartType.value = activeRecord.record_type
+      dentalRecordStore.setCurrentRecord(activeRecord)
+    } else {
+      // If no active record, prioritize permanent teeth but check what's available
+      const permanentRecord = dentalRecordStore.dentalRecords.find(r => r.record_type === 'permanent')
+      const primaryRecord = dentalRecordStore.dentalRecords.find(r => r.record_type === 'primary')
+
+      if (permanentRecord) {
+        chartType.value = 'permanent'
+        if (isDoctor.value) {
+          // Activate permanent record for doctors
+          await dentalRecordStore.activateDentalRecord(permanentRecord.id)
+        } else {
+          dentalRecordStore.setCurrentRecord(permanentRecord)
+        }
+      } else if (primaryRecord) {
+        chartType.value = 'primary'
+        if (isDoctor.value) {
+          // Activate primary record for doctors
+          await dentalRecordStore.activateDentalRecord(primaryRecord.id)
+        } else {
+          dentalRecordStore.setCurrentRecord(primaryRecord)
+        }
+      }
     }
   }
 })
@@ -419,5 +565,73 @@ watch(() => props.readonly, (newValue) => {
 
 .legend-text {
   @apply text-gray-700 capitalize;
+}
+
+/* Chart Type Selection Styles */
+.chart-type-selection {
+  @apply transition-all duration-200;
+}
+
+.chart-type-btn {
+  @apply flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+  @apply border-2;
+}
+
+.chart-type-btn-active {
+  @apply bg-blue-100 border-blue-300 text-blue-800;
+}
+
+.chart-type-btn-inactive {
+  @apply bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400;
+}
+
+.chart-type-btn:disabled {
+  @apply opacity-50 cursor-not-allowed hover:bg-white hover:border-gray-300;
+}
+
+.chart-notation {
+  @apply ml-2 text-xs opacity-75;
+}
+
+.info-stats {
+  @apply text-sm;
+}
+
+.stat-item {
+  @apply whitespace-nowrap;
+}
+
+/* Chart History Section */
+.chart-history-section {
+  @apply border-t border-gray-200 pt-8;
+}
+
+/* Read-only banner styles */
+.read-only-banner {
+  @apply transition-all duration-200;
+}
+
+.read-only-banner:hover {
+  @apply bg-blue-100 border-blue-300;
+}
+
+/* Enhanced disabled styles for chart type buttons */
+.chart-type-btn:disabled .chart-notation {
+  @apply opacity-50;
+}
+
+/* Mobile responsive read-only banner */
+@media (max-width: 640px) {
+  .read-only-banner {
+    @apply px-3 py-3;
+  }
+
+  .read-only-banner .flex {
+    @apply flex-col items-start space-y-2;
+  }
+
+  .read-only-banner .justify-between {
+    @apply justify-start;
+  }
 }
 </style>

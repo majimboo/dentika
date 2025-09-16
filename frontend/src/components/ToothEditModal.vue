@@ -8,7 +8,9 @@
       ></div>
 
       <!-- Modal panel -->
-      <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+      <div class="relative transform overflow-hidden rounded-lg bg-white w-full max-w-lg mx-auto shadow-xl transition-all my-4 sm:my-8">
+        <!-- Mobile-optimized content wrapper -->
+        <div class="px-4 py-5 sm:p-6 max-h-[85vh] overflow-y-auto">
         <div class="modal-header flex items-center justify-between mb-4">
           <div>
             <h3 class="text-lg font-semibold leading-6 text-gray-900">
@@ -58,26 +60,63 @@
             </select>
           </div>
 
-          <!-- Affected surfaces -->
+          <!-- Surface-specific conditions -->
           <div class="form-group">
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Affected Surfaces
+              Surface-Specific Conditions
             </label>
-            <div class="surfaces-grid grid grid-cols-2 gap-2">
-              <label 
-                v-for="surface in availableSurfaces" 
+            <div class="surface-conditions-container">
+              <div
+                v-for="surface in availableSurfaces"
                 :key="surface.value"
-                class="flex items-center p-2 border border-gray-300 rounded cursor-pointer hover:bg-gray-50"
-                :class="{ 'bg-blue-50 border-blue-300': editData.surfaces.includes(surface.value) }"
+                class="surface-condition-item p-3 border border-gray-200 rounded-lg mb-2"
               >
-                <input
-                  type="checkbox"
-                  :value="surface.value"
-                  v-model="editData.surfaces"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 mr-2"
-                >
-                <span class="text-sm">{{ surface.label }}</span>
-              </label>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-sm font-medium text-gray-700">
+                    {{ surface.label }}
+                  </label>
+                  <button
+                    type="button"
+                    @click="toggleSurfaceCondition(surface.value)"
+                    class="text-xs px-2 py-1 rounded transition-colors"
+                    :class="hasSurfaceCondition(surface.value)
+                      ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                  >
+                    {{ hasSurfaceCondition(surface.value) ? 'Remove' : 'Add Condition' }}
+                  </button>
+                </div>
+
+                <div v-if="hasSurfaceCondition(surface.value)" class="surface-condition-details">
+                  <select
+                    :value="getSurfaceCondition(surface.value)"
+                    @change="updateSurfaceCondition(surface.value, $event.target.value)"
+                    class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select condition...</option>
+                    <option v-for="(label, value) in conditionOptions" :key="value" :value="value">
+                      {{ label }}
+                    </option>
+                  </select>
+                </div>
+
+                <div v-else class="text-xs text-gray-500">
+                  This surface is healthy
+                </div>
+              </div>
+
+              <!-- Overall tooth condition note -->
+              <div class="overall-condition-note p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                <div class="flex items-start">
+                  <font-awesome-icon icon="fa-solid fa-info-circle" class="w-3 h-3 text-yellow-600 mt-0.5 mr-2" />
+                  <div class="text-yellow-800">
+                    <strong>Overall tooth condition:</strong> {{ formatCondition(editData.condition) }}
+                    <div class="text-xs mt-1">
+                      The overall condition represents the tooth's general state, while surface conditions show specific issues on each area.
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -93,6 +132,30 @@
               placeholder="Add any relevant notes about this tooth condition..."
               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
             ></textarea>
+          </div>
+
+          <!-- Link to appointment/visit -->
+          <div class="form-group">
+            <label for="appointment" class="block text-sm font-medium text-gray-700 mb-1">
+              Link to Appointment/Visit
+            </label>
+            <select
+              id="appointment"
+              v-model="editData.appointmentId"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">No specific appointment</option>
+              <option
+                v-for="appointment in availableAppointments"
+                :key="appointment.id"
+                :value="appointment.id"
+              >
+                {{ formatAppointmentOption(appointment) }}
+              </option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">
+              Linking to an appointment helps track when this change was made during a specific visit.
+            </p>
           </div>
 
           <!-- Reason for change -->
@@ -124,11 +187,11 @@
               </div>
               
               <div v-if="surfacesChanged" class="flex items-start mb-1">
-                <span class="font-medium">Surfaces:</span>
+                <span class="font-medium">Surface Conditions:</span>
                 <div class="ml-2">
-                  <div>{{ (tooth.surfaces || []).join(', ') || 'None' }}</div>
+                  <div>{{ formatSurfaceConditions(tooth.surface_conditions || []) }}</div>
                   <div class="text-xs">↓</div>
-                  <div>{{ editData.surfaces.join(', ') || 'None' }}</div>
+                  <div>{{ formatSurfaceConditions(editData.surfaceConditions) }}</div>
                 </div>
               </div>
               
@@ -140,46 +203,60 @@
           </div>
 
           <!-- Action buttons -->
-          <div class="flex justify-end space-x-3 pt-4">
+          <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
             <button
               type="button"
               @click="$emit('cancel')"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               Cancel
             </button>
             <button
               type="submit"
               :disabled="!isFormValid"
-              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Changes
+              <span v-if="creating">Saving...</span>
+              <span v-else>Save Changes</span>
             </button>
           </div>
         </form>
+        </div> <!-- End mobile-optimized content wrapper -->
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
+import { useAppointmentStore } from '../stores/appointment'
 
 const props = defineProps({
   tooth: {
     type: Object,
+    required: true
+  },
+  patientId: {
+    type: Number,
     required: true
   }
 })
 
 const emit = defineEmits(['save', 'cancel'])
 
+const appointmentStore = useAppointmentStore()
+
 const editData = reactive({
   condition: props.tooth.condition,
   surfaces: [...(props.tooth.surfaces || [])],
+  surfaceConditions: [...(props.tooth.surface_conditions || [])],
   notes: props.tooth.notes || '',
-  reason: ''
+  reason: '',
+  appointmentId: props.tooth.appointment_id || null
 })
+
+const availableAppointments = ref([])
+const creating = ref(false)
 
 const conditionOptions = {
   healthy: 'Healthy',
@@ -235,11 +312,13 @@ const primaryToothNames = {
 const hasChanges = computed(() => {
   return editData.condition !== props.tooth.condition ||
          JSON.stringify(editData.surfaces.sort()) !== JSON.stringify((props.tooth.surfaces || []).sort()) ||
+         JSON.stringify(editData.surfaceConditions) !== JSON.stringify(props.tooth.surface_conditions || []) ||
          editData.notes !== (props.tooth.notes || '')
 })
 
 const surfacesChanged = computed(() => {
-  return JSON.stringify(editData.surfaces.sort()) !== JSON.stringify((props.tooth.surfaces || []).sort())
+  return JSON.stringify(editData.surfaces.sort()) !== JSON.stringify((props.tooth.surfaces || []).sort()) ||
+         JSON.stringify(editData.surfaceConditions) !== JSON.stringify(props.tooth.surface_conditions || [])
 })
 
 const isFormValid = computed(() => {
@@ -272,21 +351,122 @@ const getCurrentColor = () => {
   return colors[props.tooth.condition] || '#ffffff'
 }
 
+// Surface condition methods
+const hasSurfaceCondition = (surface) => {
+  return editData.surfaceConditions.some(sc => sc.surface === surface)
+}
+
+const getSurfaceCondition = (surface) => {
+  const surfaceCondition = editData.surfaceConditions.find(sc => sc.surface === surface)
+  return surfaceCondition ? surfaceCondition.condition : ''
+}
+
+const updateSurfaceCondition = (surface, condition) => {
+  // Remove existing condition for this surface
+  editData.surfaceConditions = editData.surfaceConditions.filter(sc => sc.surface !== surface)
+
+  // Add new condition if not empty
+  if (condition) {
+    editData.surfaceConditions.push({
+      surface: surface,
+      condition: condition
+    })
+  }
+
+  // Update surfaces array for backward compatibility
+  updateSurfacesFromConditions()
+}
+
+const toggleSurfaceCondition = (surface) => {
+  if (hasSurfaceCondition(surface)) {
+    // Remove the condition
+    editData.surfaceConditions = editData.surfaceConditions.filter(sc => sc.surface !== surface)
+  } else {
+    // Add a default condition (decay)
+    editData.surfaceConditions.push({
+      surface: surface,
+      condition: 'decay'
+    })
+  }
+
+  // Update surfaces array for backward compatibility
+  updateSurfacesFromConditions()
+}
+
+const updateSurfacesFromConditions = () => {
+  // Update the surfaces array based on surface conditions
+  editData.surfaces = editData.surfaceConditions.map(sc => sc.surface)
+}
+
 const formatCondition = (condition) => {
   return condition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 }
 
-const handleSave = () => {
-  if (!isFormValid.value) return
-  
-  emit('save', {
-    tooth_number: props.tooth.tooth_number,
-    condition: editData.condition,
-    surfaces: editData.surfaces,
-    notes: editData.notes,
-    reason: editData.reason
-  })
+const formatSurfaceConditions = (surfaceConditions) => {
+  if (!surfaceConditions || surfaceConditions.length === 0) {
+    return 'No specific surface conditions'
+  }
+  return surfaceConditions.map(sc =>
+    `${sc.surface}: ${formatCondition(sc.condition)}`
+  ).join(', ')
 }
+
+const formatAppointmentOption = (appointment) => {
+  const date = new Date(appointment.start_time).toLocaleDateString()
+  const time = new Date(appointment.start_time).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+  return `${date} ${time} - ${appointment.title || 'Appointment'}`
+}
+
+const loadAppointments = async () => {
+  try {
+    // Load recent and upcoming appointments for this patient
+    await appointmentStore.fetchPatientAppointments(props.patientId)
+
+    // Filter to get relevant appointments (completed or in progress for linking)
+    const now = new Date()
+    const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000))
+
+    availableAppointments.value = appointmentStore.appointments.filter(appointment => {
+      const appointmentDate = new Date(appointment.start_time)
+      const isRecent = appointmentDate >= thirtyDaysAgo
+      const isCompletedOrInProgress = ['completed', 'in_progress'].includes(appointment.status)
+
+      return isRecent && isCompletedOrInProgress
+    }).sort((a, b) => new Date(b.start_time) - new Date(a.start_time)) // Most recent first
+  } catch (error) {
+    console.error('Error loading appointments:', error)
+  }
+}
+
+const handleSave = async () => {
+  if (!isFormValid.value) return
+
+  creating.value = true
+
+  try {
+    emit('save', {
+      tooth_number: props.tooth.tooth_number,
+      condition: editData.condition,
+      surfaces: editData.surfaces,
+      surface_conditions: editData.surfaceConditions,
+      notes: editData.notes,
+      reason: editData.reason,
+      appointment_id: editData.appointmentId
+    })
+  } finally {
+    // Reset after a short delay to show the saving state
+    setTimeout(() => {
+      creating.value = false
+    }, 500)
+  }
+}
+
+onMounted(() => {
+  loadAppointments()
+})
 </script>
 
 <style scoped>
@@ -304,9 +484,34 @@ const handleSave = () => {
   @apply text-gray-900;
 }
 
+/* Mobile optimizations */
 @media (max-width: 640px) {
   .surfaces-grid {
     @apply grid-cols-1;
+  }
+
+  .modal-header {
+    @apply flex-col items-start space-y-2;
+  }
+
+  .modal-header button {
+    @apply self-end;
+  }
+
+  .form-group label {
+    @apply text-sm;
+  }
+
+  .surface-condition-item {
+    @apply p-2;
+  }
+
+  .chart-type-buttons {
+    @apply flex-col space-x-0 space-y-2;
+  }
+
+  .overall-condition-note {
+    @apply text-xs;
   }
 }
 </style>

@@ -16,6 +16,13 @@ type UpdateToothRequest struct {
 	SurfaceConditions []models.SurfaceCondition `json:"surface_conditions"`
 	Notes             string                    `json:"notes"`
 	Reason            string                    `json:"reason"` // Reason for the change
+	AppointmentID     *uint                     `json:"appointment_id"` // Link to specific appointment
+}
+
+type CreateSnapshotRequest struct {
+	AppointmentID *uint  `json:"appointment_id"`
+	ChartType     string `json:"chart_type"`
+	VisitNotes    string `json:"visit_notes"`
 }
 
 func GetPatientDentalRecords(c *fiber.Ctx) error {
@@ -218,7 +225,7 @@ func UpdateToothCondition(c *fiber.Ctx) error {
 	}
 
 	// Update tooth condition
-	if err := dentalRecord.UpdateToothCondition(req.ToothNumber, req.Condition, req.Surfaces, req.SurfaceConditions, req.Notes, user.ID); err != nil {
+	if err := dentalRecord.UpdateToothCondition(req.ToothNumber, req.Condition, req.Surfaces, req.SurfaceConditions, req.Notes, user.ID, req.AppointmentID); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to update tooth condition"})
 	}
 
@@ -234,6 +241,7 @@ func UpdateToothCondition(c *fiber.Ctx) error {
 		PreviousCondition: previousCondition,
 		NewCondition:      req.Condition,
 		ChangeReason:      req.Reason,
+		AppointmentID:     req.AppointmentID,
 		ChangedByID:       user.ID,
 	}
 
@@ -329,10 +337,10 @@ func ActivateDentalRecord(c *fiber.Ctx) error {
 		return c.Status(403).JSON(fiber.Map{"error": "Only doctors can activate dental records"})
 	}
 
-	// Deactivate other records of same type for this patient
+	// Deactivate ALL other records for this patient (only one chart type should be active)
 	database.DB.Model(&models.DentalRecord{}).
-		Where("patient_id = ? AND record_type = ? AND id != ?",
-			dentalRecord.PatientID, dentalRecord.RecordType, dentalRecord.ID).
+		Where("patient_id = ? AND id != ?",
+			dentalRecord.PatientID, dentalRecord.ID).
 		Update("is_active", false)
 
 	// Activate this record
@@ -401,7 +409,7 @@ func BulkUpdateTeeth(c *fiber.Ctx) error {
 		}
 
 		// Update tooth condition
-		if err := dentalRecord.UpdateToothCondition(update.ToothNumber, update.Condition, update.Surfaces, update.SurfaceConditions, update.Notes, user.ID); err != nil {
+		if err := dentalRecord.UpdateToothCondition(update.ToothNumber, update.Condition, update.Surfaces, update.SurfaceConditions, update.Notes, user.ID, update.AppointmentID); err != nil {
 			continue // Log error but continue with other updates
 		}
 
@@ -434,5 +442,182 @@ func BulkUpdateTeeth(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message":    "Bulk update completed successfully",
 		"teeth_data": updatedTeethData,
+	})
+}
+
+// CreateDentalChartSnapshot creates a snapshot of the current dental chart state
+func CreateDentalChartSnapshot(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	patientID, err := strconv.ParseUint(c.Params("patient_id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid patient ID"})
+	}
+
+	// Verify patient access
+	var patient models.Patient
+	if err := database.DB.First(&patient, patientID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Patient not found"})
+	}
+
+	if !user.IsSuperAdmin() && user.ClinicID != patient.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+	}
+
+	// Only doctors can create snapshots
+	if !user.IsSuperAdmin() && !user.HasRole(models.Doctor) {
+		return c.Status(403).JSON(fiber.Map{"error": "Only doctors can create dental chart snapshots"})
+	}
+
+	var req CreateSnapshotRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	// Validate chart type
+	var chartType models.ToothType
+	if req.ChartType == "adult" || req.ChartType == "permanent" {
+		chartType = models.ToothTypePermanent
+	} else if req.ChartType == "child" || req.ChartType == "primary" {
+		chartType = models.ToothTypePrimary
+	} else {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid chart type. Use 'adult'/'permanent' or 'child'/'primary'"})
+	}
+
+	// Get current dental record for the specified chart type
+	var dentalRecord models.DentalRecord
+	if err := database.DB.Where("patient_id = ? AND record_type = ? AND is_active = ?",
+		patientID, chartType, true).First(&dentalRecord).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Active dental record not found for specified chart type"})
+	}
+
+	// Get current teeth data
+	teethData, err := dentalRecord.GetTeethData()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to get current teeth data"})
+	}
+
+	// Create snapshot
+	snapshot, err := models.CreateDentalChartSnapshot(
+		uint(patientID),
+		patient.ClinicID,
+		user.ID,
+		req.AppointmentID,
+		chartType,
+		teethData,
+		req.VisitNotes,
+	)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to create snapshot"})
+	}
+
+	// Save snapshot to database
+	if err := database.DB.Create(snapshot).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to save snapshot"})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Dental chart snapshot created successfully",
+		"snapshot": snapshot,
+	})
+}
+
+// GetPatientDentalSnapshots retrieves all dental chart snapshots for a patient
+func GetPatientDentalSnapshots(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	patientID, err := strconv.ParseUint(c.Params("patient_id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid patient ID"})
+	}
+
+	// Verify patient access
+	var patient models.Patient
+	if err := database.DB.First(&patient, patientID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Patient not found"})
+	}
+
+	if !user.IsSuperAdmin() && user.ClinicID != patient.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+	}
+
+	var snapshots []models.DentalChartSnapshot
+	query := database.DB.Preload("Appointment").Preload("CreatedBy").
+		Where("patient_id = ?", patientID).
+		Order("created_at DESC")
+
+	// Filter by chart type if specified
+	chartType := c.Query("chart_type")
+	if chartType != "" {
+		var filterType models.ToothType
+		if chartType == "adult" || chartType == "permanent" {
+			filterType = models.ToothTypePermanent
+		} else if chartType == "child" || chartType == "primary" {
+			filterType = models.ToothTypePrimary
+		}
+		if filterType != "" {
+			query = query.Where("chart_type = ?", filterType)
+		}
+	}
+
+	if err := query.Find(&snapshots).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch snapshots"})
+	}
+
+	// Parse snapshot data for each record
+	var snapshotsWithData []fiber.Map
+	for _, snapshot := range snapshots {
+		teethData, err := snapshot.GetSnapshotData()
+		if err != nil {
+			continue // Skip snapshots with invalid data
+		}
+
+		snapshotsWithData = append(snapshotsWithData, fiber.Map{
+			"id":            snapshot.ID,
+			"patient_id":    snapshot.PatientID,
+			"appointment_id": snapshot.AppointmentID,
+			"appointment":   snapshot.Appointment,
+			"chart_type":    snapshot.ChartType,
+			"teeth_data":    teethData,
+			"visit_notes":   snapshot.VisitNotes,
+			"created_by":    snapshot.CreatedBy,
+			"created_at":    snapshot.CreatedAt,
+		})
+	}
+
+	return c.JSON(snapshotsWithData)
+}
+
+// GetDentalChartSnapshot retrieves a specific dental chart snapshot
+func GetDentalChartSnapshot(c *fiber.Ctx) error {
+	user := c.Locals("user").(models.User)
+	snapshotID, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid snapshot ID"})
+	}
+
+	var snapshot models.DentalChartSnapshot
+	if err := database.DB.Preload("Patient").Preload("Appointment").Preload("CreatedBy").
+		First(&snapshot, snapshotID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Snapshot not found"})
+	}
+
+	// Check access
+	if !user.IsSuperAdmin() && user.ClinicID != snapshot.Patient.ClinicID {
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
+	}
+
+	teethData, err := snapshot.GetSnapshotData()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to parse snapshot data"})
+	}
+
+	return c.JSON(fiber.Map{
+		"id":            snapshot.ID,
+		"patient":       snapshot.Patient,
+		"appointment":   snapshot.Appointment,
+		"chart_type":    snapshot.ChartType,
+		"teeth_data":    teethData,
+		"visit_notes":   snapshot.VisitNotes,
+		"created_by":    snapshot.CreatedBy,
+		"created_at":    snapshot.CreatedAt,
 	})
 }

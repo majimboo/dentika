@@ -7,6 +7,8 @@ export const useDentalRecordStore = defineStore('dentalRecord', {
     currentRecord: null,
     toothHistory: [],
     recordHistory: [],
+    dentalSnapshots: [],
+    currentSnapshot: null,
     loading: false,
     error: null,
     selectedTooth: null
@@ -256,7 +258,7 @@ export const useDentalRecordStore = defineStore('dentalRecord', {
 
     getToothDisplayText(tooth) {
       if (!tooth) return ''
-      
+
       const displayMap = {
         healthy: 'H',
         decay: 'D',
@@ -268,8 +270,118 @@ export const useDentalRecordStore = defineStore('dentalRecord', {
         bridge: 'B',
         missing: 'M'
       }
-      
+
       return displayMap[tooth.condition] || ''
+    },
+
+    // Dental Chart Snapshot Methods
+    async createDentalChartSnapshot(patientId, snapshotData) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const result = await apiService.post(`/api/patients/${patientId}/dental-snapshots`, snapshotData)
+        if (result.success) {
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to create dental chart snapshot'
+        console.error('Error creating dental chart snapshot:', error)
+        return { success: false, error: 'Failed to create dental chart snapshot' }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchPatientDentalSnapshots(patientId, chartType = null) {
+      this.loading = true
+      this.error = null
+
+      try {
+        let url = `/api/patients/${patientId}/dental-snapshots`
+        if (chartType) {
+          url += `?chart_type=${chartType}`
+        }
+
+        const result = await apiService.get(url)
+        if (result.success) {
+          this.dentalSnapshots = result.data
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to fetch dental snapshots'
+        console.error('Error fetching dental snapshots:', error)
+        return { success: false, error: 'Failed to fetch dental snapshots' }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchDentalSnapshot(snapshotId) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const result = await apiService.get(`/api/dental-snapshots/${snapshotId}`)
+        if (result.success) {
+          this.currentSnapshot = result.data
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to fetch dental snapshot'
+        console.error('Error fetching dental snapshot:', error)
+        return { success: false, error: 'Failed to fetch dental snapshot' }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    setCurrentSnapshot(snapshot) {
+      this.currentSnapshot = snapshot
+    },
+
+    clearCurrentSnapshot() {
+      this.currentSnapshot = null
+    },
+
+    // Enhanced tooth update with appointment linking
+    async updateToothConditionWithAppointment(recordId, toothData, appointmentId = null) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const payload = {
+          ...toothData,
+          appointment_id: appointmentId
+        }
+
+        const result = await apiService.put(`/api/dental-records/${recordId}/tooth`, payload)
+        if (result.success) {
+          // Update current record with new teeth data
+          if (this.currentRecord && this.currentRecord.id === recordId) {
+            this.currentRecord.teeth_data = result.data.teeth_data
+          }
+          return { success: true, data: result.data }
+        } else {
+          this.error = result.error
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        this.error = 'Failed to update tooth condition'
+        console.error('Error updating tooth condition:', error)
+        return { success: false, error: 'Failed to update tooth condition' }
+      } finally {
+        this.loading = false
+      }
     }
   }
 })

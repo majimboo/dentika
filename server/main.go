@@ -69,6 +69,7 @@ func main() {
 		&models.TreatmentPlanProcedure{},
 		&models.DentalRecord{},
 		&models.DentalRecordHistory{},
+		&models.DentalChartSnapshot{},
 		&models.ConsentTemplate{},
 		&models.ConsentForm{},
 
@@ -231,6 +232,11 @@ func main() {
 	api.Put("/dental-records/:id/bulk-update", middleware.RoleMiddleware(models.Doctor), handlers.BulkUpdateTeeth)
 	api.Get("/dental-records/:id/history", handlers.GetDentalRecordHistory)
 	api.Get("/dental-records/:id/tooth-history", handlers.GetToothHistory)
+
+	// Dental chart snapshots routes
+	api.Post("/patients/:patient_id/dental-snapshots", middleware.RoleMiddleware(models.Doctor), handlers.CreateDentalChartSnapshot)
+	api.Get("/patients/:patient_id/dental-snapshots", handlers.GetPatientDentalSnapshots)
+	api.Get("/dental-snapshots/:id", handlers.GetDentalChartSnapshot)
 
 	// Procedure and diagnosis templates
 	api.Get("/procedure-templates", handlers.GetProcedureTemplates)

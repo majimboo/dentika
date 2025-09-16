@@ -48,6 +48,32 @@ type DentalRecord struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
+// DentalChartSnapshot represents a dental chart state at a specific visit/appointment
+type DentalChartSnapshot struct {
+	ID           uint         `json:"id" gorm:"primarykey"`
+	PatientID    uint         `json:"patient_id" gorm:"not null;index"`
+	Patient      Patient      `json:"patient" gorm:"foreignKey:PatientID"`
+	ClinicID     uint         `json:"clinic_id" gorm:"not null;index"`
+	Clinic       Clinic       `json:"clinic" gorm:"foreignKey:ClinicID"`
+
+	// Link to specific appointment/visit
+	AppointmentID *uint        `json:"appointment_id" gorm:"index"`
+	Appointment   *Appointment `json:"appointment,omitempty" gorm:"foreignKey:AppointmentID"`
+
+	// Chart type and snapshot data
+	ChartType     ToothType `json:"chart_type" gorm:"type:varchar(20);not null"`
+	SnapshotData  string    `json:"snapshot_data" gorm:"type:text"` // JSON of TeethData at this visit
+
+	// Metadata
+	CreatedByID   uint         `json:"created_by_id" gorm:"not null;index"`
+	CreatedBy     User         `json:"created_by" gorm:"foreignKey:CreatedByID"`
+	VisitNotes    string       `json:"visit_notes" gorm:"type:text"`
+
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
+	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
 type SurfaceCondition struct {
 	Surface   string         `json:"surface"`   // mesial, distal, occlusal, buccal, lingual, incisal
 	Condition ToothCondition `json:"condition"` // specific condition for this surface
@@ -61,7 +87,8 @@ type ToothData struct {
 	SurfaceConditions []SurfaceCondition `json:"surface_conditions"` // detailed conditions per surface
 	Notes             string             `json:"notes"`
 	LastUpdated       time.Time          `json:"last_updated"`
-	UpdatedBy         uint               `json:"updated_by"` // user ID who made the update
+	UpdatedBy         uint               `json:"updated_by"`   // user ID who made the update
+	AppointmentID     *uint              `json:"appointment_id"` // appointment where this change was made
 }
 
 type DentalRecordHistory struct {
@@ -183,7 +210,7 @@ func (dr *DentalRecord) getPrimaryToothPosition(toothNumber int) string {
 	return fmt.Sprintf("%s - %d", quadrants[quadrant], position)
 }
 
-func (dr *DentalRecord) UpdateToothCondition(toothNumber string, newCondition ToothCondition, surfaces []string, surfaceConditions []SurfaceCondition, notes string, updatedBy uint) error {
+func (dr *DentalRecord) UpdateToothCondition(toothNumber string, newCondition ToothCondition, surfaces []string, surfaceConditions []SurfaceCondition, notes string, updatedBy uint, appointmentID *uint) error {
 	teethData, err := dr.GetTeethData()
 	if err != nil {
 		return err
@@ -197,6 +224,7 @@ func (dr *DentalRecord) UpdateToothCondition(toothNumber string, newCondition To
 			teethData[i].Notes = notes
 			teethData[i].LastUpdated = time.Now()
 			teethData[i].UpdatedBy = updatedBy
+			teethData[i].AppointmentID = appointmentID
 			break
 		}
 	}
@@ -231,4 +259,46 @@ func (td *ToothData) SetSurfaceCondition(surface string, condition ToothConditio
 			Condition: condition,
 		})
 	}
+}
+
+// Methods for DentalChartSnapshot
+func (dcs *DentalChartSnapshot) GetSnapshotData() ([]ToothData, error) {
+	var teethData []ToothData
+	if dcs.SnapshotData == "" {
+		return []ToothData{}, nil
+	}
+
+	err := json.Unmarshal([]byte(dcs.SnapshotData), &teethData)
+	if err != nil {
+		return nil, err
+	}
+	return teethData, nil
+}
+
+func (dcs *DentalChartSnapshot) SetSnapshotData(teethData []ToothData) error {
+	data, err := json.Marshal(teethData)
+	if err != nil {
+		return err
+	}
+	dcs.SnapshotData = string(data)
+	return nil
+}
+
+// CreateSnapshot creates a snapshot from current dental record state
+func CreateDentalChartSnapshot(patientID, clinicID, createdByID uint, appointmentID *uint, chartType ToothType, teethData []ToothData, visitNotes string) (*DentalChartSnapshot, error) {
+	snapshot := &DentalChartSnapshot{
+		PatientID:     patientID,
+		ClinicID:      clinicID,
+		AppointmentID: appointmentID,
+		ChartType:     chartType,
+		CreatedByID:   createdByID,
+		VisitNotes:    visitNotes,
+	}
+
+	err := snapshot.SetSnapshotData(teethData)
+	if err != nil {
+		return nil, err
+	}
+
+	return snapshot, nil
 }

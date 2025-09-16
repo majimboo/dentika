@@ -47,6 +47,205 @@
            </div>
         </div>
 
+        <!-- Patient Details Display (View Mode) -->
+        <div v-if="isViewMode" class="space-y-8">
+          <!-- Patient Avatar and Basic Info -->
+          <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+            <div class="flex-shrink-0">
+              <div class="relative">
+                <img
+                  v-if="form.avatar_path"
+                  :src="`/uploads/${form.avatar_path}`"
+                  :alt="`${form.first_name} ${form.last_name}`"
+                  class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                />
+                <div
+                  v-else
+                  class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center border-4 border-white shadow-lg"
+                >
+                  <span class="text-2xl font-bold text-white">
+                    {{ (form.first_name || '').charAt(0) }}{{ (form.last_name || '').charAt(0) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="flex-1 text-center sm:text-left">
+              <h2 class="text-2xl font-bold text-gray-900 mb-1">
+                {{ form.first_name }} {{ form.last_name }}
+              </h2>
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-600 mb-3">
+                <span class="inline-flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                  </svg>
+                  ID: {{ patientStore.currentPatient?.patient_number || 'N/A' }}
+                </span>
+                <span class="hidden sm:inline text-gray-400">•</span>
+                <span class="inline-flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  Age: {{ calculateAge(form.date_of_birth) }} years
+                </span>
+                <span class="hidden sm:inline text-gray-400">•</span>
+                <span class="inline-flex items-center capitalize">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  {{ form.gender || 'Not specified' }}
+                </span>
+              </div>
+              <p class="text-sm text-gray-600">
+                Born: {{ formatDate(form.date_of_birth, { dateStyle: 'long' }) || 'Date not provided' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+              Contact Information
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-4">
+                <div v-if="form.phone" class="flex items-start space-x-3">
+                  <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Phone Number</p>
+                    <p class="text-sm text-gray-900">{{ formatPhoneNumber(form.phone) }}</p>
+                  </div>
+                </div>
+                <div v-if="form.email" class="flex items-start space-x-3">
+                  <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Email Address</p>
+                    <p class="text-sm text-gray-900">{{ form.email }}</p>
+                  </div>
+                </div>
+              </div>
+              <div v-if="form.address">
+                <div class="flex items-start space-x-3">
+                  <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Address</p>
+                    <p class="text-sm text-gray-900 whitespace-pre-line">{{ form.address }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Contact -->
+          <div v-if="form.emergency_contact_name || form.emergency_contact_phone" class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+              Emergency Contact
+            </h3>
+            <div class="bg-red-50 rounded-lg p-4 border border-red-100">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div v-if="form.emergency_contact_name">
+                  <p class="text-sm font-medium text-gray-700">Contact Name</p>
+                  <p class="text-sm text-gray-900">{{ form.emergency_contact_name }}</p>
+                </div>
+                <div v-if="form.emergency_contact_phone">
+                  <p class="text-sm font-medium text-gray-700">Phone Number</p>
+                  <p class="text-sm text-gray-900">{{ formatPhoneNumber(form.emergency_contact_phone) }}</p>
+                </div>
+                <div v-if="form.emergency_contact_relation">
+                  <p class="text-sm font-medium text-gray-700">Relationship</p>
+                  <p class="text-sm text-gray-900">{{ form.emergency_contact_relation }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medical Information -->
+          <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Medical Information
+            </h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div v-if="form.medical_conditions" class="space-y-2">
+                <p class="text-sm font-medium text-gray-700">Medical Conditions</p>
+                <div class="bg-gray-50 rounded-lg p-3 border">
+                  <p class="text-sm text-gray-900 whitespace-pre-line">{{ form.medical_conditions }}</p>
+                </div>
+              </div>
+              <div v-if="form.current_medications" class="space-y-2">
+                <p class="text-sm font-medium text-gray-700">Current Medications</p>
+                <div class="bg-gray-50 rounded-lg p-3 border">
+                  <p class="text-sm text-gray-900 whitespace-pre-line">{{ form.current_medications }}</p>
+                </div>
+              </div>
+            </div>
+            <div v-if="form.allergies && form.allergies.length > 0" class="space-y-2">
+              <p class="text-sm font-medium text-gray-700">Allergies</p>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="allergy in form.allergies"
+                  :key="allergy"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200"
+                >
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                  </svg>
+                  {{ allergy }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Insurance Information -->
+          <div v-if="form.insurance_provider || form.insurance_number" class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Insurance Information
+            </h3>
+            <div class="bg-purple-50 rounded-lg p-4 border border-purple-100">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div v-if="form.insurance_provider">
+                  <p class="text-sm font-medium text-gray-700">Insurance Provider</p>
+                  <p class="text-sm text-gray-900">{{ form.insurance_provider }}</p>
+                </div>
+                <div v-if="form.insurance_number">
+                  <p class="text-sm font-medium text-gray-700">Policy Number</p>
+                  <p class="text-sm text-gray-900">{{ form.insurance_number }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Notes -->
+          <div v-if="form.notes" class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              Additional Notes
+            </h3>
+            <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+              <p class="text-sm text-gray-900 whitespace-pre-line">{{ form.notes }}</p>
+            </div>
+          </div>
+        </div>
+
         <form v-if="!isViewMode" @submit.prevent="handleSubmit" class="space-y-8">
             <!-- Basic Information -->
             <div class="space-y-6">
@@ -799,6 +998,25 @@ const hasChanges = computed(() => {
       form.preferred_language !== (originalPatient.value.preferred_language || 'English')
   )
 })
+
+// Helper functions
+const calculateAge = (dateOfBirth) => {
+  if (!dateOfBirth) return 'Unknown'
+
+  const today = new Date()
+  const birthDate = new Date(dateOfBirth)
+
+  if (isNaN(birthDate.getTime())) return 'Unknown'
+
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+
+  return age
+}
 
 // Methods
 const resetForm = () => {

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all duration-200 cursor-pointer group">
+  <div class="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all duration-200 cursor-pointer group" @click="navigateToPatient">
     <!-- Patient Info -->
     <div class="flex items-start justify-between mb-2">
       <div class="flex-1">
@@ -48,7 +48,7 @@
         <!-- Mark as Arrived (for scheduled appointments) -->
         <button
           v-if="appointment.status === 'scheduled'"
-          @click="$emit('status-changed', appointment.id, 'confirmed')"
+          @click.stop="$emit('status-changed', appointment.id, 'confirmed')"
           class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition-colors"
           title="Mark as arrived"
         >
@@ -61,7 +61,7 @@
         <!-- Start Appointment (for confirmed appointments) -->
         <button
           v-if="appointment.status === 'confirmed'"
-          @click="$emit('status-changed', appointment.id, 'in_progress')"
+          @click.stop="$emit('status-changed', appointment.id, 'in_progress')"
           class="inline-flex items-center px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-md hover:bg-yellow-200 transition-colors"
           title="Start appointment"
         >
@@ -74,7 +74,7 @@
         <!-- Complete Appointment (for in-progress appointments) -->
         <button
           v-if="appointment.status === 'in_progress'"
-          @click="$emit('status-changed', appointment.id, 'completed')"
+          @click.stop="$emit('status-changed', appointment.id, 'completed')"
           class="inline-flex items-center px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200 transition-colors"
           title="Complete appointment"
         >
@@ -86,7 +86,7 @@
       </div>
 
        <!-- View Details -->
-       <div class="flex space-x-1">
+       <div class="flex space-x-1" @click.stop>
          <router-link
            :to="`/appointments/${appointment.id}`"
            class="inline-flex items-center px-2 py-1 text-xs font-medium text-neutral-700 bg-neutral-100 rounded-md hover:bg-neutral-200 transition-colors"
@@ -129,6 +129,12 @@ export default {
   },
   emits: ['status-changed'],
   methods: {
+    navigateToPatient() {
+      if (this.appointment.patient_id) {
+        this.$router.push(`/patients/${this.appointment.patient_id}`)
+      }
+    },
+
     getStatusBadgeClass(status) {
       const classes = {
         'scheduled': 'bg-blue-100 text-blue-800',
